@@ -3,6 +3,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
 import { sql as sqlLang } from '@codemirror/lang-sql';
+import { basicSetup } from 'codemirror';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { parseSql } from '../../api/client';
 import './SqlEditor.css';
@@ -42,6 +43,7 @@ export const SqlEditor: React.FC = () => {
     const startState = EditorState.create({
       doc: sql,
       extensions: [
+        basicSetup,
         sqlLang(),
         keymap.of(defaultKeymap),
         EditorView.updateListener.of((update) => {
