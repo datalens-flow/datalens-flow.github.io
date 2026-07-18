@@ -205,16 +205,31 @@ body {
 }
 
 /* CodeMirror Syntax Highlighting Custom Overrides */
-.theme-dark .cm-keyword { color: #818cf8 !important; font-weight: 600; }
-.theme-dark .cm-type { color: #34d399 !important; }
-.theme-dark .cm-string { color: #fb7185 !important; }
-.theme-dark .cm-comment { color: #64748b !important; font-style: italic; }
-.theme-dark .cm-variableName { color: #f8fafc !important; }
-.theme-dark .cm-number { color: #fbbf24 !important; }
+.theme-dark .cm-keyword, .theme-dark .tok-keyword { color: #a5b4fc !important; font-weight: 600; }
+.theme-dark .cm-type, .theme-dark .tok-type { color: #34d399 !important; }
+.theme-dark .cm-string, .theme-dark .tok-string { color: #fb7185 !important; }
+.theme-dark .cm-comment, .theme-dark .tok-comment { color: #64748b !important; font-style: italic; }
+.theme-dark .cm-variableName, .theme-dark .tok-variableName, .theme-dark .cm-content { color: #f8fafc !important; }
+.theme-dark .cm-number, .theme-dark .tok-number { color: #fbbf24 !important; }
 
-.theme-light .cm-keyword { color: #4f46e5 !important; font-weight: 600; }
-.theme-light .cm-type { color: #059669 !important; }
-.theme-light .cm-string { color: #e11d48 !important; }
-.theme-light .cm-comment { color: #94a3b8 !important; font-style: italic; }
-.theme-light .cm-variableName { color: #1e293b !important; }
-.theme-light .cm-number { color: #b45309 !important; }
+.theme-light .cm-keyword, .theme-light .tok-keyword { color: #4f46e5 !important; font-weight: 600; }
+.theme-light .cm-type, .theme-light .tok-type { color: #059669 !important; }
+.theme-light .cm-string, .theme-light .tok-string { color: #e11d48 !important; }
+.theme-light .cm-comment, .theme-light .tok-comment { color: #94a3b8 !important; font-style: italic; }
+.theme-light .cm-variableName, .theme-light .tok-variableName, .theme-light .cm-content { color: #1e293b !important; }
+.theme-light .cm-number, .theme-light .tok-number { color: #b45309 !important; }
+
+/* CodeMirror Active Line & Selection Highlight Styling */
+.theme-dark .cm-activeLine {
+  background-color: rgba(99, 102, 241, 0.12) !important;
+}
+.theme-dark .cm-selectionBackground, .theme-dark ::selection {
+  background-color: rgba(99, 102, 241, 0.35) !important;
+}
+
+.theme-light .cm-activeLine {
+  background-color: rgba(79, 70, 229, 0.06) !important;
+}
+.theme-light .cm-selectionBackground, .theme-light ::selection {
+  background-color: rgba(79, 70, 229, 0.18) !important;
+}
