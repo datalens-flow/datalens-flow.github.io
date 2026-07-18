@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { 
   ReactFlow, 
   Background, 
@@ -13,7 +13,6 @@ import { useSchemaStore } from '../../store/useSchemaStore';
 import { getLayoutedElements } from '../../utils/layout';
 import TableNode from './TableNode';
 import CrowsFootEdge from './CrowsFootEdge';
-import CanvasToolbar from './CanvasToolbar';
 import CardinalityMarkers from './CardinalityMarkers';
 import './ERDCanvas.css';
 
@@ -34,12 +33,12 @@ const ERDCanvasContent: React.FC = () => {
     deleteRelationship,
     theme,
     layoutDir,
-    inferRelationships
+    inferRelationships,
+    searchQuery
   } = useSchemaStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
-  const [searchQuery, setSearchQuery] = useState('');
   
   const { fitView } = useReactFlow();
 
@@ -157,9 +156,6 @@ const ERDCanvasContent: React.FC = () => {
 
   return (
     <div className={`erd-canvas-container theme-${theme}`}>
-      {/* Top Controls Toolbar overlay */}
-      <CanvasToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-
       {/* SVG Cardinality Marker Defs */}
       <CardinalityMarkers />
 

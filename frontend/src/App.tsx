@@ -2,6 +2,7 @@ import { SqlEditor } from './components/SqlEditor/SqlEditor';
 import { ERDCanvas } from './components/ERDCanvas/ERDCanvas';
 import { DataDictionary } from './components/DataDictionary/DataDictionary';
 import { ExportPanel } from './components/ExportPanel/ExportPanel';
+import { CanvasToolbar } from './components/ERDCanvas/CanvasToolbar';
 import { useSchemaStore } from './store/useSchemaStore';
 
 function App() {
@@ -24,6 +25,9 @@ function App() {
             DataLens <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--color-text-muted)' }}>v1.0</span>
           </h1>
         </div>
+        
+        {/* Canvas Controls (only active on ERD tab) */}
+        {activeTab === 'erd' && <CanvasToolbar />}
         
         {/* Export options dropdown */}
         <ExportPanel />

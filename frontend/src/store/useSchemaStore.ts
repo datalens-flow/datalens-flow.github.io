@@ -33,6 +33,8 @@ interface SchemaState {
   layoutDir: 'LR' | 'TB';
   inferRelationships: boolean;
   outputDialect: string;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   
   setSql: (sql: string) => void;
   setDialect: (dialect: string) => void;
@@ -97,6 +99,8 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   layoutDir: 'LR',
   inferRelationships: false,
   outputDialect: 'postgres',
+  searchQuery: '',
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
   
   setSql: (sql) => set({ sql }),
   setDialect: (dialect) => set({ dialect }),

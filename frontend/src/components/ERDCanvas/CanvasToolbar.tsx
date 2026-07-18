@@ -1,12 +1,7 @@
 import React from 'react';
 import { useSchemaStore } from '../../store/useSchemaStore';
 
-interface CanvasToolbarProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-}
-
-export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({ searchQuery, setSearchQuery }) => {
+export const CanvasToolbar: React.FC = () => {
   const {
     addTable,
     layoutDir,
@@ -14,13 +9,15 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({ searchQuery, setSe
     inferRelationships,
     setInferRelationships,
     theme,
-    setTheme
+    setTheme,
+    searchQuery,
+    setSearchQuery
   } = useSchemaStore();
 
   const hasSearch = searchQuery.trim().length > 0;
 
   return (
-    <div className="canvas-toolbar glass-panel" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
+    <div className="canvas-toolbar" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
       <button className="toolbar-btn add-btn" onClick={addTable}>
         ➕ Add Table
       </button>
