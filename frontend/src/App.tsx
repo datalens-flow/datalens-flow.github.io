@@ -22,7 +22,7 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '20px' }}>🔷</span>
           <h1 style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '0.02em' }}>
-            DataLens <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--color-text-muted)' }}>v1.0</span>
+            DataLens
           </h1>
         </div>
         
