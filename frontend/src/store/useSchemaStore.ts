@@ -29,7 +29,7 @@ interface SchemaState {
   error: string | null;
 
   // Visual/Layout settings
-  theme: 'neon' | 'cyberpunk' | 'light';
+  theme: 'dark' | 'light';
   layoutDir: 'LR' | 'TB';
   inferRelationships: boolean;
   outputDialect: string;
@@ -48,7 +48,7 @@ interface SchemaState {
   setNodePositions: (positions: Record<string, { x: number; y: number }>) => void;
   updateNodePosition: (tableId: string, x: number, y: number) => void;
 
-  setTheme: (theme: 'neon' | 'cyberpunk' | 'light') => void;
+  setTheme: (theme: 'dark' | 'light') => void;
   setLayoutDir: (dir: 'LR' | 'TB') => void;
   setInferRelationships: (infer: boolean) => void;
   setOutputDialect: (dialect: string) => void;
@@ -95,7 +95,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   loading: false,
   error: null,
 
-  theme: 'neon',
+  theme: 'dark',
   layoutDir: 'LR',
   inferRelationships: false,
   outputDialect: 'postgres',

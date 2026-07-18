@@ -57,16 +57,10 @@ export const CanvasToolbar: React.FC = () => {
       <div className="toolbar-group">
         <span className="toolbar-label">Theme:</span>
         <button 
-          className={`toolbar-toggle-btn ${theme === 'neon' ? 'active' : ''}`}
-          onClick={() => setTheme('neon')}
+          className={`toolbar-toggle-btn ${theme === 'dark' ? 'active' : ''}`}
+          onClick={() => setTheme('dark')}
         >
-          🌌 Neon
-        </button>
-        <button 
-          className={`toolbar-toggle-btn ${theme === 'cyberpunk' ? 'active' : ''}`}
-          onClick={() => setTheme('cyberpunk')}
-        >
-          🟡 Cyber
+          🌌 Dark
         </button>
         <button 
           className={`toolbar-toggle-btn ${theme === 'light' ? 'active' : ''}`}

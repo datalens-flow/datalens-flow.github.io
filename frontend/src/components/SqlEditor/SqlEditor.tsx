@@ -52,11 +52,11 @@ export const SqlEditor: React.FC = () => {
           }
         }),
         EditorView.theme({
-          '&': { height: '100%', backgroundColor: '#0f172a', color: '#f8fafc' },
+          '&': { height: '100%', backgroundColor: 'var(--bg-secondary)', color: 'var(--color-text-primary)' },
           '.cm-content': { fontFamily: 'var(--font-mono)', fontSize: '13px' },
-          '.cm-gutters': { backgroundColor: '#090f1a', color: '#64748b', borderRight: '1px solid #1e293b' },
-          '.cm-cursor': { borderLeftColor: '#6366f1' }
-        }, { dark: true })
+          '.cm-gutters': { backgroundColor: 'var(--bg-tertiary)', color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)' },
+          '.cm-cursor': { borderLeftColor: 'var(--color-indigo)' }
+        })
       ]
     });
 
