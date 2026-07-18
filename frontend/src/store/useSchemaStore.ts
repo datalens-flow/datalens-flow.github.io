@@ -23,6 +23,7 @@ interface SchemaState {
   theme: 'neon' | 'cyberpunk' | 'light';
   layoutDir: 'LR' | 'TB';
   inferRelationships: boolean;
+  outputDialect: string;
   
   setSql: (sql: string) => void;
   setDialect: (dialect: string) => void;
@@ -39,6 +40,7 @@ interface SchemaState {
   setTheme: (theme: 'neon' | 'cyberpunk' | 'light') => void;
   setLayoutDir: (dir: 'LR' | 'TB') => void;
   setInferRelationships: (infer: boolean) => void;
+  setOutputDialect: (dialect: string) => void;
   clearRenameEvents: () => void;
   
   // Interactive UI action handles
@@ -50,6 +52,8 @@ interface SchemaState {
   
   addTable: () => void;
   addColumn: (tableId: string) => void;
+  toggleColumnPk: (tableId: string, colName: string) => void;
+  toggleColumnNullable: (tableId: string, colName: string) => void;
   syncSqlFromSchema: () => Promise<void>;
 }
 
@@ -83,6 +87,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   theme: 'neon',
   layoutDir: 'LR',
   inferRelationships: false,
+  outputDialect: 'postgres',
   
   setSql: (sql) => set({ sql }),
   setDialect: (dialect) => set({ dialect }),
@@ -130,6 +135,10 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   setTheme: (theme) => set({ theme }),
   setLayoutDir: (layoutDir) => set({ layoutDir }),
   setInferRelationships: (inferRelationships) => set({ inferRelationships }),
+  setOutputDialect: (outputDialect) => {
+    set({ outputDialect });
+    get().syncSqlFromSchema();
+  },
   clearRenameEvents: () => set({ renameEvents: { tables: {}, columns: {} } }),
 
   updateTableName: (oldTableId, newName) => {
@@ -446,11 +455,65 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
     get().syncSqlFromSchema();
   },
 
+  toggleColumnPk: (tableId, colName) => {
+    set((state) => {
+      if (!state.schema) return {};
+      const updatedTables = state.schema.tables.map((t) => {
+        if (t.id === tableId) {
+          return {
+            ...t,
+            columns: t.columns.map((c) => {
+              if (c.name === colName) {
+                return { ...c, is_pk: !c.is_pk };
+              }
+              return c;
+            })
+          };
+        }
+        return t;
+      });
+      return {
+        schema: {
+          ...state.schema,
+          tables: updatedTables
+        }
+      };
+    });
+    get().syncSqlFromSchema();
+  },
+
+  toggleColumnNullable: (tableId, colName) => {
+    set((state) => {
+      if (!state.schema) return {};
+      const updatedTables = state.schema.tables.map((t) => {
+        if (t.id === tableId) {
+          return {
+            ...t,
+            columns: t.columns.map((c) => {
+              if (c.name === colName) {
+                return { ...c, nullable: !c.nullable };
+              }
+              return c;
+            })
+          };
+        }
+        return t;
+      });
+      return {
+        schema: {
+          ...state.schema,
+          tables: updatedTables
+        }
+      };
+    });
+    get().syncSqlFromSchema();
+  },
+
   syncSqlFromSchema: async () => {
-    const { schema } = get();
+    const { schema, outputDialect } = get();
     if (!schema) return;
     try {
-      const blob = await exportSql(schema);
+      const blob = await exportSql(schema, outputDialect);
       const sqlText = await blob.text();
       set({ sql: sqlText });
     } catch (e) {

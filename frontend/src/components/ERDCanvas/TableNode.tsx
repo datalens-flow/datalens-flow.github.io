@@ -23,11 +23,17 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
   const [editingColType, setEditingColType] = useState<string | null>(null);
   const [tempColType, setTempColType] = useState('');
 
+  const [activeCommentCol, setActiveCommentCol] = useState<string | null>(null);
+
   const { 
     updateTableName, 
     updateColumnName,
     updateColumnType,
-    addColumn
+    addColumn,
+    toggleColumnPk,
+    toggleColumnNullable,
+    descriptions,
+    updateDescription
   } = useSchemaStore();
 
   // 1. Rename Table Name
@@ -102,81 +108,123 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
       <div className="table-node-columns">
         {data.columns.map((col) => {
           return (
-            <div 
-              key={col.name} 
-              className={`column-row ${col.is_pk ? 'pk-row' : ''} ${col.is_fk ? 'fk-row' : ''}`}
-              style={{ position: 'relative' }}
-            >
-              {/* Left Handle for FK/PK connections */}
-              <Handle
-                type="target"
-                position={Position.Left}
-                id={`left_${col.name}`}
-                style={{ top: '50%', transform: 'translateY(-50%)', left: '-6px', background: '#6366f1' }}
-              />
+            <div key={col.name} className="column-wrapper" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.02)' }}>
+              <div 
+                className={`column-row ${col.is_pk ? 'pk-row' : ''} ${col.is_fk ? 'fk-row' : ''}`}
+                style={{ position: 'relative' }}
+              >
+                {/* Left Handle for FK/PK connections */}
+                <Handle
+                  type="target"
+                  position={Position.Left}
+                  id={`left_${col.name}`}
+                  style={{ top: '50%', transform: 'translateY(-50%)', left: '-6px', background: '#6366f1' }}
+                />
 
-              {/* Column Meta/Keys */}
-              <div className="column-meta">
-                {col.is_pk && <span className="key-icon pk-icon" title="Primary Key">🔑</span>}
-                {col.is_fk && <span className="key-icon fk-icon" title={`Foreign Key to ${col.fk_ref_table}`}>🔗</span>}
-                {!col.is_pk && !col.is_fk && <span className="key-placeholder"></span>}
+                {/* Column Meta/Keys - Double click to toggle PK */}
+                <div 
+                  className="column-meta" 
+                  onDoubleClick={() => toggleColumnPk(tableId, col.name)} 
+                  style={{ cursor: 'pointer' }}
+                  title="Double click to toggle Primary Key"
+                >
+                  {col.is_pk && <span className="key-icon pk-icon">🔑</span>}
+                  {col.is_fk && <span className="key-icon fk-icon">🔗</span>}
+                  {!col.is_pk && !col.is_fk && <span className="key-placeholder"></span>}
+                </div>
+
+                {/* Editable Column Name */}
+                {editingColName === col.name ? (
+                  <input
+                    type="text"
+                    value={tempColName}
+                    onChange={(e) => setTempColName(e.target.value)}
+                    onBlur={() => handleSaveColumnName(col.name)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveColumnName(col.name);
+                      if (e.key === 'Escape') setEditingColName(null);
+                    }}
+                    autoFocus
+                    className="column-name-input"
+                  />
+                ) : (
+                  <span 
+                    className="column-name"
+                    onDoubleClick={() => handleDoubleClickColumn(col.name)}
+                    title="Double click to edit column name"
+                  >
+                    {col.name}
+                  </span>
+                )}
+
+                {/* Editable Column Type */}
+                {editingColType === col.name ? (
+                  <input
+                    type="text"
+                    value={tempColType}
+                    onChange={(e) => setTempColType(e.target.value)}
+                    onBlur={() => handleSaveColumnType(col.name)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveColumnType(col.name);
+                      if (e.key === 'Escape') setEditingColType(null);
+                    }}
+                    autoFocus
+                    className="column-type-input"
+                  />
+                ) : (
+                  <span 
+                    className="column-type"
+                    onDoubleClick={() => handleDoubleClickType(col.name, col.type)}
+                    title="Double click to edit type"
+                  >
+                    {col.type}
+                  </span>
+                )}
+
+                {/* Nullable status - Double click to toggle */}
+                <span 
+                  className="column-nullable" 
+                  onDoubleClick={() => toggleColumnNullable(tableId, col.name)}
+                  title="Double click to toggle NULL / NOT NULL"
+                >
+                  {col.nullable ? 'NULL' : 'N-N'}
+                </span>
+
+                {/* Description comment bubble */}
+                <button 
+                  className={`comment-bubble-btn ${(descriptions[tableId]?.[col.name]) ? 'has-comment' : ''}`}
+                  onClick={() => setActiveCommentCol(activeCommentCol === col.name ? null : col.name)}
+                  title="Edit description comment"
+                >
+                  💬
+                </button>
+
+                {/* Right Handle for FK/PK connections */}
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={`right_${col.name}`}
+                  style={{ top: '50%', transform: 'translateY(-50%)', right: '-6px', background: '#10b981' }}
+                />
               </div>
 
-              {/* Editable Column Name */}
-              {editingColName === col.name ? (
-                <input
-                  type="text"
-                  value={tempColName}
-                  onChange={(e) => setTempColName(e.target.value)}
-                  onBlur={() => handleSaveColumnName(col.name)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveColumnName(col.name);
-                    if (e.key === 'Escape') setEditingColName(null);
-                  }}
-                  autoFocus
-                  className="column-name-input"
-                />
-              ) : (
-                <span 
-                  className="column-name"
-                  onDoubleClick={() => handleDoubleClickColumn(col.name)}
-                  title="Double click to edit column name"
-                >
-                  {col.name}
-                </span>
+              {/* Comment editor input overlay */}
+              {activeCommentCol === col.name && (
+                <div className="column-comment-editor">
+                  <input
+                    type="text"
+                    placeholder="Add description..."
+                    value={descriptions[tableId]?.[col.name] || ''}
+                    onChange={(e) => updateDescription(tableId, col.name, e.target.value)}
+                    onBlur={() => setActiveCommentCol(null)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') setActiveCommentCol(null);
+                    }}
+                    autoFocus
+                    className="column-comment-input"
+                  />
+                </div>
               )}
-
-              {/* Editable Column Type */}
-              {editingColType === col.name ? (
-                <input
-                  type="text"
-                  value={tempColType}
-                  onChange={(e) => setTempColType(e.target.value)}
-                  onBlur={() => handleSaveColumnType(col.name)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveColumnType(col.name);
-                    if (e.key === 'Escape') setEditingColType(null);
-                  }}
-                  autoFocus
-                  className="column-type-input"
-                />
-              ) : (
-                <span 
-                  className="column-type"
-                  onDoubleClick={() => handleDoubleClickType(col.name, col.type)}
-                  title="Double click to edit type"
-                >
-                  {col.type}
-                </span>
-              )}
-
-              {/* Right Handle for FK/PK connections */}
-              <Handle
-                type="source"
-                position={Position.Right}
-                id={`right_${col.name}`}
-                style={{ top: '50%', transform: 'translateY(-50%)', right: '-6px', background: '#10b981' }}
-              />
             </div>
           );
         })}

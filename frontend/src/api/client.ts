@@ -53,8 +53,8 @@ export async function exportMarkdown(
   return res.blob();
 }
 
-export async function exportSql(schema: SchemaResponse): Promise<Blob> {
-  const res = await fetch(`${API_BASE}/export/sql`, {
+export async function exportSql(schema: SchemaResponse, targetDialect: string = 'postgres'): Promise<Blob> {
+  const res = await fetch(`${API_BASE}/export/sql?target_dialect=${targetDialect}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(schema),

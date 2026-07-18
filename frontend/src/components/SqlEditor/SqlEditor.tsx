@@ -30,7 +30,9 @@ export const SqlEditor: React.FC = () => {
     clearRenameEvents,
     setLoading, 
     setError, 
-    loading 
+    loading,
+    outputDialect,
+    setOutputDialect
   } = useSchemaStore();
 
   // Initialize CodeMirror Editor
@@ -90,25 +92,44 @@ export const SqlEditor: React.FC = () => {
 
   return (
     <div className="sql-editor-container glass-panel">
-      <div className="sql-editor-header">
-        <span className="sql-editor-title">SQL Script Input</span>
-        <div className="sql-editor-controls">
-          <select 
-            value={dialect} 
-            onChange={(e) => setDialect(e.target.value)}
-            className="dialect-select"
-          >
-            {DIALECTS.map((d) => (
-              <option key={d.value} value={d.value}>{d.label}</option>
-            ))}
-          </select>
+      <div className="sql-editor-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="sql-editor-title">SQL Script Input</span>
           <button 
             onClick={handleParse} 
             disabled={loading}
             className="btn btn-primary"
+            style={{ padding: '6px 12px', fontSize: '12px' }}
           >
             {loading ? 'Parsing...' : 'Parse DDL'}
           </button>
+        </div>
+        <div className="sql-editor-controls" style={{ justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Input:</span>
+            <select 
+              value={dialect} 
+              onChange={(e) => setDialect(e.target.value)}
+              className="dialect-select"
+            >
+              {DIALECTS.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Output:</span>
+            <select 
+              value={outputDialect} 
+              onChange={(e) => setOutputDialect(e.target.value)}
+              className="dialect-select"
+            >
+              {DIALECTS.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
       <div className="editor-workspace" ref={editorRef}></div>

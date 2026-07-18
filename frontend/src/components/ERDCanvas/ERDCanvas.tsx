@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ReactFlow, 
   Background, 
   Controls, 
   MiniMap, 
   useNodesState, 
-  useEdgesState 
+  useEdgesState,
+  ReactFlowProvider,
+  useReactFlow
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useSchemaStore } from '../../store/useSchemaStore';
@@ -22,7 +24,7 @@ const edgeTypes = {
   crowsFootEdge: CrowsFootEdge,
 };
 
-export const ERDCanvas: React.FC = () => {
+const ERDCanvasContent: React.FC = () => {
   const { 
     schema, 
     nodePositions, 
@@ -37,8 +39,15 @@ export const ERDCanvas: React.FC = () => {
     inferRelationships,
     setInferRelationships
   } = useSchemaStore();
+
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const { fitView } = useReactFlow();
+
+  const hasSearch = searchQuery.trim().length > 0;
+  const query = searchQuery.toLowerCase().trim();
 
   // Compute Layout on parse or when settings change
   useEffect(() => {
@@ -55,18 +64,73 @@ export const ERDCanvas: React.FC = () => {
       inferRelationships
     );
 
-    // Apply any existing user-dragged position updates
+    // Apply any existing user-dragged position updates and search highlights
     const positionedNodes = layoutedNodes.map((node) => {
       const savedPos = nodePositions[node.id];
-      if (savedPos) {
-        return { ...node, position: savedPos };
+      const nodePos = savedPos || node.position;
+      
+      let matches = false;
+      if (hasSearch) {
+        const tableNameMatches = node.data.name.toLowerCase().includes(query);
+        const colNameMatches = node.data.columns.some((c: any) => c.name.toLowerCase().includes(query));
+        matches = tableNameMatches || colNameMatches;
       }
-      return node;
+      
+      return { 
+        ...node, 
+        position: nodePos,
+        className: `table-node ${hasSearch ? (matches ? 'highlighted-node' : 'dimmed-node') : ''}`,
+        style: hasSearch ? {
+          opacity: matches ? 1 : 0.2,
+          boxShadow: matches ? '0 0 20px var(--color-border-hover)' : 'none',
+          transition: 'opacity 0.2s ease, box-shadow 0.2s ease'
+        } : undefined
+      };
+    });
+
+    // Dim edges not linked to match nodes
+    const processedEdges = layoutedEdges.map((edge) => {
+      let edgeOpacity = 1;
+      if (hasSearch) {
+        const sourceTable = schema.tables.find(t => t.id === edge.source);
+        const targetTable = schema.tables.find(t => t.id === edge.target);
+        
+        const sourceMatch = edge.source.toLowerCase().includes(query) || 
+          sourceTable?.columns.some(c => c.name.toLowerCase().includes(query));
+        const targetMatch = edge.target.toLowerCase().includes(query) || 
+          targetTable?.columns.some(c => c.name.toLowerCase().includes(query));
+          
+        edgeOpacity = (sourceMatch || targetMatch) ? 1 : 0.15;
+      }
+      
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          opacity: edgeOpacity,
+          transition: 'opacity 0.2s ease'
+        }
+      };
     });
 
     setNodes(positionedNodes);
-    setEdges(layoutedEdges);
-  }, [schema, layoutDir, inferRelationships]);
+    setEdges(processedEdges);
+  }, [schema, layoutDir, inferRelationships, searchQuery]);
+
+  // Viewport Autofocus Zoom
+  useEffect(() => {
+    if (!hasSearch || nodes.length === 0) return;
+    
+    const firstMatch = nodes.find(n => {
+      const tableNameMatches = n.data.name.toLowerCase().includes(query);
+      const colNameMatches = n.data.columns.some((c: any) => c.name.toLowerCase().includes(query));
+      return tableNameMatches || colNameMatches;
+    });
+
+    if (firstMatch) {
+      fitView({ nodes: [firstMatch], duration: 800, minZoom: 0.8, maxZoom: 1.2 });
+    }
+  }, [searchQuery]);
 
   const handleNodeDragStop = (_event: any, node: any) => {
     updateNodePosition(node.id, node.position.x, node.position.y);
@@ -97,7 +161,7 @@ export const ERDCanvas: React.FC = () => {
   return (
     <div className={`erd-canvas-container theme-${theme}`}>
       {/* Top Controls Toolbar */}
-      <div className="canvas-toolbar glass-panel">
+      <div className="canvas-toolbar glass-panel" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
         <button className="toolbar-btn add-btn" onClick={addTable}>
           ➕ Add Table
         </button>
@@ -155,6 +219,27 @@ export const ERDCanvas: React.FC = () => {
             ☀️ Light
           </button>
         </div>
+
+        <div className="toolbar-divider"></div>
+
+        {/* Search bar focus filter */}
+        <div className="toolbar-group">
+          <input
+            type="text"
+            placeholder="🔍 Search table/column..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="toolbar-search-input"
+          />
+          {hasSearch && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', fontSize: '12px', marginLeft: '-24px', zIndex: 10 }}
+            >
+              ❌
+            </button>
+          )}
+        </div>
       </div>
 
       {/* SVG Cardinality Defs */}
@@ -210,4 +295,11 @@ export const ERDCanvas: React.FC = () => {
     </div>
   );
 };
+
+export const ERDCanvas: React.FC = () => (
+  <ReactFlowProvider>
+    <ERDCanvasContent />
+  </ReactFlowProvider>
+);
+
 export default ERDCanvas;

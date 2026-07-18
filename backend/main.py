@@ -54,8 +54,8 @@ def export_markdown(req: ExportRequest):
     )
 
 @app.post("/api/export/sql")
-def export_sql(schema: SchemaResponse):
-    sql_text = generate_sql_ddl(schema)
+def export_sql(schema: SchemaResponse, target_dialect: str = "postgres"):
+    sql_text = generate_sql_ddl(schema, target_dialect)
     return Response(
         content=sql_text,
         media_type="text/plain",

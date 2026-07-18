@@ -151,6 +151,23 @@ export const ExportPanel: React.FC = () => {
     }
   };
 
+  const handleCopyDrawio = async () => {
+    if (!schema) return;
+    setExporting(true);
+    try {
+      const blob = await exportDrawio(schema);
+      const xmlText = await blob.text();
+      await navigator.clipboard.writeText(xmlText);
+      alert('Draw.io XML copied to clipboard! You can paste it directly inside Draw.io.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to copy to clipboard.');
+    } finally {
+      setExporting(false);
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div className="export-panel-container">
       <button 
@@ -167,6 +184,7 @@ export const ExportPanel: React.FC = () => {
           <button onClick={handleExportPng} className="dropdown-item">🖼️ Export PNG Image</button>
           <button onClick={handleExportSvg} className="dropdown-item">📐 Export SVG Vector</button>
           <button onClick={handleExportDrawio} className="dropdown-item">🔗 Export Draw.io XML</button>
+          <button onClick={handleCopyDrawio} className="dropdown-item">📋 Copy Draw.io XML</button>
           
           <div className="dropdown-divider"></div>
           
