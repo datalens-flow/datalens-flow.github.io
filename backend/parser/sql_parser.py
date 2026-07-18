@@ -170,6 +170,53 @@ def parse_sql_script(sql_text: str, dialect: str) -> SchemaResponse:
                                 to_column=rc.lower(),
                                 type="many-to-one"
                             ))
+                            
+        # 3. INSERT DML (Inference)
+        elif isinstance(expression, exp.Insert):
+            table_expr = expression.this
+            if isinstance(table_expr, exp.Schema):
+                table_name = table_expr.this.name
+                cols = [c.name for c in table_expr.expressions]
+            elif isinstance(table_expr, exp.Table):
+                table_name = table_expr.name
+                cols = []
+            else:
+                continue
+                
+            table_id = table_name.lower()
+            if table_id not in table_map:
+                # Create inferred table
+                columns = []
+                for c in cols:
+                    columns.append(ColumnSchema(
+                        name=c,
+                        type="VARCHAR(255)", # default type for DML inference
+                        nullable=True,
+                        is_pk=False,
+                        is_fk=False,
+                        comment=""
+                    ))
+                t_schema = TableSchema(
+                    id=table_id,
+                    name=table_name,
+                    columns=columns
+                )
+                table_map[table_id] = t_schema
+                tables.append(t_schema)
+            else:
+                # Add missing columns inferred from INSERT
+                t_schema = table_map[table_id]
+                existing_cols = {c.name.lower() for c in t_schema.columns}
+                for c in cols:
+                    if c.lower() not in existing_cols:
+                        t_schema.columns.append(ColumnSchema(
+                            name=c,
+                            type="VARCHAR(255)",
+                            nullable=True,
+                            is_pk=False,
+                            is_fk=False,
+                            comment=""
+                        ))
                                 
     return SchemaResponse(
         tables=tables,

@@ -48,3 +48,12 @@ def test_alter_table_foreign_key():
     assert user_id_col.is_fk is True
     assert user_id_col.fk_ref_table == "users"
     assert user_id_col.fk_ref_column == "id"
+
+def test_dml_insert_inference():
+    sql = "INSERT INTO customers (cust_id, first_name, last_name) VALUES (1, 'John', 'Doe');"
+    res = parse_sql_script(sql, "postgres")
+    assert len(res.tables) == 1
+    assert res.tables[0].name == "customers"
+    assert len(res.tables[0].columns) == 3
+    assert res.tables[0].columns[0].name == "cust_id"
+

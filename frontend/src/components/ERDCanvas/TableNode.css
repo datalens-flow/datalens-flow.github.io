@@ -118,3 +118,29 @@
 .fk-row .column-name {
   color: #a5b4fc;
 }
+
+.table-name-input {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  background-color: var(--bg-primary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-indigo);
+  border-radius: 4px;
+  padding: 2px 6px;
+  width: 100%;
+  outline: none;
+}
+
+.column-type-input {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background-color: var(--bg-primary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-indigo);
+  border-radius: 4px;
+  padding: 1px 4px;
+  width: 70px;
+  outline: none;
+}
+

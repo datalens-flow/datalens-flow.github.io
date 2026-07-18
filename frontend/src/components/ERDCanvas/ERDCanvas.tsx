@@ -23,7 +23,13 @@ const edgeTypes = {
 };
 
 export const ERDCanvas: React.FC = () => {
-  const { schema, nodePositions, updateNodePosition } = useSchemaStore();
+  const { 
+    schema, 
+    nodePositions, 
+    updateNodePosition,
+    addRelationship,
+    deleteRelationship 
+  } = useSchemaStore();
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
 
@@ -55,6 +61,25 @@ export const ERDCanvas: React.FC = () => {
 
   const handleNodeDragStop = (_event: any, node: any) => {
     updateNodePosition(node.id, node.position.x, node.position.y);
+  };
+
+  const handleConnect = (params: any) => {
+    const fromTable = params.source;
+    const toTable = params.target;
+    
+    // Extract column name from handle ID (e.g. "right_email" -> "email")
+    const fromCol = params.sourceHandle?.replace('right_', '') || '';
+    const toCol = params.targetHandle?.replace('left_', '') || '';
+    
+    if (fromTable && toTable && fromCol && toCol) {
+      addRelationship(fromTable, fromCol, toTable, toCol);
+    }
+  };
+
+  const handleEdgeDoubleClick = (_event: any, edge: any) => {
+    if (window.confirm('Delete this relationship connection?')) {
+      deleteRelationship(edge.id);
+    }
   };
 
   return (
@@ -99,6 +124,8 @@ export const ERDCanvas: React.FC = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={handleNodeDragStop}
+        onConnect={handleConnect}
+        onEdgeDoubleClick={handleEdgeDoubleClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView

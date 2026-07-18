@@ -13,10 +13,37 @@ interface TableNodeProps {
 }
 
 export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
+  // Editing states
+  const [editingTableName, setEditingTableName] = useState(false);
+  const [tempTableName, setTempTableName] = useState('');
+  
   const [editingColName, setEditingColName] = useState<string | null>(null);
-  const [tempColName, setTempColName] = useState<string>('');
-  const { schema, setSchema } = useSchemaStore();
+  const [tempColName, setTempColName] = useState('');
+  
+  const [editingColType, setEditingColType] = useState<string | null>(null);
+  const [tempColType, setTempColType] = useState('');
 
+  const { 
+    schema, 
+    setSchema, 
+    updateTableName, 
+    updateColumnType 
+  } = useSchemaStore();
+
+  // 1. Rename Table Name
+  const handleDoubleClickTable = () => {
+    setEditingTableName(true);
+    setTempTableName(data.name);
+  };
+
+  const handleSaveTableName = () => {
+    if (tempTableName.trim() && tempTableName.trim() !== data.name) {
+      updateTableName(tableId, tempTableName.trim());
+    }
+    setEditingTableName(false);
+  };
+
+  // 2. Rename Column Name
   const handleDoubleClickColumn = (colName: string) => {
     setEditingColName(colName);
     setTempColName(colName);
@@ -28,7 +55,6 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
       return;
     }
 
-    // Deep clone and update schema column name
     const updatedTables = schema.tables.map((t) => {
       if (t.id === tableId) {
         return {
@@ -44,7 +70,6 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
       return t;
     });
 
-    // Also update relationships referencing this column
     const updatedRels = schema.relationships.map((r) => {
       let from_col = r.from_column;
       let to_col = r.to_column;
@@ -66,12 +91,46 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
     setEditingColName(null);
   };
 
+  // 3. Edit Column Type
+  const handleDoubleClickType = (colName: string, currentType: string) => {
+    setEditingColType(colName);
+    setTempColType(currentType);
+  };
+
+  const handleSaveColumnType = (colName: string) => {
+    if (tempColType.trim()) {
+      updateColumnType(tableId, colName, tempColType.trim());
+    }
+    setEditingColType(null);
+  };
+
   return (
     <div className="table-node glass-panel">
       {/* Table Header */}
       <div className="table-node-header">
         <span className="table-icon">📁</span>
-        <span className="table-name">{data.name}</span>
+        {editingTableName ? (
+          <input
+            type="text"
+            value={tempTableName}
+            onChange={(e) => setTempTableName(e.target.value)}
+            onBlur={handleSaveTableName}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSaveTableName();
+              if (e.key === 'Escape') setEditingTableName(false);
+            }}
+            autoFocus
+            className="table-name-input"
+          />
+        ) : (
+          <span 
+            className="table-name"
+            onDoubleClick={handleDoubleClickTable}
+            title="Double click to edit table name"
+          >
+            {data.name}
+          </span>
+        )}
       </div>
 
       {/* Columns Container */}
@@ -122,8 +181,29 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
                 </span>
               )}
 
-              {/* Column Type */}
-              <span className="column-type">{col.type}</span>
+              {/* Editable Column Type */}
+              {editingColType === col.name ? (
+                <input
+                  type="text"
+                  value={tempColType}
+                  onChange={(e) => setTempColType(e.target.value)}
+                  onBlur={() => handleSaveColumnType(col.name)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveColumnType(col.name);
+                    if (e.key === 'Escape') setEditingColType(null);
+                  }}
+                  autoFocus
+                  className="column-type-input"
+                />
+              ) : (
+                <span 
+                  className="column-type"
+                  onDoubleClick={() => handleDoubleClickType(col.name, col.type)}
+                  title="Double click to edit type"
+                >
+                  {col.type}
+                </span>
+              )}
 
               {/* Right Handle for FK/PK connections */}
               <Handle
