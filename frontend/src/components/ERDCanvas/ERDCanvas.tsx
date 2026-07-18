@@ -14,6 +14,8 @@ import { useSchemaStore } from '../../store/useSchemaStore';
 import { getLayoutedElements } from '../../utils/layout';
 import TableNode from './TableNode';
 import CrowsFootEdge from './CrowsFootEdge';
+import CanvasToolbar from './CanvasToolbar';
+import CardinalityMarkers from './CardinalityMarkers';
 import './ERDCanvas.css';
 
 const nodeTypes = {
@@ -31,13 +33,9 @@ const ERDCanvasContent: React.FC = () => {
     updateNodePosition,
     addRelationship,
     deleteRelationship,
-    addTable,
     theme,
-    setTheme,
     layoutDir,
-    setLayoutDir,
-    inferRelationships,
-    setInferRelationships
+    inferRelationships
   } = useSchemaStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
@@ -160,117 +158,11 @@ const ERDCanvasContent: React.FC = () => {
 
   return (
     <div className={`erd-canvas-container theme-${theme}`}>
-      {/* Top Controls Toolbar */}
-      <div className="canvas-toolbar glass-panel" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="toolbar-btn add-btn" onClick={addTable}>
-          ➕ Add Table
-        </button>
-        
-        <div className="toolbar-divider"></div>
+      {/* Top Controls Toolbar overlay */}
+      <CanvasToolbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-        {/* Layout Direction Selector */}
-        <div className="toolbar-group">
-          <span className="toolbar-label">Layout:</span>
-          <button 
-            className={`toolbar-toggle-btn ${layoutDir === 'LR' ? 'active' : ''}`}
-            onClick={() => setLayoutDir('LR')}
-          >
-            ↔️ Horizontal
-          </button>
-          <button 
-            className={`toolbar-toggle-btn ${layoutDir === 'TB' ? 'active' : ''}`}
-            onClick={() => setLayoutDir('TB')}
-          >
-            ↕️ Vertical
-          </button>
-        </div>
-
-        <div className="toolbar-divider"></div>
-
-        {/* Implicit relationship toggle */}
-        <button 
-          className={`toolbar-btn implicit-btn ${inferRelationships ? 'active' : ''}`}
-          onClick={() => setInferRelationships(!inferRelationships)}
-        >
-          {inferRelationships ? '🟢 Heuristics: ON' : '⚫ Heuristics: OFF'}
-        </button>
-
-        <div className="toolbar-divider"></div>
-
-        {/* Theme Selectors */}
-        <div className="toolbar-group">
-          <span className="toolbar-label">Theme:</span>
-          <button 
-            className={`toolbar-toggle-btn ${theme === 'neon' ? 'active' : ''}`}
-            onClick={() => setTheme('neon')}
-          >
-            🌌 Neon
-          </button>
-          <button 
-            className={`toolbar-toggle-btn ${theme === 'cyberpunk' ? 'active' : ''}`}
-            onClick={() => setTheme('cyberpunk')}
-          >
-            🟡 Cyber
-          </button>
-          <button 
-            className={`toolbar-toggle-btn ${theme === 'light' ? 'active' : ''}`}
-            onClick={() => setTheme('light')}
-          >
-            ☀️ Light
-          </button>
-        </div>
-
-        <div className="toolbar-divider"></div>
-
-        {/* Search bar focus filter */}
-        <div className="toolbar-group">
-          <input
-            type="text"
-            placeholder="🔍 Search table/column..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="toolbar-search-input"
-          />
-          {hasSearch && (
-            <button 
-              onClick={() => setSearchQuery('')}
-              style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', fontSize: '12px', marginLeft: '-24px', zIndex: 10 }}
-            >
-              ❌
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* SVG Cardinality Defs */}
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
-        <defs>
-          <marker
-            id="one-cardinality"
-            markerWidth="12"
-            markerHeight="12"
-            refX="0"
-            refY="6"
-            orient="auto-start-reverse"
-            markerUnits="strokeWidth"
-          >
-            <path d="M 3,2 L 3,10 M 7,2 L 7,10" stroke="var(--color-edge)" strokeWidth="2" fill="none" />
-          </marker>
-
-          <marker
-            id="many-cardinality"
-            markerWidth="16"
-            markerHeight="16"
-            refX="16"
-            refY="8"
-            orient="auto-start-reverse"
-            markerUnits="strokeWidth"
-          >
-            <path d="M 16,8 L 4,2 M 16,8 L 4,14 M 4,8 L 16,8" stroke="var(--color-edge)" strokeWidth="2" fill="none" />
-            <path d="M 0,3 L 0,13" stroke="var(--color-edge)" strokeWidth="2" fill="none" />
-          </marker>
-        </defs>
-      </svg>
+      {/* SVG Cardinality Marker Defs */}
+      <CardinalityMarkers />
 
       <ReactFlow
         nodes={nodes}

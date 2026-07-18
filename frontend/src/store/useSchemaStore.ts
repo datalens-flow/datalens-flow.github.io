@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { SchemaResponse } from '../types/schema';
 import { exportSql } from '../api/client';
+import {
+  updateTableNameHelper,
+  updateColumnNameHelper,
+  updateColumnTypeHelper,
+  addRelationshipHelper,
+  deleteRelationshipHelper,
+  addTableHelper,
+  addColumnHelper
+} from './schemaHelpers';
 
 export interface RenameEvents {
   tables: Record<string, string>; // oldTableId -> newTableName
@@ -142,316 +151,37 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   clearRenameEvents: () => set({ renameEvents: { tables: {}, columns: {} } }),
 
   updateTableName: (oldTableId, newName) => {
-    set((state) => {
-      if (!state.schema || !newName.trim()) return {};
-      const newTableId = newName.trim().toLowerCase();
-      const currentTableName = state.schema.tables.find(t => t.id === oldTableId)?.name || oldTableId;
-      
-      // 1. Rename table in tables array
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === oldTableId) {
-          return { ...t, id: newTableId, name: newName.trim() };
-        }
-        return t;
-      });
-
-      // 2. Update relationships involving this table
-      const updatedRels = state.schema.relationships.map((r) => {
-        let from_table = r.from_table;
-        let to_table = r.to_table;
-        if (r.from_table === oldTableId) from_table = newTableId;
-        if (r.to_table === oldTableId) to_table = newTableId;
-        return { ...r, from_table, to_table };
-      });
-
-      // 3. Update descriptions map key
-      const updatedDescriptions = { ...state.descriptions };
-      if (updatedDescriptions[oldTableId]) {
-        updatedDescriptions[newTableId] = updatedDescriptions[oldTableId];
-        delete updatedDescriptions[oldTableId];
-      }
-
-      // 4. Update nodePositions key
-      const updatedPositions = { ...state.nodePositions };
-      if (updatedPositions[oldTableId]) {
-        updatedPositions[newTableId] = updatedPositions[oldTableId];
-        delete updatedPositions[oldTableId];
-      }
-
-      // 5. Log rename event
-      const updatedRenames = { ...state.renameEvents };
-      // Trace original baseline name if we renamed multiple times
-      let originalName = oldTableId;
-      for (const [orig, curr] of Object.entries(updatedRenames.tables)) {
-        if (curr === currentTableName) {
-          originalName = orig;
-          break;
-        }
-      }
-      updatedRenames.tables[originalName] = newName.trim();
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables,
-          relationships: updatedRels,
-        },
-        descriptions: updatedDescriptions,
-        nodePositions: updatedPositions,
-        renameEvents: updatedRenames,
-      };
-    });
+    set((state) => updateTableNameHelper(state.schema, state.descriptions, state.nodePositions, state.renameEvents, oldTableId, newName));
     get().syncSqlFromSchema();
   },
 
   updateColumnName: (tableId, oldCol, newCol) => {
-    set((state) => {
-      if (!state.schema || !newCol.trim()) return {};
-      
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === tableId) {
-          return {
-            ...t,
-            columns: t.columns.map((c) => {
-              if (c.name === oldCol) {
-                return { ...c, name: newCol.trim() };
-              }
-              return c;
-            })
-          };
-        }
-        return t;
-      });
-
-      const updatedRels = state.schema.relationships.map((r) => {
-        let from_col = r.from_column;
-        let to_col = r.to_column;
-        if (r.from_table === tableId && r.from_column === oldCol) {
-          from_col = newCol.trim();
-        }
-        if (r.to_table === tableId && r.to_column === oldCol) {
-          to_col = newCol.trim();
-        }
-        return { ...r, from_column: from_col, to_column: to_col };
-      });
-
-      // Log rename event for column
-      const updatedRenames = { ...state.renameEvents };
-      if (!updatedRenames.columns[tableId]) {
-        updatedRenames.columns[tableId] = {};
-      }
-      // Trace original baseline column name
-      let originalCol = oldCol;
-      for (const [orig, curr] of Object.entries(updatedRenames.columns[tableId])) {
-        if (curr === oldCol) {
-          originalCol = orig;
-          break;
-        }
-      }
-      updatedRenames.columns[tableId][originalCol] = newCol.trim();
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables,
-          relationships: updatedRels,
-        },
-        renameEvents: updatedRenames,
-      };
-    });
+    set((state) => updateColumnNameHelper(state.schema, state.renameEvents, tableId, oldCol, newCol));
     get().syncSqlFromSchema();
   },
 
   updateColumnType: (tableId, columnName, newType) => {
-    set((state) => {
-      if (!state.schema || !newType.trim()) return {};
-      
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === tableId) {
-          return {
-            ...t,
-            columns: t.columns.map((c) => {
-              if (c.name === columnName) {
-                return { ...c, type: newType.trim() };
-              }
-              return c;
-            }),
-          };
-        }
-        return t;
-      });
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables,
-        },
-      };
-    });
+    set((state) => updateColumnTypeHelper(state.schema, tableId, columnName, newType));
     get().syncSqlFromSchema();
   },
 
   addRelationship: (fromTable, fromCol, toTable, toCol) => {
-    set((state) => {
-      if (!state.schema) return {};
-      
-      const relId = `rel_${fromTable}_${fromCol}_to_${toTable}_${toCol}`;
-      if (state.schema.relationships.some((r) => r.from_table === fromTable && r.from_column === fromCol && r.to_table === toTable && r.to_column === toCol)) {
-        return {};
-      }
-
-      const newRel = {
-        id: relId,
-        from_table: fromTable,
-        from_column: fromCol,
-        to_table: toTable,
-        to_column: toCol,
-        type: 'many-to-one',
-      };
-
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === fromTable) {
-          return {
-            ...t,
-            columns: t.columns.map((c) => {
-              if (c.name === fromCol) {
-                return {
-                  ...c,
-                  is_fk: true,
-                  fk_ref_table: toTable,
-                  fk_ref_column: toCol,
-                };
-              }
-              return c;
-            }),
-          };
-        }
-        return t;
-      });
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables,
-          relationships: [...state.schema.relationships, newRel],
-        },
-      };
-    });
+    set((state) => addRelationshipHelper(state.schema, fromTable, fromCol, toTable, toCol));
     get().syncSqlFromSchema();
   },
 
   deleteRelationship: (id) => {
-    set((state) => {
-      if (!state.schema) return {};
-
-      const relToDelete = state.schema.relationships.find((r) => r.id === id);
-      if (!relToDelete) return {};
-
-      const updatedRels = state.schema.relationships.filter((r) => r.id !== id);
-
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === relToDelete.from_table) {
-          return {
-            ...t,
-            columns: t.columns.map((c) => {
-              if (c.name === relToDelete.from_column) {
-                return {
-                  ...c,
-                  is_fk: false,
-                  fk_ref_table: null,
-                  fk_ref_column: null,
-                };
-              }
-              return c;
-            }),
-          };
-        }
-        return t;
-      });
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables,
-          relationships: updatedRels,
-        },
-      };
-    });
+    set((state) => deleteRelationshipHelper(state.schema, id));
     get().syncSqlFromSchema();
   },
 
   addTable: () => {
-    set((state) => {
-      if (!state.schema) return {};
-      
-      const tablesCount = state.schema.tables.length + 1;
-      const newTableName = `table_${tablesCount}`;
-      const newTableId = newTableName.toLowerCase();
-
-      const newTable = {
-        id: newTableId,
-        name: newTableName,
-        columns: [
-          {
-            name: 'id',
-            type: 'INT',
-            nullable: false,
-            is_pk: true,
-            is_fk: false,
-            comment: ''
-          }
-        ]
-      };
-
-      const newPositions = {
-        ...state.nodePositions,
-        [newTableId]: { x: 150 + (tablesCount * 30), y: 150 + (tablesCount * 30) }
-      };
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: [...state.schema.tables, newTable]
-        },
-        nodePositions: newPositions
-      };
-    });
+    set((state) => addTableHelper(state.schema, state.nodePositions));
     get().syncSqlFromSchema();
   },
 
   addColumn: (tableId) => {
-    set((state) => {
-      if (!state.schema) return {};
-
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === tableId) {
-          const colIndex = t.columns.length + 1;
-          const newColName = `col_${colIndex}`;
-          return {
-            ...t,
-            columns: [
-              ...t.columns,
-              {
-                name: newColName,
-                type: 'VARCHAR(255)',
-                nullable: true,
-                is_pk: false,
-                is_fk: false,
-                comment: ''
-              }
-            ]
-          };
-        }
-        return t;
-      });
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables
-        }
-      };
-    });
+    set((state) => addColumnHelper(state.schema, tableId));
     get().syncSqlFromSchema();
   },
 
