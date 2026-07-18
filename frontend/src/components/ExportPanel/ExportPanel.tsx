@@ -16,6 +16,7 @@ export const ExportPanel: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const { schema, originalSchema, renameEvents, descriptions } = useSchemaStore();
   const { getNodes } = useReactFlow();
+  const [prefix, setPrefix] = useState('datalens-flow');
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
@@ -33,7 +34,7 @@ export const ExportPanel: React.FC = () => {
   const handleExportJson = () => {
     if (!schema) return;
     const blob = new Blob([JSON.stringify(schema, null, 2)], { type: 'application/json' });
-    triggerDownload(blob, 'datalens-schema.json');
+    triggerDownload(blob, `${prefix}-schema.json`);
     setIsOpen(false);
   };
 
@@ -62,7 +63,7 @@ export const ExportPanel: React.FC = () => {
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = 'datalens-erd.png';
+      a.download = `${prefix}-erd.png`;
       a.click();
     } catch (err) {
       console.error('Failed to export PNG', err);
@@ -97,7 +98,7 @@ export const ExportPanel: React.FC = () => {
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = 'datalens-erd.svg';
+      a.download = `${prefix}-erd.svg`;
       a.click();
     } catch (err) {
       console.error('Failed to export SVG', err);
@@ -112,7 +113,7 @@ export const ExportPanel: React.FC = () => {
     setExporting(true);
     try {
       const blob = await exportDrawio(schema);
-      triggerDownload(blob, 'datalens-erd.drawio.xml');
+      triggerDownload(blob, `${prefix}-erd.drawio.xml`);
     } catch (err) {
       console.error(err);
     } finally {
@@ -126,7 +127,7 @@ export const ExportPanel: React.FC = () => {
     setExporting(true);
     try {
       const blob = await exportXlsx(schema, descriptions);
-      triggerDownload(blob, 'datalens-datadict.xlsx');
+      triggerDownload(blob, `${prefix}-datadict.xlsx`);
     } catch (err) {
       console.error(err);
     } finally {
@@ -140,7 +141,7 @@ export const ExportPanel: React.FC = () => {
     setExporting(true);
     try {
       const blob = await exportMarkdown(schema, descriptions);
-      triggerDownload(blob, 'datalens-datadict.md');
+      triggerDownload(blob, `${prefix}-datadict.md`);
     } catch (err) {
       console.error(err);
     } finally {
@@ -154,7 +155,7 @@ export const ExportPanel: React.FC = () => {
     setExporting(true);
     try {
       const blob = await exportSql(schema);
-      triggerDownload(blob, 'datalens-schema.sql');
+      triggerDownload(blob, `${prefix}-schema.sql`);
     } catch (err) {
       console.error(err);
     } finally {
@@ -171,7 +172,7 @@ export const ExportPanel: React.FC = () => {
     setExporting(true);
     try {
       const blob = await exportMigration(originalSchema, schema, renameEvents);
-      triggerDownload(blob, 'migration.sql');
+      triggerDownload(blob, `${prefix}-migration.sql`);
     } catch (err) {
       console.error(err);
     } finally {
@@ -208,7 +209,31 @@ export const ExportPanel: React.FC = () => {
       </button>
 
       {isOpen && schema && (
-        <div className="export-dropdown glass-panel">
+        <div className="export-dropdown glass-panel" style={{ width: '220px' }}>
+          {/* Filename Prefix configuration */}
+          <div style={{ padding: '8px 12px 10px 12px', borderBottom: '1px solid var(--color-border)' }}>
+            <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              File Prefix:
+            </label>
+            <input
+              type="text"
+              value={prefix}
+              onChange={(e) => setPrefix(e.target.value)}
+              placeholder="e.g. datalens-flow"
+              style={{
+                width: '100%',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '4px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                outline: 'none',
+                fontFamily: 'var(--font-sans)'
+              }}
+            />
+          </div>
+
           <div className="dropdown-section-title">Diagram (ERD)</div>
           <button onClick={handleExportPng} className="dropdown-item">🖼️ Export PNG Image</button>
           <button onClick={handleExportSvg} className="dropdown-item">📐 Export SVG Vector</button>

@@ -112,15 +112,11 @@ export function generateXlsxDataDict(
 ): Blob {
   const wb = XLSX.utils.book_new();
 
-  // Create list of rows
-  const rows: any[] = [];
-  // Title row
-  rows.push(['DATABASE DATA DICTIONARY']);
-  rows.push([`Generated on: ${new Date().toLocaleDateString()}`]);
-  rows.push([]);
-
   for (const table of schema.tables) {
-    rows.push([`TABLE: ${table.name}`]);
+    const rows: any[] = [];
+    rows.push([`DATABASE TABLE: ${table.name.toUpperCase()}`]);
+    rows.push([`Generated on: ${new Date().toLocaleDateString()}`]);
+    rows.push([]);
     rows.push(['Column Name', 'Data Type', 'Key', 'Nullable', 'Default', 'Description']);
 
     for (const col of table.columns) {
@@ -135,11 +131,12 @@ export function generateXlsxDataDict(
 
       rows.push([col.name, col.type, keyStr, nullableStr, defaultStr, commentStr]);
     }
-    rows.push([]); // blank row separator
-  }
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Data Dictionary');
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // Sanitize sheet name for SheetJS (max 30 chars, no special characters)
+    const sheetName = table.name.replace(/[:\?\*\/\\\[\]]/g, '').substring(0, 30) || 'Table';
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  }
 
   // Generate buffer
   const out = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
