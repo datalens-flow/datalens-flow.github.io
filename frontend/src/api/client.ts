@@ -1,66 +1,46 @@
-import { SchemaResponse, ExportRequest } from '../types/schema';
-
-const API_BASE = '/api';
+import { SchemaResponse } from '../types/schema';
+import { parseSqlLocal } from '../utils/sqlParser';
+import { 
+  generateDrawioXml, 
+  generateMarkdownDataDict, 
+  generateXlsxDataDict, 
+  generateSqlDdlLocal 
+} from '../utils/exporters';
+import { generateMigrationScriptLocal } from '../utils/migrationGenerator';
 
 export async function parseSql(sql: string, dialect: string): Promise<SchemaResponse> {
-  const res = await fetch(`${API_BASE}/parse`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sql, dialect }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || 'Failed to parse SQL');
+  // Execute parsing entirely inside client browser (No-Backend!)
+  try {
+    const result = parseSqlLocal(sql, dialect);
+    return result;
+  } catch (err: any) {
+    throw new Error(err.message || 'Failed to parse SQL locally');
   }
-  return res.json();
 }
 
 export async function exportDrawio(schema: SchemaResponse): Promise<Blob> {
-  const res = await fetch(`${API_BASE}/export/drawio`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(schema),
-  });
-  if (!res.ok) throw new Error('Failed to export Draw.io XML');
-  return res.blob();
+  const xml = generateDrawioXml(schema);
+  return new Blob([xml], { type: 'application/xml' });
 }
 
 export async function exportXlsx(
   schema: SchemaResponse,
   descriptions: Record<string, Record<string, string>>
 ): Promise<Blob> {
-  const body: ExportRequest = { schema_data: schema, descriptions };
-  const res = await fetch(`${API_BASE}/export/xlsx`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error('Failed to export Excel file');
-  return res.blob();
+  return generateXlsxDataDict(schema, descriptions);
 }
 
 export async function exportMarkdown(
   schema: SchemaResponse,
   descriptions: Record<string, Record<string, string>>
 ): Promise<Blob> {
-  const body: ExportRequest = { schema_data: schema, descriptions };
-  const res = await fetch(`${API_BASE}/export/md`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error('Failed to export Markdown file');
-  return res.blob();
+  const md = generateMarkdownDataDict(schema, descriptions);
+  return new Blob([md], { type: 'text/markdown' });
 }
 
 export async function exportSql(schema: SchemaResponse, targetDialect: string = 'postgres'): Promise<Blob> {
-  const res = await fetch(`${API_BASE}/export/sql?target_dialect=${targetDialect}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(schema),
-  });
-  if (!res.ok) throw new Error('Failed to export SQL file');
-  return res.blob();
+  const sql = generateSqlDdlLocal(schema, targetDialect);
+  return new Blob([sql], { type: 'text/plain' });
 }
 
 export async function exportMigration(
@@ -73,12 +53,6 @@ export async function exportMigration(
     current_schema: currentSchema,
     rename_events: renameEvents,
   };
-  const res = await fetch(`${API_BASE}/export/migration`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error('Failed to export Migration script');
-  return res.blob();
+  const sql = generateMigrationScriptLocal(body);
+  return new Blob([sql], { type: 'text/plain' });
 }
-

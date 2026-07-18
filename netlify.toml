@@ -3,14 +3,7 @@
   publish = "dist"
   command = "npm run build"
 
-# 1. Proxy API requests to Backend (Replace the target URL with your deployed FastAPI backend)
-[[redirects]]
-  from = "/api/*"
-  to = "http://localhost:8000/api/:splat"
-  status = 200
-  force = true
-
-# 2. Redirect all other paths to index.html for React Router SPA support
+# Redirect all other paths to index.html for React Router SPA support
 [[redirects]]
   from = "/*"
   to = "/index.html"
