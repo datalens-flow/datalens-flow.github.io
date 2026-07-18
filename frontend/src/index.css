@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-primary: #080c14;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #1e293b;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+  
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-border: #334155;
+  --color-border-hover: #475569;
+  
+  --color-indigo: #6366f1;
+  --color-indigo-hover: #4f46e5;
+  --color-emerald: #10b981;
+  --color-emerald-hover: #059669;
+  --color-cyan: #06b6d4;
+  --color-rose: #f43f5e;
+  --color-amber: #f59e0b;
+  
+  --font-sans: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-hover);
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: var(--transition-all);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--color-indigo);
+  color: #white;
+  color: var(--color-text-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-indigo-hover);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.btn-emerald {
+  background-color: var(--color-emerald);
+  color: var(--color-text-primary);
+}
+
+.btn-emerald:hover {
+  background-color: var(--color-emerald-hover);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Tab utilities */
+.tabs-container {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--bg-secondary);
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition-all);
+}
+
+.tab-btn:hover {
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.tab-btn.active {
+  color: var(--color-indigo);
+  border-bottom-color: var(--color-indigo);
+}
