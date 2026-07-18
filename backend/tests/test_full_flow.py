@@ -49,3 +49,17 @@ def test_full_pipeline_flow():
     sql_res = client.post("/api/export/sql", json=schema_data)
     assert sql_res.status_code == 200
     assert "CREATE TABLE users" in sql_res.text
+    
+    # 6. Export Migration ALTER SQL
+    migration_payload = {
+        "original_schema": schema_data,
+        "current_schema": schema_data, # no diff in this check
+        "rename_events": {
+            "tables": {},
+            "columns": {}
+        }
+    }
+    mig_res = client.post("/api/export/migration", json=migration_payload)
+    assert mig_res.status_code == 200
+    assert "-- No schema changes detected." in mig_res.text
+

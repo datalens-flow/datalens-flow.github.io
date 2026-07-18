@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from backend.models import ParseRequest, SchemaResponse, ExportRequest
+from backend.models import ParseRequest, SchemaResponse, ExportRequest, MigrationRequest
 from backend.parser.sql_parser import parse_sql_script
 from backend.exporters.drawio_generator import generate_drawio_xml
 from backend.exporters.xlsx_generator import generate_xlsx_bytes
 from backend.exporters.markdown_generator import generate_markdown_doc
 from backend.exporters.sql_generator import generate_sql_ddl
+from backend.exporters.migration_generator import generate_migration_script
 
 app = FastAPI(title="DataLens Backend API")
 
@@ -59,4 +60,13 @@ def export_sql(schema: SchemaResponse):
         content=sql_text,
         media_type="text/plain",
         headers={"Content-Disposition": "attachment; filename=schema.sql"}
+    )
+
+@app.post("/api/export/migration")
+def export_migration(req: MigrationRequest):
+    migration_text = generate_migration_script(req)
+    return Response(
+        content=migration_text,
+        media_type="text/plain",
+        headers={"Content-Disposition": "attachment; filename=migration.sql"}
     )

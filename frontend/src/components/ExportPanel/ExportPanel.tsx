@@ -5,14 +5,15 @@ import {
   exportDrawio, 
   exportXlsx, 
   exportMarkdown, 
-  exportSql 
+  exportSql,
+  exportMigration
 } from '../../api/client';
 import './ExportPanel.css';
 
 export const ExportPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const { schema, descriptions } = useSchemaStore();
+  const { schema, originalSchema, renameEvents, descriptions } = useSchemaStore();
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
@@ -133,6 +134,23 @@ export const ExportPanel: React.FC = () => {
     }
   };
 
+  const handleExportMigration = async () => {
+    if (!schema || !originalSchema) {
+      alert("No baseline schema. Please load or parse an SQL DDL script first.");
+      return;
+    }
+    setExporting(true);
+    try {
+      const blob = await exportMigration(originalSchema, schema, renameEvents);
+      triggerDownload(blob, 'migration.sql');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setExporting(false);
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div className="export-panel-container">
       <button 
@@ -160,6 +178,7 @@ export const ExportPanel: React.FC = () => {
           
           <div className="dropdown-section-title">Structure</div>
           <button onClick={handleExportSql} className="dropdown-item">💻 Export SQL DDL</button>
+          <button onClick={handleExportMigration} className="dropdown-item">📝 Export Migration ALTER SQL</button>
           <button onClick={handleExportJson} className="dropdown-item">📦 Export Raw JSON</button>
         </div>
       )}

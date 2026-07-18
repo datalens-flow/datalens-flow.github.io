@@ -20,7 +20,18 @@ const DIALECTS = [
 export const SqlEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const { sql, setSql, dialect, setDialect, setSchema, setLoading, setError, loading } = useSchemaStore();
+  const { 
+    sql, 
+    setSql, 
+    dialect, 
+    setDialect, 
+    setSchema, 
+    setOriginalSchema,
+    clearRenameEvents,
+    setLoading, 
+    setError, 
+    loading 
+  } = useSchemaStore();
 
   // Initialize CodeMirror Editor
   useEffect(() => {
@@ -66,9 +77,12 @@ export const SqlEditor: React.FC = () => {
         setError(parsed.warnings.join('\n'));
       }
       setSchema(parsed);
+      setOriginalSchema(JSON.parse(JSON.stringify(parsed)));
+      clearRenameEvents();
     } catch (err: any) {
       setError(err.message || 'Failed to parse SQL DDL');
       setSchema(null);
+      setOriginalSchema(null);
     } finally {
       setLoading(false);
     }

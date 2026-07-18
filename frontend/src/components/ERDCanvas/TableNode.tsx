@@ -24,10 +24,10 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
   const [tempColType, setTempColType] = useState('');
 
   const { 
-    schema, 
-    setSchema, 
     updateTableName, 
-    updateColumnType 
+    updateColumnName,
+    updateColumnType,
+    addColumn
   } = useSchemaStore();
 
   // 1. Rename Table Name
@@ -50,44 +50,9 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
   };
 
   const handleSaveColumnName = (oldName: string) => {
-    if (!tempColName.trim() || tempColName === oldName || !schema) {
-      setEditingColName(null);
-      return;
+    if (tempColName.trim() && tempColName.trim() !== oldName) {
+      updateColumnName(tableId, oldName, tempColName.trim());
     }
-
-    const updatedTables = schema.tables.map((t) => {
-      if (t.id === tableId) {
-        return {
-          ...t,
-          columns: t.columns.map((c) => {
-            if (c.name === oldName) {
-              return { ...c, name: tempColName.trim() };
-            }
-            return c;
-          })
-        };
-      }
-      return t;
-    });
-
-    const updatedRels = schema.relationships.map((r) => {
-      let from_col = r.from_column;
-      let to_col = r.to_column;
-      if (r.from_table === tableId && r.from_column === oldName) {
-        from_col = tempColName.trim();
-      }
-      if (r.to_table === tableId && r.to_column === oldName) {
-        to_col = tempColName.trim();
-      }
-      return { ...r, from_column: from_col, to_column: to_col };
-    });
-
-    setSchema({
-      ...schema,
-      tables: updatedTables,
-      relationships: updatedRels
-    });
-
     setEditingColName(null);
   };
 
@@ -215,6 +180,15 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
             </div>
           );
         })}
+        
+        {/* Add Column Button */}
+        <button 
+          className="add-column-btn"
+          onClick={() => addColumn(tableId)}
+          title="Add Column"
+        >
+          ➕ Add Column
+        </button>
       </div>
     </div>
   );

@@ -20,6 +20,9 @@
   --color-rose: #f43f5e;
   --color-amber: #f59e0b;
   
+  --color-edge: #6366f1;
+  --color-grid: #334155;
+  
   --font-sans: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   
@@ -28,6 +31,46 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   
   --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-cyberpunk {
+  --bg-primary: #040408;
+  --bg-secondary: #0a0a0f;
+  --bg-tertiary: #14141f;
+  --accent-glow: rgba(255, 0, 127, 0.15);
+  
+  --color-text-primary: #00ffcc;
+  --color-text-secondary: #ff007f;
+  --color-text-muted: #808090;
+  --color-border: #ff007f;
+  --color-border-hover: #00ffcc;
+  
+  --color-indigo: #ff007f;
+  --color-indigo-hover: #e60072;
+  --color-emerald: #00ffcc;
+  --color-emerald-hover: #00e6b8;
+  --color-edge: #ff007f;
+  --color-grid: #201a24;
+}
+
+.theme-light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --accent-glow: rgba(37, 99, 235, 0.08);
+  
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-border-hover: #cbd5e1;
+  
+  --color-indigo: #2563eb;
+  --color-indigo-hover: #1d4ed8;
+  --color-emerald: #10b981;
+  --color-emerald-hover: #059669;
+  --color-edge: #475569;
+  --color-grid: #cbd5e1;
 }
 
 * {

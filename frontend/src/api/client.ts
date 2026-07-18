@@ -62,3 +62,23 @@ export async function exportSql(schema: SchemaResponse): Promise<Blob> {
   if (!res.ok) throw new Error('Failed to export SQL file');
   return res.blob();
 }
+
+export async function exportMigration(
+  originalSchema: SchemaResponse,
+  currentSchema: SchemaResponse,
+  renameEvents: any
+): Promise<Blob> {
+  const body = {
+    original_schema: originalSchema,
+    current_schema: currentSchema,
+    rename_events: renameEvents,
+  };
+  const res = await fetch(`${API_BASE}/export/migration`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error('Failed to export Migration script');
+  return res.blob();
+}
+

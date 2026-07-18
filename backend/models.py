@@ -40,3 +40,13 @@ class SchemaResponse(BaseModel):
 class ExportRequest(BaseModel):
     schema_data: SchemaResponse
     descriptions: Dict[str, Dict[str, str]]  # table_id -> column_name -> description
+
+class RenameEvents(BaseModel):
+    tables: Dict[str, str] = {}  # oldTableId -> currentTableName
+    columns: Dict[str, Dict[str, str]] = {}  # tableId -> oldColName -> currentColName
+
+class MigrationRequest(BaseModel):
+    original_schema: SchemaResponse
+    current_schema: SchemaResponse
+    rename_events: RenameEvents
+
