@@ -31,7 +31,6 @@ const ERDCanvasContent: React.FC = () => {
     updateNodePosition,
     addRelationship,
     deleteRelationship,
-    theme,
     layoutDir,
     inferRelationships,
     searchQuery
@@ -155,7 +154,7 @@ const ERDCanvasContent: React.FC = () => {
   };
 
   return (
-    <div className={`erd-canvas-container theme-${theme}`}>
+    <div className="erd-canvas-container">
       {/* SVG Cardinality Marker Defs */}
       <CardinalityMarkers />
 

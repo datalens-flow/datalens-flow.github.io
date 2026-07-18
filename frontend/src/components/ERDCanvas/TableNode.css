@@ -51,7 +51,7 @@
 }
 
 .column-row:hover {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--color-row-hover);
 }
 
 .column-meta {
@@ -116,7 +116,7 @@
 }
 
 .fk-row .column-name {
-  color: #a5b4fc;
+  color: var(--color-fk);
 }
 
 .table-name-input {

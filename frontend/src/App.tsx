@@ -6,10 +6,10 @@ import { CanvasToolbar } from './components/ERDCanvas/CanvasToolbar';
 import { useSchemaStore } from './store/useSchemaStore';
 
 function App() {
-  const { activeTab, setActiveTab, error } = useSchemaStore();
+  const { activeTab, setActiveTab, error, theme } = useSchemaStore();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-primary)' }}>
+    <div className={`theme-${theme}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-primary)', color: 'var(--color-text-primary)', transition: 'background-color 0.2s ease, color 0.2s ease' }}>
       {/* Top Header */}
       <header style={{ 
         display: 'flex', 
