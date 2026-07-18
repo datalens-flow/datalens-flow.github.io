@@ -6,7 +6,6 @@ import {
   MiniMap, 
   useNodesState, 
   useEdgesState,
-  ReactFlowProvider,
   useReactFlow
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -188,10 +187,8 @@ const ERDCanvasContent: React.FC = () => {
   );
 };
 
-export const ERDCanvas: React.FC = () => (
-  <ReactFlowProvider>
-    <ERDCanvasContent />
-  </ReactFlowProvider>
-);
+export const ERDCanvas: React.FC = () => {
+  return <ERDCanvasContent />;
+};
 
 export default ERDCanvas;

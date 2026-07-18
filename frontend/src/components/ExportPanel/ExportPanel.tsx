@@ -8,12 +8,14 @@ import {
   exportSql,
   exportMigration
 } from '../../api/client';
+import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import './ExportPanel.css';
 
 export const ExportPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const { schema, originalSchema, renameEvents, descriptions } = useSchemaStore();
+  const { getNodes } = useReactFlow();
 
   const toggleDropdown = () => setIsOpen(!isOpen);
 
@@ -36,14 +38,26 @@ export const ExportPanel: React.FC = () => {
   };
 
   const handleExportPng = async () => {
-    const erdElement = document.querySelector('.react-flow') as HTMLElement;
-    if (!erdElement) return;
+    const nodes = getNodes();
+    if (nodes.length === 0) return;
     setExporting(true);
     try {
+      const bounds = getNodesBounds(nodes);
+      const padding = 40;
+      const width = bounds.width + padding * 2;
+      const height = bounds.height + padding * 2;
+
+      const erdElement = document.querySelector('.react-flow__viewport') as HTMLElement;
+      if (!erdElement) return;
+
       const dataUrl = await toPng(erdElement, {
         backgroundColor: '#0b0f19',
+        width: width,
+        height: height,
         style: {
-          transform: 'scale(1)',
+          width: `${width}px`,
+          height: `${height}px`,
+          transform: `translate(${-bounds.x + padding}px, ${-bounds.y + padding}px) scale(1)`,
         }
       });
       const a = document.createElement('a');
@@ -59,12 +73,27 @@ export const ExportPanel: React.FC = () => {
   };
 
   const handleExportSvg = async () => {
-    const erdElement = document.querySelector('.react-flow') as HTMLElement;
-    if (!erdElement) return;
+    const nodes = getNodes();
+    if (nodes.length === 0) return;
     setExporting(true);
     try {
+      const bounds = getNodesBounds(nodes);
+      const padding = 40;
+      const width = bounds.width + padding * 2;
+      const height = bounds.height + padding * 2;
+
+      const erdElement = document.querySelector('.react-flow__viewport') as HTMLElement;
+      if (!erdElement) return;
+
       const dataUrl = await toSvg(erdElement, {
-        backgroundColor: '#0b0f19'
+        backgroundColor: '#0b0f19',
+        width: width,
+        height: height,
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+          transform: `translate(${-bounds.x + padding}px, ${-bounds.y + padding}px) scale(1)`,
+        }
       });
       const a = document.createElement('a');
       a.href = dataUrl;
