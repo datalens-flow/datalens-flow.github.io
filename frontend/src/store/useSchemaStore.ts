@@ -146,7 +146,7 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   })),
 
   setTheme: (theme) => set({ theme }),
-  setLayoutDir: (layoutDir) => set({ layoutDir }),
+  setLayoutDir: (layoutDir) => set({ layoutDir, nodePositions: {} }),
   setInferRelationships: (inferRelationships) => set({ inferRelationships }),
   setOutputDialect: (outputDialect) => {
     set({ outputDialect });
