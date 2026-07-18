@@ -24,8 +24,8 @@ const edgeTypes = {
 
 export const ERDCanvas: React.FC = () => {
   const { schema, nodePositions, updateNodePosition } = useSchemaStore();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
 
   // Compute Layout on parse
   useEffect(() => {

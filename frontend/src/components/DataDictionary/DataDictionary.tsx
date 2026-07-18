@@ -73,7 +73,7 @@ export const DataDictionary: React.FC = () => {
       field: 'isPk', 
       headerName: 'Primary Key', 
       width: 120,
-      cellStyle: { color: 'var(--color-amber)' }
+      cellStyle: { color: 'var(--color-amber)' } as any
     },
     { 
       field: 'isFk', 
@@ -84,7 +84,7 @@ export const DataDictionary: React.FC = () => {
       field: 'fkRef', 
       headerName: 'FK Reference', 
       width: 180,
-      cellStyle: { color: '#a5b4fc', fontFamily: 'var(--font-mono)' }
+      cellStyle: { color: '#a5b4fc', fontFamily: 'var(--font-mono)' } as any
     },
     {
       field: 'description',
@@ -92,7 +92,7 @@ export const DataDictionary: React.FC = () => {
       editable: true,
       flex: 1,
       cellEditor: 'agTextCellEditor',
-      cellStyle: { backgroundColor: 'rgba(99, 102, 241, 0.05)', cursor: 'pointer' }
+      cellStyle: { backgroundColor: 'rgba(99, 102, 241, 0.05)', cursor: 'pointer' } as any
     }
   ], []);
 

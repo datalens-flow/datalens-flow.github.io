@@ -1,9 +1,11 @@
-import React from 'react';
 import { SqlEditor } from './components/SqlEditor/SqlEditor';
+import { ERDCanvas } from './components/ERDCanvas/ERDCanvas';
+import { DataDictionary } from './components/DataDictionary/DataDictionary';
+import { ExportPanel } from './components/ExportPanel/ExportPanel';
 import { useSchemaStore } from './store/useSchemaStore';
 
 function App() {
-  const { activeTab, setActiveTab, error, loading } = useSchemaStore();
+  const { activeTab, setActiveTab, error } = useSchemaStore();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-primary)' }}>
@@ -23,8 +25,8 @@ function App() {
           </h1>
         </div>
         
-        {/* Placeholder for export panel */}
-        <div id="export-panel-anchor"></div>
+        {/* Export options dropdown */}
+        <ExportPanel />
       </header>
 
       {/* Main Workspace */}
@@ -70,19 +72,9 @@ function App() {
           {/* Canvas Workspace */}
           <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
             {activeTab === 'erd' ? (
-              <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div style={{ color: 'var(--color-text-secondary)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '18px', marginBottom: '8px' }}>ERD Diagram Area</p>
-                  <p style={{ fontSize: '13px', opacity: 0.7 }}>Click "Parse DDL" on the left to render diagram</p>
-                </div>
-              </div>
+              <ERDCanvas />
             ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div style={{ color: 'var(--color-text-secondary)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '18px', marginBottom: '8px' }}>Data Dictionary Grid</p>
-                  <p style={{ fontSize: '13px', opacity: 0.7 }}>Click "Parse DDL" on the left to show columns list</p>
-                </div>
-              </div>
+              <DataDictionary />
             )}
           </div>
         </section>

@@ -76,9 +76,7 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
 
       {/* Columns Container */}
       <div className="table-node-columns">
-        {data.columns.map((col, index) => {
-          const colId = `${tableId}_${col.name}`;
-          
+        {data.columns.map((col) => {
           return (
             <div 
               key={col.name} 
