@@ -1,0 +1,30 @@
+.data-dictionary-container {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: #0b0f19;
+}
+
+/* Customize Alpine Dark theme colors */
+.ag-theme-alpine-dark {
+  --ag-background-color: #0f172a !important;
+  --ag-header-background-color: #090f1a !important;
+  --ag-border-color: #334155 !important;
+  --ag-header-foreground-color: var(--color-text-primary) !important;
+  --ag-foreground-color: var(--color-text-secondary) !important;
+  --ag-odd-row-background-color: rgba(255, 255, 255, 0.01) !important;
+  --ag-row-hover-color: rgba(99, 102, 241, 0.1) !important;
+  --ag-selected-row-background-color: rgba(99, 102, 241, 0.2) !important;
+  --ag-font-family: var(--font-sans) !important;
+  --ag-font-size: 13px !important;
+}
+
+.ag-header-cell-label {
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+}
+
+.ag-cell {
+  display: flex !important;
+  align-items: center !important;
+}
