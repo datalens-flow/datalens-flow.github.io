@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { 
   ReactFlow, 
   Background, 
+  BackgroundVariant,
   Controls, 
   MiniMap, 
   useNodesState, 
@@ -173,7 +174,7 @@ const ERDCanvasContent: React.FC = () => {
         maxZoom={2}
         fitView
       >
-        {showGrid && <Background color="var(--color-grid)" gap={16} size={1} />}
+        {showGrid && <Background variant={BackgroundVariant.Lines} color="var(--color-grid)" gap={24} size={0.6} />}
         <Controls style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }} />
         <MiniMap 
           style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)' }} 
