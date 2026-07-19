@@ -29,11 +29,12 @@ export function getLayoutedElements(
   inferRelationships: boolean = false
 ): { nodes: LayoutedNode[]; edges: LayoutedEdge[] } {
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: layoutDir, nodesep: 80, ranksep: 120 });
+  g.setGraph({ rankdir: layoutDir, nodesep: 150, ranksep: 240 });
   g.setDefaultEdgeLabel(() => ({}));
 
+  const nodeWidth = 240;
+
   tables.forEach((table) => {
-    const nodeWidth = 220;
     const nodeHeight = 60 + table.columns.length * 28; // height includes header and Add Column button
     g.setNode(table.id, { width: nodeWidth, height: nodeHeight });
   });
@@ -88,7 +89,7 @@ export function getLayoutedElements(
 
   const layoutedNodes: LayoutedNode[] = tables.map((table) => {
     const dagreNode = g.node(table.id) || { x: 100, y: 100 };
-    const x = dagreNode.x - 220 / 2;
+    const x = dagreNode.x - nodeWidth / 2;
     const y = dagreNode.y - (60 + table.columns.length * 28) / 2;
     return {
       id: table.id,
