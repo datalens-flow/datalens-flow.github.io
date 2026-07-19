@@ -6,7 +6,8 @@ import { CanvasToolbar } from './components/ERDCanvas/CanvasToolbar';
 import { useSchemaStore } from './store/useSchemaStore';
 
 function App() {
-  const { activeTab, setActiveTab, error, theme } = useSchemaStore();
+  const { activeTab, setActiveTab, error, theme, schema } = useSchemaStore();
+  const tableCount = schema?.tables?.length || 0;
 
   return (
     <div className={`theme-${theme}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-primary)', color: 'var(--color-text-primary)', transition: 'background-color 0.2s ease, color 0.2s ease' }}>
@@ -48,13 +49,13 @@ function App() {
               className={`tab-btn ${activeTab === 'erd' ? 'active' : ''}`}
               onClick={() => setActiveTab('erd')}
             >
-              📊 Interactive ERD
+              📊 Interactive ERD {tableCount > 0 ? `(${tableCount})` : ''}
             </button>
             <button 
               className={`tab-btn ${activeTab === 'dict' ? 'active' : ''}`}
               onClick={() => setActiveTab('dict')}
             >
-              📖 Data Dictionary
+              📖 Data Dictionary {tableCount > 0 ? `(${tableCount})` : ''}
             </button>
           </div>
 

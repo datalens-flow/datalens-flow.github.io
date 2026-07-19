@@ -92,19 +92,51 @@ export const SqlEditor: React.FC = () => {
     }
   };
 
+  const handleLoadSample = () => {
+    const sampleSql = `CREATE TABLE users (
+  id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  user_id INT REFERENCES users(id),
+  amount DECIMAL(10,2) NOT NULL,
+  order_date DATE
+);`;
+    setSql(sampleSql);
+    if (viewRef.current) {
+      viewRef.current.dispatch({
+        changes: { from: 0, to: viewRef.current.state.doc.length, insert: sampleSql }
+      });
+    }
+  };
+
   return (
     <div className="sql-editor-container glass-panel">
       <div className="sql-editor-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="sql-editor-title">SQL Script Input</span>
-          <button 
-            onClick={handleParse} 
-            disabled={loading}
-            className="btn btn-primary"
-            style={{ padding: '6px 12px', fontSize: '12px' }}
-          >
-            {loading ? 'Parsing...' : 'Parse DDL'}
-          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button 
+              onClick={handleLoadSample}
+              disabled={loading}
+              className="btn btn-secondary"
+              style={{ padding: '4px 10px', fontSize: '11px' }}
+            >
+              💡 Sample DDL
+            </button>
+            <button 
+              onClick={handleParse} 
+              disabled={loading}
+              className="btn btn-primary"
+              style={{ padding: '4px 10px', fontSize: '11px' }}
+            >
+              {loading ? 'Parsing...' : 'Parse DDL'}
+            </button>
+          </div>
         </div>
         <div className="sql-editor-controls" style={{ justifyContent: 'space-between', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
