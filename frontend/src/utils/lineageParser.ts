@@ -16,7 +16,7 @@ const SQL_KEYWORDS = new Set([
   'inner', 'outer', 'left', 'right', 'cross', 'natural', 'full', 'into',
   'values', 'group', 'order', 'having', 'limit', 'offset', 'as', 'case',
   'when', 'then', 'else', 'end', 'between', 'like', 'in', 'exists', 'is',
-  'delete', 'insert', 'update', 'merge', 'using', 'matched', 'by',
+  'delete', 'insert', 'update', 'merge', 'using', 'matched', 'by', 'excluded',
 ]);
 
 /** Check if an expression is NOT a real source column (literals, functions, etc.) */
@@ -77,9 +77,9 @@ export const parseLineage = (sql: string): LineageResult => {
       if (cleanSql[i] === '(') depth++;
       if (cleanSql[i] === ')') depth--;
       if (depth === 0) {
-        // Look for DML keywords starting at depth 0
+        // Look for DML keywords starting at depth 0 (with word boundaries)
         const sub = cleanSqlLower.substring(i).trim();
-        if (sub.startsWith('select') || sub.startsWith('insert') || sub.startsWith('update') || sub.startsWith('delete') || sub.startsWith('merge')) {
+        if (/^(?:select|insert|update|delete|merge)\b/i.test(sub)) {
           mainActionIdx = i;
           break;
         }
@@ -154,6 +154,8 @@ export const parseLineage = (sql: string): LineageResult => {
 
 
 
+
+
   // Split into separate statements
   const statements = cleanSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
 
@@ -172,7 +174,7 @@ export const parseLineage = (sql: string): LineageResult => {
         if (stmt[i] === ')') depth--;
         if (depth === 0) {
           const sub = stmtLower.substring(i).trim();
-          if (sub.startsWith('select') || sub.startsWith('insert') || sub.startsWith('update') || sub.startsWith('delete') || sub.startsWith('merge')) {
+          if (/^(?:select|insert|update|delete|merge)\b/i.test(sub)) {
             mainActionIdx = i;
             break;
           }
@@ -223,6 +225,12 @@ export const parseLineage = (sql: string): LineageResult => {
     const aliasMap: Record<string, string> = {};
     const aliasMatches = [...cleanStmt.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
     aliasMatches.forEach(m => {
+      const fullPath = m[1].toLowerCase();
+      const dotParts = fullPath.split('.');
+      if (dotParts.length > 1) {
+        const prefix = dotParts[0];
+        if (SQL_KEYWORDS.has(prefix)) return; // skip EXCLUDED.col, etc.
+      }
       const tableName = extractTableName(m[1]);
       if (SQL_KEYWORDS.has(tableName)) return;
       const alias = m[2] && !SQL_KEYWORDS.has(m[2].toLowerCase()) ? m[2].toLowerCase() : tableName;
@@ -302,9 +310,9 @@ export const parseLineage = (sql: string): LineageResult => {
         }
       }
 
-      // Strip SQL function wrappers like UPPER(, TRIM(, COALESCE(, ROUND(
+      // Strip SQL function wrappers like UPPER(, TRIM(, COALESCE(, ROUND(, GREATEST(, LEAST(
       // by grabbing the column/alias identifier inside (supports optional leading parenthesises)
-      const funcMatch = cleanExpr.match(/\b(?:upper|trim|coalesce|round|lower|abs|nullif|concat|nvl)\s*\(\s*\(?\s*([\w.]+)/i);
+      const funcMatch = cleanExpr.match(/\b(?:upper|trim|coalesce|round|lower|abs|nullif|concat|nvl|greatest|least)\s*\(\s*\(?\s*([\w.]+)/i);
       if (funcMatch) {
         cleanExpr = funcMatch[1];
       }
@@ -316,7 +324,7 @@ export const parseLineage = (sql: string): LineageResult => {
       
       const firstToken = colIdMatch[1].toLowerCase();
       // Ignore known SQL keywords, functions, or non-column indicators
-      const ignoredWords = new Set([...SQL_KEYWORDS, 'upper', 'trim', 'coalesce', 'round', 'lower', 'abs', 'nullif', 'concat', 'nvl']);
+      const ignoredWords = new Set([...SQL_KEYWORDS, 'upper', 'trim', 'coalesce', 'round', 'lower', 'abs', 'nullif', 'concat', 'nvl', 'greatest', 'least']);
       if (ignoredWords.has(firstToken) || isNonColumnExpr(firstToken)) return null;
 
       const dotParts = firstToken.split('.');
@@ -418,6 +426,7 @@ export const parseLineage = (sql: string): LineageResult => {
   // Build final source/target lists from tableRoles
   // A table CAN appear in BOTH lists (dual-role)
   // Filter out CTE names — they are virtual tables
+
   const sources = Object.entries(tableRoles)
     .filter(([t, r]) => r.isSource && !cteNames.has(t))
     .map(([t]) => t);
