@@ -203,35 +203,33 @@ body {
 }
 
 /* CodeMirror Syntax Highlighting Custom Overrides */
-.theme-dark .cm-keyword, 
-.theme-dark .tok-keyword, 
-.theme-dark .tok-operator, 
-.theme-dark .tok-modifier, 
-.theme-dark .tok-builtin,
-.theme-dark .tok-standardKeyword { 
+.theme-dark .cm-editor .tok-keyword, 
+.theme-dark .cm-editor .tok-operator, 
+.theme-dark .cm-editor .tok-modifier, 
+.theme-dark .cm-editor .tok-builtin,
+.theme-dark .cm-editor .tok-standardKeyword { 
   color: #38bdf8 !important; 
   font-weight: 600; 
 }
-.theme-dark .cm-type, .theme-dark .tok-type { color: #34d399 !important; }
-.theme-dark .cm-string, .theme-dark .tok-string { color: #fda4af !important; }
-.theme-dark .cm-comment, .theme-dark .tok-comment { color: #64748b !important; font-style: italic; }
-.theme-dark .cm-variableName, .theme-dark .tok-variableName, .theme-dark .cm-content { color: #f8fafc !important; }
-.theme-dark .cm-number, .theme-dark .tok-number { color: #f59e0b !important; }
+.theme-dark .cm-editor .tok-type { color: #34d399 !important; }
+.theme-dark .cm-editor .tok-string { color: #fda4af !important; }
+.theme-dark .cm-editor .tok-comment { color: #64748b !important; font-style: italic; }
+.theme-dark .cm-editor .tok-variableName, .theme-dark .cm-editor .cm-content { color: #f8fafc !important; }
+.theme-dark .cm-editor .tok-number { color: #f59e0b !important; }
 
-.theme-light .cm-keyword, 
-.theme-light .tok-keyword,
-.theme-light .tok-operator,
-.theme-light .tok-modifier,
-.theme-light .tok-builtin,
-.theme-light .tok-standardKeyword { 
+.theme-light .cm-editor .tok-keyword, 
+.theme-light .cm-editor .tok-operator,
+.theme-light .cm-editor .tok-modifier,
+.theme-light .cm-editor .tok-builtin,
+.theme-light .cm-editor .tok-standardKeyword { 
   color: #1e40af !important; 
   font-weight: 600; 
 }
-.theme-light .cm-type, .theme-light .tok-type { color: #059669 !important; }
-.theme-light .cm-string, .theme-light .tok-string { color: #dc2626 !important; }
-.theme-light .cm-comment, .theme-light .tok-comment { color: #94a3b8 !important; font-style: italic; }
-.theme-light .cm-variableName, .theme-light .tok-variableName, .theme-light .cm-content { color: #1e293b !important; }
-.theme-light .cm-number, .theme-light .tok-number { color: #b45309 !important; }
+.theme-light .cm-editor .tok-type { color: #059669 !important; }
+.theme-light .cm-editor .tok-string { color: #dc2626 !important; }
+.theme-light .cm-editor .tok-comment { color: #94a3b8 !important; font-style: italic; }
+.theme-light .cm-editor .tok-variableName, .theme-light .cm-editor .cm-content { color: #1e293b !important; }
+.theme-light .cm-editor .tok-number { color: #b45309 !important; }
 
 /* CodeMirror Editor Shell Restyling */
 .cm-editor {
