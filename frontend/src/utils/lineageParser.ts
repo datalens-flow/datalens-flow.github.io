@@ -52,37 +52,89 @@ export const parseLineage = (sql: string): LineageResult => {
   // Map CTE name → real source tables it reads from
   const cteToRealSources: Record<string, string[]> = {};
 
-  // Find all WITH blocks (can appear anywhere, not just at start)
-  const cteBlockMatches = [...cleanSql.matchAll(/\bwith\s+([\s\S]+?)(?=\s*(?:insert|update|delete|merge)\s)/gi)];
-  cteBlockMatches.forEach(cteBlockMatch => {
-    const cteBlock = cteBlockMatch[1];
-    // Match CTE definitions carefully handling nested parens
-    const cteDefRegex = /(\w+)\s+as\s*\(/gi;
-    let match;
-    while ((match = cteDefRegex.exec(cteBlock)) !== null) {
-      const cteName = match[1].toLowerCase();
-      if (SQL_KEYWORDS.has(cteName)) continue;
-      cteNames.add(cteName);
+  // Extract CTE block using parenthesis depth parsing
+  // Find "WITH" blocks anywhere in the cleanSql. Since WITH can be part of multiple statements,
+  // we look for matches of '\bwith\b' and scan forward to find where the block ends.
+  const cleanSqlLower = cleanSql.toLowerCase();
+  let searchPos = 0;
+  while (true) {
+    const withIdx = cleanSqlLower.indexOf('with', searchPos);
+    if (withIdx === -1) break;
 
-      // Extract FROM/JOIN tables inside this CTE's body
-      const startIdx = match.index + match[0].length;
-      let depth = 1;
-      let endIdx = startIdx;
-      for (let i = startIdx; i < cteBlock.length && depth > 0; i++) {
-        if (cteBlock[i] === '(') depth++;
-        if (cteBlock[i] === ')') depth--;
-        endIdx = i;
-      }
-      const cteBody = cteBlock.substring(startIdx, endIdx);
-      const fromMatches = [...cteBody.matchAll(/(?:from|join)\s+([\w.]+)/gi)];
-      const realSources: string[] = [];
-      fromMatches.forEach(m => {
-        const tbl = extractTableName(m[1]);
-        if (!SQL_KEYWORDS.has(tbl)) realSources.push(tbl);
-      });
-      cteToRealSources[cteName] = realSources;
+    // Check boundary
+    const isWordBoundary = (withIdx === 0 || !/[a-zA-Z0-9_]/.test(cleanSql[withIdx - 1])) &&
+                           (withIdx + 4 >= cleanSql.length || !/[a-zA-Z0-9_]/.test(cleanSql[withIdx + 4]));
+
+    if (!isWordBoundary) {
+      searchPos = withIdx + 4;
+      continue;
     }
-  });
+
+    // Scan forward from withIdx + 4 to find the DML statement starting at depth 0
+    let depth = 0;
+    let mainActionIdx = -1;
+    for (let i = withIdx + 4; i < cleanSql.length; i++) {
+      if (cleanSql[i] === '(') depth++;
+      if (cleanSql[i] === ')') depth--;
+      if (depth === 0) {
+        // Look for DML keywords starting at depth 0
+        const sub = cleanSqlLower.substring(i).trim();
+        if (sub.startsWith('select') || sub.startsWith('insert') || sub.startsWith('update') || sub.startsWith('delete') || sub.startsWith('merge')) {
+          mainActionIdx = i;
+          break;
+        }
+      }
+    }
+
+    const cteBlock = cleanSql.substring(withIdx + 4, mainActionIdx !== -1 ? mainActionIdx : cleanSql.length);
+    
+    // Parse individual CTEs in this chained declaration list (delimited by commas at depth 0)
+    let currentPos = 0;
+    while (currentPos < cteBlock.length) {
+      // Find the next CTE name 'name AS ('
+      const nextAsMatch = cteBlock.substring(currentPos).match(/\b(\w+)\s+as\s*\(/i);
+      if (!nextAsMatch || nextAsMatch.index === undefined) break;
+
+      const cteName = nextAsMatch[1].toLowerCase();
+      const matchStartInBlock = currentPos + nextAsMatch.index;
+      const bodyStart = matchStartInBlock + nextAsMatch[0].length;
+
+      // Track depth to find matching closing paren of the CTE body
+      let depthInner = 1;
+      let bodyEnd = bodyStart;
+      for (let i = bodyStart; i < cteBlock.length && depthInner > 0; i++) {
+        if (cteBlock[i] === '(') depthInner++;
+        if (cteBlock[i] === ')') depthInner--;
+        bodyEnd = i;
+      }
+
+      if (!SQL_KEYWORDS.has(cteName)) {
+        cteNames.add(cteName);
+        
+        const cteBody = cteBlock.substring(bodyStart, bodyEnd);
+        // Find base tables inside the CTE's FROM/JOIN clauses (case insensitive)
+        const fromMatches = [...cteBody.matchAll(/\b(?:from|join)\s+([\w.]+)/gi)];
+        const realSources: string[] = [];
+        fromMatches.forEach(m => {
+          const tbl = extractTableName(m[1]);
+          if (!SQL_KEYWORDS.has(tbl)) {
+            realSources.push(tbl);
+          }
+        });
+        cteToRealSources[cteName] = realSources;
+      }
+
+      // Advance search position past this CTE body
+      currentPos = bodyEnd + 1;
+      // Skip comma delimiter if any
+      const commaSearch = cteBlock.substring(currentPos).match(/\s*,\s*/);
+      if (commaSearch && commaSearch.index === 0) {
+        currentPos += commaSearch[0].length;
+      }
+    }
+
+    searchPos = mainActionIdx !== -1 ? mainActionIdx : cleanSql.length;
+  }
 
   // Resolve CTE chains: if a CTE references another CTE, follow the chain to find real tables
   const resolveCteSources = (cteName: string, visited = new Set<string>()): string[] => {
@@ -99,6 +151,8 @@ export const parseLineage = (sql: string): LineageResult => {
     });
     return [...new Set(resolved)];
   };
+
+
 
   // Split into separate statements
   const statements = cleanSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
@@ -167,6 +221,21 @@ export const parseLineage = (sql: string): LineageResult => {
         // Replace the CTE name with the first real source for column resolution
         if (realSources.length > 0) {
           aliasMap[alias] = realSources[0];
+        } else {
+          // If a CTE matches no real source, delete it from aliasMap so it's not treated as a real table
+          delete aliasMap[alias];
+        }
+      }
+    });
+
+    // Clean up aliasMap values so that no CTE names remain
+    Object.keys(aliasMap).forEach(key => {
+      if (cteNames.has(aliasMap[key])) {
+        const realSources = resolveCteSources(aliasMap[key]);
+        if (realSources.length > 0) {
+          aliasMap[key] = realSources[0];
+        } else {
+          delete aliasMap[key];
         }
       }
     });
@@ -194,7 +263,34 @@ export const parseLineage = (sql: string): LineageResult => {
     // --- Helper: resolve "alias.col" or "col" to { table, col } ---
     const resolveColumn = (expr: string): { table: string; col: string } | null => {
       if (isNonColumnExpr(expr)) return null;
-      const firstToken = expr.split(/\s+/)[0]; // ignore AS alias
+
+      // Extract the target identifier from nested expressions, functions, or parentheses
+      // e.g. UPPER(TRIM(customer_name)) -> customer_name
+      // e.g. COALESCE(gender, 'U') -> gender
+      // e.g. CASE WHEN ... -> skip or match first column identifier
+      let cleanExpr = expr.trim();
+      
+      // If it contains CASE WHEN, we extract the first column mentioned or treat it as a general flow if too complex
+      if (cleanExpr.toLowerCase().startsWith('case ')) {
+        const match = cleanExpr.match(/(?:then|else)\s+([\w.]+)/i);
+        if (match) {
+          cleanExpr = match[1];
+        }
+      }
+
+      // Strip SQL function wrappers like UPPER(, TRIM(, COALESCE(, ROUND(
+      // by grabbing the column/alias identifier inside
+      const funcMatch = cleanExpr.match(/\b(?:upper|trim|coalesce|round|lower|abs|nullif|concat|nvl)\s*\(\s*([\w.]+)/i);
+      if (funcMatch) {
+        cleanExpr = funcMatch[1];
+      }
+
+      // Strip any residual parentheses or punctuation
+      cleanExpr = cleanExpr.replace(/[()]/g, '').trim();
+
+      const firstToken = cleanExpr.split(/\s+/)[0]; // ignore AS alias
+      if (!firstToken || isNonColumnExpr(firstToken)) return null;
+
       const dotParts = firstToken.split('.');
       if (dotParts.length === 2) {
         const alias = dotParts[0].toLowerCase();
