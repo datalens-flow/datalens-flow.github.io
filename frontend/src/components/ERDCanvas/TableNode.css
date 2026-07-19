@@ -258,4 +258,66 @@
 .table-node:hover .delete-table-btn:hover {
   opacity: 1;
   background-color: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+}
+
+/* Delete column button */
+.delete-col-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition-all);
+  padding: 2px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.column-row:hover .delete-col-btn {
+  opacity: 0.5;
+}
+
+.column-row:hover .delete-col-btn:hover {
+  opacity: 1;
+  color: #f43f5e;
+  background-color: rgba(244, 63, 94, 0.12);
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: var(--transition-all);
+}
+
+.column-row:hover .drag-handle {
+  opacity: 1;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Drag over indicator */
+.column-wrapper.drag-over {
+  border-top: 2px solid var(--color-indigo) !important;
+}
+
+/* Validation error */
+.validation-error {
+  font-size: 9px;
+  color: #f43f5e;
+  margin-top: 2px;
+  font-family: var(--font-sans);
+}
+
+.input-error {
+  border-color: #f43f5e !important;
 }

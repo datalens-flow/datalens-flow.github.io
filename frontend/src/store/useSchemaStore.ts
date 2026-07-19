@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { SchemaResponse } from '../types/schema';
 import { exportSql } from '../api/client';
 import {
@@ -38,6 +39,15 @@ interface SchemaState {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   
+  // Undo/Redo
+  _history: SchemaResponse[];
+  _historyIndex: number;
+  _pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+
   setSql: (sql: string) => void;
   setDialect: (dialect: string) => void;
   setSchema: (schema: SchemaResponse | null) => void;
@@ -66,6 +76,8 @@ interface SchemaState {
   addTable: () => void;
   deleteTable: (tableId: string) => void;
   addColumn: (tableId: string) => void;
+  deleteColumn: (tableId: string, colName: string) => void;
+  moveColumn: (tableId: string, fromIndex: number, toIndex: number) => void;
   toggleColumnPk: (tableId: string, colName: string) => void;
   toggleColumnNullable: (tableId: string, colName: string) => void;
   syncSqlFromSchema: () => Promise<void>;
@@ -86,202 +98,316 @@ CREATE TABLE orders (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );`;
 
-export const useSchemaStore = create<SchemaState>((set, get) => ({
-  schema: null,
-  originalSchema: null,
-  renameEvents: { tables: {}, columns: {} },
-  descriptions: {},
-  nodePositions: {},
-  activeTab: 'erd',
-  sql: DEFAULT_SQL,
-  dialect: 'postgres',
-  loading: false,
-  error: null,
+const MAX_HISTORY = 50;
 
-  theme: 'dark',
-  layoutDir: 'LR',
-  inferRelationships: false,
-  showGrid: true,
-  setShowGrid: (showGrid) => set({ showGrid }),
-  outputDialect: 'postgres',
-  searchQuery: '',
-  setSearchQuery: (searchQuery) => set({ searchQuery }),
-  
-  setSql: (sql) => set({ sql }),
-  setDialect: (dialect) => set({ dialect }),
-  setSchema: (schema) => set((state) => {
-    const newDescriptions = { ...state.descriptions };
-    if (schema) {
-      schema.tables.forEach((t) => {
-        if (!newDescriptions[t.id]) {
-          newDescriptions[t.id] = {};
-        }
-        t.columns.forEach((c) => {
-          if (newDescriptions[t.id][c.name] === undefined) {
-            newDescriptions[t.id][c.name] = c.comment || '';
-          }
-        });
-      });
-    }
-    return { schema, descriptions: newDescriptions };
-  }),
-  setOriginalSchema: (originalSchema) => set({ originalSchema }),
-  updateDescription: (tableId, colName, text) => set((state) => {
-    const tableComments = state.descriptions[tableId] || {};
-    return {
-      descriptions: {
-        ...state.descriptions,
-        [tableId]: {
-          ...tableComments,
-          [colName]: text,
-        },
+export const useSchemaStore = create<SchemaState>()(
+  persist(
+    (set, get) => ({
+      schema: null,
+      originalSchema: null,
+      renameEvents: { tables: {}, columns: {} },
+      descriptions: {},
+      nodePositions: {},
+      activeTab: 'erd',
+      sql: DEFAULT_SQL,
+      dialect: 'postgres',
+      loading: false,
+      error: null,
+
+      theme: 'dark',
+      layoutDir: 'LR',
+      inferRelationships: false,
+      showGrid: true,
+      setShowGrid: (showGrid) => set({ showGrid }),
+      outputDialect: 'postgres',
+      searchQuery: '',
+      setSearchQuery: (searchQuery) => set({ searchQuery }),
+
+      // Undo/Redo state
+      _history: [],
+      _historyIndex: -1,
+
+      _pushHistory: () => {
+        const { schema, _history, _historyIndex } = get();
+        if (!schema) return;
+        const snapshot = JSON.parse(JSON.stringify(schema));
+        const trimmed = _history.slice(0, _historyIndex + 1);
+        const newHistory = [...trimmed, snapshot].slice(-MAX_HISTORY);
+        set({ _history: newHistory, _historyIndex: newHistory.length - 1 });
       },
-    };
-  }),
-  setDescriptions: (descriptions) => set({ descriptions }),
-  setActiveTab: (activeTab) => set({ activeTab }),
-  setLoading: (loading) => set({ loading }),
-  setError: (error) => set({ error }),
-  setNodePositions: (nodePositions) => set({ nodePositions }),
-  updateNodePosition: (tableId, x, y) => set((state) => ({
-    nodePositions: {
-      ...state.nodePositions,
-      [tableId]: { x, y },
-    },
-  })),
 
-  setTheme: (theme) => set({ theme }),
-  setLayoutDir: (layoutDir) => set({ layoutDir, nodePositions: {} }),
-  setInferRelationships: (inferRelationships) => set({ inferRelationships }),
-  setOutputDialect: (outputDialect) => {
-    set({ outputDialect });
-    get().syncSqlFromSchema();
-  },
-  clearRenameEvents: () => set({ renameEvents: { tables: {}, columns: {} } }),
+      undo: () => {
+        const { _history, _historyIndex } = get();
+        if (_historyIndex <= 0) return;
+        const newIndex = _historyIndex - 1;
+        const previous = JSON.parse(JSON.stringify(_history[newIndex]));
+        set({ schema: previous, _historyIndex: newIndex });
+        get().syncSqlFromSchema();
+      },
 
-  updateTableName: (oldTableId, newName) => {
-    set((state) => updateTableNameHelper(state.schema, state.descriptions, state.nodePositions, state.renameEvents, oldTableId, newName));
-    get().syncSqlFromSchema();
-  },
+      redo: () => {
+        const { _history, _historyIndex } = get();
+        if (_historyIndex >= _history.length - 1) return;
+        const newIndex = _historyIndex + 1;
+        const next = JSON.parse(JSON.stringify(_history[newIndex]));
+        set({ schema: next, _historyIndex: newIndex });
+        get().syncSqlFromSchema();
+      },
 
-  updateColumnName: (tableId, oldCol, newCol) => {
-    set((state) => updateColumnNameHelper(state.schema, state.renameEvents, tableId, oldCol, newCol));
-    get().syncSqlFromSchema();
-  },
-
-  updateColumnType: (tableId, columnName, newType) => {
-    set((state) => updateColumnTypeHelper(state.schema, tableId, columnName, newType));
-    get().syncSqlFromSchema();
-  },
-
-  addRelationship: (fromTable, fromCol, toTable, toCol) => {
-    set((state) => addRelationshipHelper(state.schema, fromTable, fromCol, toTable, toCol));
-    get().syncSqlFromSchema();
-  },
-
-  deleteRelationship: (id) => {
-    set((state) => deleteRelationshipHelper(state.schema, id));
-    get().syncSqlFromSchema();
-  },
-
-  addTable: () => {
-    set((state) => addTableHelper(state.schema, state.nodePositions));
-    get().syncSqlFromSchema();
-  },
-
-  deleteTable: (tableId) => {
-    set((state) => {
-      if (!state.schema) return {};
-      const updatedTables = state.schema.tables.filter((t) => t.id !== tableId);
-      const updatedRelationships = state.schema.relationships.filter(
-        (r) => r.from_table !== tableId && r.to_table !== tableId
-      );
-      const updatedPositions = { ...state.nodePositions };
-      delete updatedPositions[tableId];
-      const updatedDescriptions = { ...state.descriptions };
-      delete updatedDescriptions[tableId];
-
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables,
-          relationships: updatedRelationships
+      canUndo: () => get()._historyIndex > 0,
+      canRedo: () => get()._historyIndex < get()._history.length - 1,
+      
+      setSql: (sql) => set({ sql }),
+      setDialect: (dialect) => set({ dialect }),
+      setSchema: (schema) => set((state) => {
+        const newDescriptions = { ...state.descriptions };
+        if (schema) {
+          schema.tables.forEach((t) => {
+            if (!newDescriptions[t.id]) {
+              newDescriptions[t.id] = {};
+            }
+            t.columns.forEach((c) => {
+              if (newDescriptions[t.id][c.name] === undefined) {
+                newDescriptions[t.id][c.name] = c.comment || '';
+              }
+            });
+          });
+        }
+        // Push initial schema to history
+        const snapshot = schema ? JSON.parse(JSON.stringify(schema)) : null;
+        const newHistory = snapshot ? [snapshot] : [];
+        return { schema, descriptions: newDescriptions, _history: newHistory, _historyIndex: snapshot ? 0 : -1 };
+      }),
+      setOriginalSchema: (originalSchema) => set({ originalSchema }),
+      updateDescription: (tableId, colName, text) => set((state) => {
+        const tableComments = state.descriptions[tableId] || {};
+        return {
+          descriptions: {
+            ...state.descriptions,
+            [tableId]: {
+              ...tableComments,
+              [colName]: text,
+            },
+          },
+        };
+      }),
+      setDescriptions: (descriptions) => set({ descriptions }),
+      setActiveTab: (activeTab) => set({ activeTab }),
+      setLoading: (loading) => set({ loading }),
+      setError: (error) => set({ error }),
+      setNodePositions: (nodePositions) => set({ nodePositions }),
+      updateNodePosition: (tableId, x, y) => set((state) => ({
+        nodePositions: {
+          ...state.nodePositions,
+          [tableId]: { x, y },
         },
-        nodePositions: updatedPositions,
-        descriptions: updatedDescriptions
-      };
-    });
-    get().syncSqlFromSchema();
-  },
+      })),
 
-  addColumn: (tableId) => {
-    set((state) => addColumnHelper(state.schema, tableId));
-    get().syncSqlFromSchema();
-  },
+      setTheme: (theme) => set({ theme }),
+      setLayoutDir: (layoutDir) => set({ layoutDir, nodePositions: {} }),
+      setInferRelationships: (inferRelationships) => set({ inferRelationships }),
+      setOutputDialect: (outputDialect) => {
+        set({ outputDialect });
+        get().syncSqlFromSchema();
+      },
+      clearRenameEvents: () => set({ renameEvents: { tables: {}, columns: {} } }),
 
-  toggleColumnPk: (tableId, colName) => {
-    set((state) => {
-      if (!state.schema) return {};
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === tableId) {
+      updateTableName: (oldTableId, newName) => {
+        get()._pushHistory();
+        set((state) => updateTableNameHelper(state.schema, state.descriptions, state.nodePositions, state.renameEvents, oldTableId, newName));
+        get().syncSqlFromSchema();
+      },
+
+      updateColumnName: (tableId, oldCol, newCol) => {
+        get()._pushHistory();
+        set((state) => updateColumnNameHelper(state.schema, state.renameEvents, tableId, oldCol, newCol));
+        get().syncSqlFromSchema();
+      },
+
+      updateColumnType: (tableId, columnName, newType) => {
+        get()._pushHistory();
+        set((state) => updateColumnTypeHelper(state.schema, tableId, columnName, newType));
+        get().syncSqlFromSchema();
+      },
+
+      addRelationship: (fromTable, fromCol, toTable, toCol) => {
+        get()._pushHistory();
+        set((state) => addRelationshipHelper(state.schema, fromTable, fromCol, toTable, toCol));
+        get().syncSqlFromSchema();
+      },
+
+      deleteRelationship: (id) => {
+        get()._pushHistory();
+        set((state) => deleteRelationshipHelper(state.schema, id));
+        get().syncSqlFromSchema();
+      },
+
+      addTable: () => {
+        get()._pushHistory();
+        set((state) => addTableHelper(state.schema, state.nodePositions));
+        get().syncSqlFromSchema();
+      },
+
+      deleteTable: (tableId) => {
+        get()._pushHistory();
+        set((state) => {
+          if (!state.schema) return {};
+          const updatedTables = state.schema.tables.filter((t) => t.id !== tableId);
+          const updatedRelationships = state.schema.relationships.filter(
+            (r) => r.from_table !== tableId && r.to_table !== tableId
+          );
+          const updatedPositions = { ...state.nodePositions };
+          delete updatedPositions[tableId];
+          const updatedDescriptions = { ...state.descriptions };
+          delete updatedDescriptions[tableId];
+
           return {
-            ...t,
-            columns: t.columns.map((c) => {
-              if (c.name === colName) {
-                return { ...c, is_pk: !c.is_pk };
-              }
-              return c;
-            })
+            schema: {
+              ...state.schema,
+              tables: updatedTables,
+              relationships: updatedRelationships
+            },
+            nodePositions: updatedPositions,
+            descriptions: updatedDescriptions
           };
-        }
-        return t;
-      });
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables
-        }
-      };
-    });
-    get().syncSqlFromSchema();
-  },
+        });
+        get().syncSqlFromSchema();
+      },
 
-  toggleColumnNullable: (tableId, colName) => {
-    set((state) => {
-      if (!state.schema) return {};
-      const updatedTables = state.schema.tables.map((t) => {
-        if (t.id === tableId) {
+      addColumn: (tableId) => {
+        get()._pushHistory();
+        set((state) => addColumnHelper(state.schema, tableId));
+        get().syncSqlFromSchema();
+      },
+
+      deleteColumn: (tableId, colName) => {
+        get()._pushHistory();
+        set((state) => {
+          if (!state.schema) return {};
+          const updatedTables = state.schema.tables.map((t) => {
+            if (t.id !== tableId) return t;
+            return { ...t, columns: t.columns.filter((c) => c.name !== colName) };
+          });
+          // Remove relationships that reference this column
+          const updatedRelationships = state.schema.relationships.filter(
+            (r) => !((r.from_table === tableId && r.from_column === colName) ||
+                     (r.to_table === tableId && r.to_column === colName))
+          );
+          // Clean up descriptions
+          const updatedDescriptions = { ...state.descriptions };
+          if (updatedDescriptions[tableId]) {
+            const tableCopy = { ...updatedDescriptions[tableId] };
+            delete tableCopy[colName];
+            updatedDescriptions[tableId] = tableCopy;
+          }
           return {
-            ...t,
-            columns: t.columns.map((c) => {
-              if (c.name === colName) {
-                return { ...c, nullable: !c.nullable };
-              }
-              return c;
-            })
+            schema: { ...state.schema, tables: updatedTables, relationships: updatedRelationships },
+            descriptions: updatedDescriptions
           };
-        }
-        return t;
-      });
-      return {
-        schema: {
-          ...state.schema,
-          tables: updatedTables
-        }
-      };
-    });
-    get().syncSqlFromSchema();
-  },
+        });
+        get().syncSqlFromSchema();
+      },
 
-  syncSqlFromSchema: async () => {
-    const { schema, outputDialect } = get();
-    if (!schema) return;
-    try {
-      const blob = await exportSql(schema, outputDialect);
-      const sqlText = await blob.text();
-      set({ sql: sqlText });
-    } catch (e) {
-      console.error("Failed to sync DDL SQL:", e);
+      moveColumn: (tableId, fromIndex, toIndex) => {
+        get()._pushHistory();
+        set((state) => {
+          if (!state.schema) return {};
+          const updatedTables = state.schema.tables.map((t) => {
+            if (t.id !== tableId) return t;
+            const cols = [...t.columns];
+            const [moved] = cols.splice(fromIndex, 1);
+            cols.splice(toIndex, 0, moved);
+            return { ...t, columns: cols };
+          });
+          return { schema: { ...state.schema, tables: updatedTables } };
+        });
+        get().syncSqlFromSchema();
+      },
+
+      toggleColumnPk: (tableId, colName) => {
+        get()._pushHistory();
+        set((state) => {
+          if (!state.schema) return {};
+          const updatedTables = state.schema.tables.map((t) => {
+            if (t.id === tableId) {
+              return {
+                ...t,
+                columns: t.columns.map((c) => {
+                  if (c.name === colName) {
+                    return { ...c, is_pk: !c.is_pk };
+                  }
+                  return c;
+                })
+              };
+            }
+            return t;
+          });
+          return {
+            schema: {
+              ...state.schema,
+              tables: updatedTables
+            }
+          };
+        });
+        get().syncSqlFromSchema();
+      },
+
+      toggleColumnNullable: (tableId, colName) => {
+        get()._pushHistory();
+        set((state) => {
+          if (!state.schema) return {};
+          const updatedTables = state.schema.tables.map((t) => {
+            if (t.id === tableId) {
+              return {
+                ...t,
+                columns: t.columns.map((c) => {
+                  if (c.name === colName) {
+                    return { ...c, nullable: !c.nullable };
+                  }
+                  return c;
+                })
+              };
+            }
+            return t;
+          });
+          return {
+            schema: {
+              ...state.schema,
+              tables: updatedTables
+            }
+          };
+        });
+        get().syncSqlFromSchema();
+      },
+
+      syncSqlFromSchema: async () => {
+        const { schema, outputDialect } = get();
+        if (!schema) return;
+        try {
+          const blob = await exportSql(schema, outputDialect);
+          const sqlText = await blob.text();
+          set({ sql: sqlText });
+        } catch (e) {
+          console.error("Failed to sync DDL SQL:", e);
+        }
+      }
+    }),
+    {
+      name: 'datalens-store',
+      partialize: (state) => ({
+        schema: state.schema,
+        originalSchema: state.originalSchema,
+        descriptions: state.descriptions,
+        nodePositions: state.nodePositions,
+        sql: state.sql,
+        dialect: state.dialect,
+        theme: state.theme,
+        layoutDir: state.layoutDir,
+        inferRelationships: state.inferRelationships,
+        showGrid: state.showGrid,
+        outputDialect: state.outputDialect,
+        renameEvents: state.renameEvents,
+      }),
     }
-  }
-}));
+  )
+);

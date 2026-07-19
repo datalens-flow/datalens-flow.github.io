@@ -7,9 +7,57 @@ import {
   useEdgesState,
   MarkerType
 } from '@xyflow/react';
+import { EditorState } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
+import { defaultKeymap } from '@codemirror/commands';
+import { sql as sqlLang } from '@codemirror/lang-sql';
+import { basicSetup } from 'codemirror';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
+import { useSchemaStore } from '../../store/useSchemaStore';
 import { parseLineage } from '../../utils/lineageParser';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
+
+const darkHighlightStyle = HighlightStyle.define([
+  { tag: t.keyword, color: '#38bdf8', fontWeight: 'bold' },
+  { tag: t.operator, color: '#38bdf8' },
+  { tag: t.modifier, color: '#38bdf8' },
+  { tag: t.standard(t.name), color: '#38bdf8', fontWeight: 'bold' },
+  { tag: t.typeName, color: '#34d399' },
+  { tag: t.string, color: '#fda4af' },
+  { tag: t.special(t.string), color: '#fda4af' },
+  { tag: t.number, color: '#f59e0b' },
+  { tag: t.bool, color: '#f59e0b' },
+  { tag: t.null, color: '#94a3b8' },
+  { tag: t.name, color: '#f8fafc' },
+  { tag: t.special(t.name), color: '#67e8f9' },
+  { tag: t.comment, color: '#64748b', fontStyle: 'italic' },
+  { tag: t.lineComment, color: '#64748b', fontStyle: 'italic' },
+  { tag: t.blockComment, color: '#64748b', fontStyle: 'italic' },
+  { tag: t.variableName, color: '#f8fafc' },
+  { tag: t.punctuation, color: '#94a3b8' }
+]);
+
+const lightHighlightStyle = HighlightStyle.define([
+  { tag: t.keyword, color: '#1e40af', fontWeight: 'bold' },
+  { tag: t.operator, color: '#1e40af' },
+  { tag: t.modifier, color: '#1e40af' },
+  { tag: t.standard(t.name), color: '#1e40af', fontWeight: 'bold' },
+  { tag: t.typeName, color: '#059669' },
+  { tag: t.string, color: '#dc2626' },
+  { tag: t.special(t.string), color: '#dc2626' },
+  { tag: t.number, color: '#b45309' },
+  { tag: t.bool, color: '#b45309' },
+  { tag: t.null, color: '#64748b' },
+  { tag: t.name, color: '#1e293b' },
+  { tag: t.special(t.name), color: '#0891b2' },
+  { tag: t.comment, color: '#94a3b8', fontStyle: 'italic' },
+  { tag: t.lineComment, color: '#94a3b8', fontStyle: 'italic' },
+  { tag: t.blockComment, color: '#94a3b8', fontStyle: 'italic' },
+  { tag: t.variableName, color: '#1e293b' },
+  { tag: t.punctuation, color: '#64748b' }
+]);
 
 export const DataLineage: React.FC = () => {
   const [procedureSql, setProcedureSql] = useState<string>(`-- Sample ETL Stored Procedure
@@ -18,9 +66,53 @@ SELECT u.name, o.amount
 FROM users u
 JOIN orders o ON u.id = o.user_id;`);
 
+  const { theme } = useSchemaStore();
+  const editorRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
+
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const selection = viewRef.current?.state.selection;
+
+    const startState = EditorState.create({
+      doc: procedureSql,
+      extensions: [
+        basicSetup,
+        sqlLang(),
+        keymap.of(defaultKeymap),
+        syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            setProcedureSql(update.state.doc.toString());
+          }
+        }),
+        EditorView.theme({
+          '&': { height: '100%', minHeight: '300px', flex: 1, backgroundColor: 'var(--bg-secondary)', color: 'var(--color-text-primary)' },
+          '.cm-content': { fontFamily: 'var(--font-mono)', fontSize: '13px' },
+          '.cm-gutters': { backgroundColor: 'var(--bg-tertiary)', color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)' },
+          '.cm-cursor': { borderLeftColor: 'var(--color-indigo)' },
+          '.cm-scroller': { overflow: 'auto' }
+        })
+      ],
+      selection: selection || undefined
+    });
+
+    const view = new EditorView({
+      state: startState,
+      parent: editorRef.current
+    });
+
+    viewRef.current = view;
+
+    return () => {
+      view.destroy();
+    };
+  }, [theme]);
 
   const handleAnalyze = () => {
     const result = parseLineage(procedureSql);
@@ -111,6 +203,11 @@ JOIN orders o ON u.id = o.user_id;`);
       const text = event.target?.result as string;
       if (text) {
         setProcedureSql(text);
+        if (viewRef.current) {
+          viewRef.current.dispatch({
+            changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
+          });
+        }
       }
     };
     reader.readAsText(file);
@@ -150,12 +247,7 @@ JOIN orders o ON u.id = o.user_id;`);
             </button>
           </div>
         </div>
-        <textarea
-          className="lineage-textarea"
-          value={procedureSql}
-          onChange={(e) => setProcedureSql(e.target.value)}
-          placeholder="Paste or write your INSERT INTO / SELECT stored procedure queries here..."
-        />
+        <div className="lineage-textarea" ref={editorRef}></div>
       </div>
       <div className="lineage-canvas">
         <ReactFlow

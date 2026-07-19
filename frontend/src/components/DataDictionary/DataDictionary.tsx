@@ -41,8 +41,11 @@ export const DataDictionary: React.FC = () => {
               }}
             >
               <span style={{ fontSize: '14px' }}>📁</span>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-text-primary)' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {table.name}
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 'normal' }}>
+                  ({table.columns.length} columns)
+                </span>
               </h3>
             </div>
 

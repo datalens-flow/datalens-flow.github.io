@@ -11,7 +11,11 @@ import {
 import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import './ExportPanel.css';
 
-export const ExportPanel: React.FC = () => {
+interface ExportPanelProps {
+  mode?: 'diagram' | 'lineage';
+}
+
+export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const { schema, originalSchema, renameEvents, descriptions, theme } = useSchemaStore();
@@ -65,7 +69,7 @@ export const ExportPanel: React.FC = () => {
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `${prefix}-erd.png`;
+      a.download = `${prefix}-${mode === 'lineage' ? 'lineage' : 'erd'}.png`;
       a.click();
     } catch (err) {
       console.error('Failed to export PNG', err);
@@ -102,7 +106,7 @@ export const ExportPanel: React.FC = () => {
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `${prefix}-erd.svg`;
+      a.download = `${prefix}-${mode === 'lineage' ? 'lineage' : 'erd'}.svg`;
       a.click();
     } catch (err) {
       console.error('Failed to export SVG', err);
@@ -206,13 +210,13 @@ export const ExportPanel: React.FC = () => {
     <div className="export-panel-container">
       <button 
         onClick={toggleDropdown} 
-        disabled={!schema || exporting}
+        disabled={exporting || (mode === 'diagram' && !schema)}
         className="btn btn-secondary dropdown-trigger"
       >
         {exporting ? 'Exporting...' : '💾 Export Options ▼'}
       </button>
 
-      {isOpen && schema && (
+      {isOpen && (mode === 'lineage' || schema) && (
         <div className="export-dropdown glass-panel" style={{ width: '220px' }}>
           {/* Filename Prefix configuration */}
           <div style={{ padding: '8px 12px 10px 12px', borderBottom: '1px solid var(--color-border)' }}>
@@ -238,24 +242,29 @@ export const ExportPanel: React.FC = () => {
             />
           </div>
 
-          <div className="dropdown-section-title">Diagram (ERD)</div>
+          <div className="dropdown-section-title">{mode === 'lineage' ? 'Lineage Canvas' : 'Diagram (ERD)'}</div>
           <button onClick={handleExportPng} className="dropdown-item">🖼️ Export PNG Image</button>
           <button onClick={handleExportSvg} className="dropdown-item">📐 Export SVG Vector</button>
-          <button onClick={handleExportDrawio} className="dropdown-item">🔗 Export Draw.io XML</button>
-          <button onClick={handleCopyDrawio} className="dropdown-item">📋 Copy Draw.io XML</button>
           
-          <div className="dropdown-divider"></div>
-          
-          <div className="dropdown-section-title">Data Dictionary</div>
-          <button onClick={handleExportXlsx} className="dropdown-item">📊 Export Excel (.xlsx)</button>
-          <button onClick={handleExportMarkdown} className="dropdown-item">📝 Export Markdown (.md)</button>
-          
-          <div className="dropdown-divider"></div>
-          
-          <div className="dropdown-section-title">Structure</div>
-          <button onClick={handleExportSql} className="dropdown-item">💻 Export SQL DDL</button>
-          <button onClick={handleExportMigration} className="dropdown-item">📝 Export Migration ALTER SQL</button>
-          <button onClick={handleExportJson} className="dropdown-item">📦 Export Raw JSON</button>
+          {mode === 'diagram' && (
+            <>
+              <button onClick={handleExportDrawio} className="dropdown-item">🔗 Export Draw.io XML</button>
+              <button onClick={handleCopyDrawio} className="dropdown-item">📋 Copy Draw.io XML</button>
+              
+              <div className="dropdown-divider"></div>
+              
+              <div className="dropdown-section-title">Data Dictionary</div>
+              <button onClick={handleExportXlsx} className="dropdown-item">📊 Export Excel (.xlsx)</button>
+              <button onClick={handleExportMarkdown} className="dropdown-item">📝 Export Markdown (.md)</button>
+              
+              <div className="dropdown-divider"></div>
+              
+              <div className="dropdown-section-title">Structure</div>
+              <button onClick={handleExportSql} className="dropdown-item">💻 Export SQL DDL</button>
+              <button onClick={handleExportMigration} className="dropdown-item">📝 Export Migration ALTER SQL</button>
+              <button onClick={handleExportJson} className="dropdown-item">📦 Export Raw JSON</button>
+            </>
+          )}
         </div>
       )}
     </div>

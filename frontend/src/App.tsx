@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SqlEditor } from './components/SqlEditor/SqlEditor';
 import { ERDCanvas } from './components/ERDCanvas/ERDCanvas';
 import { DataDictionary } from './components/DataDictionary/DataDictionary';
@@ -9,8 +9,36 @@ import { useSchemaStore } from './store/useSchemaStore';
 
 function App() {
   const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>('diagram');
-  const { activeTab, setActiveTab, error, theme, schema } = useSchemaStore();
+  const { activeTab, setActiveTab, error, theme, schema, undo, redo, canUndo, canRedo } = useSchemaStore();
   const tableCount = schema?.tables?.length || 0;
+
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey;
+      
+      // Ctrl/Cmd + Z = Undo
+      if (isMod && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo()) undo();
+        return;
+      }
+      // Ctrl/Cmd + Shift + Z = Redo
+      if (isMod && e.key === 'z' && e.shiftKey) {
+        e.preventDefault();
+        if (canRedo()) redo();
+        return;
+      }
+      // Ctrl/Cmd + Y = Redo (alternative)
+      if (isMod && e.key === 'y') {
+        e.preventDefault();
+        if (canRedo()) redo();
+        return;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo, canUndo, canRedo]);
 
   return (
     <div className={`theme-${theme}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-primary)', color: 'var(--color-text-primary)', transition: 'background-color 0.2s ease, color 0.2s ease' }}>
@@ -25,7 +53,9 @@ function App() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>🔷</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-indigo)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
             <h1 style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '0.02em', margin: 0 }}>
               DataLens Flow
             </h1>
@@ -36,16 +66,18 @@ function App() {
             <button 
               className={`toolbar-toggle-btn ${currentMode === 'diagram' ? 'active' : ''}`}
               onClick={() => setCurrentMode('diagram')}
-              style={{ fontSize: '12px', padding: '4px 12px' }}
+              style={{ fontSize: '12px', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              📁 Database Diagram
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M7 4h2M4 7v2M12 7v2"/></svg>
+              Database Diagram
             </button>
             <button 
               className={`toolbar-toggle-btn ${currentMode === 'lineage' ? 'active' : ''}`}
               onClick={() => setCurrentMode('lineage')}
-              style={{ fontSize: '12px', padding: '4px 12px' }}
+              style={{ fontSize: '12px', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              🌿 Data Lineage
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="3" cy="8" r="2"/><circle cx="13" cy="4" r="2"/><circle cx="13" cy="12" r="2"/><path d="M5 8h3l2-4M8 8l2 4"/></svg>
+              Data Lineage
             </button>
           </div>
         </div>
@@ -53,8 +85,8 @@ function App() {
         {/* Canvas Controls (only active on ERD tab in Diagram Mode) */}
         {currentMode === 'diagram' && activeTab === 'erd' && <CanvasToolbar />}
         
-        {/* Export options dropdown (only active in Diagram Mode) */}
-        {currentMode === 'diagram' && <ExportPanel />}
+        {/* Export options dropdown */}
+        <ExportPanel mode={currentMode} />
       </header>
 
       {/* Main Workspace */}
@@ -73,13 +105,15 @@ function App() {
                 className={`tab-btn ${activeTab === 'erd' ? 'active' : ''}`}
                 onClick={() => setActiveTab('erd')}
               >
-                📊 Interactive ERD {tableCount > 0 ? `(${tableCount})` : ''}
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{marginRight: 6}}><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M1 7h14M6 7v6"/></svg>
+                Interactive ERD {tableCount > 0 ? `(${tableCount})` : ''}
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'dict' ? 'active' : ''}`}
                 onClick={() => setActiveTab('dict')}
               >
-                📖 Data Dictionary {tableCount > 0 ? `(${tableCount})` : ''}
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{marginRight: 6}}><path d="M3 1h10a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
+                Data Dictionary {tableCount > 0 ? `(${tableCount})` : ''}
               </button>
             </div>
 
@@ -94,7 +128,8 @@ function App() {
                 whiteSpace: 'pre-wrap',
                 fontFamily: 'var(--font-mono)'
               }}>
-                ⚠️ {error}
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{marginRight: 6, verticalAlign: 'middle'}}><path d="M8 1L1 14h14L8 1zM8 6v4M8 12h.01"/></svg>
+                {error}
               </div>
             )}
 
