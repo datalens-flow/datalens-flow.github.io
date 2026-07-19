@@ -4,6 +4,8 @@ import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
 import { sql as sqlLang } from '@codemirror/lang-sql';
 import { basicSetup } from 'codemirror';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags as t } from '@lezer/highlight';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { parseSql } from '../../api/client';
 import './SqlEditor.css';
@@ -17,6 +19,28 @@ const DIALECTS = [
   { value: 'bigquery', label: 'BigQuery' },
   { value: 'sqlite', label: 'SQLite' }
 ];
+
+const darkHighlightStyle = HighlightStyle.define([
+  { tag: t.keyword, color: '#38bdf8', fontWeight: 'bold' },
+  { tag: t.operator, color: '#38bdf8' },
+  { tag: t.modifier, color: '#38bdf8' },
+  { tag: t.typeName, color: '#34d399' },
+  { tag: t.string, color: '#fda4af' },
+  { tag: t.number, color: '#f59e0b' },
+  { tag: t.comment, color: '#64748b', fontStyle: 'italic' },
+  { tag: t.variableName, color: '#f8fafc' }
+]);
+
+const lightHighlightStyle = HighlightStyle.define([
+  { tag: t.keyword, color: '#1e40af', fontWeight: 'bold' },
+  { tag: t.operator, color: '#1e40af' },
+  { tag: t.modifier, color: '#1e40af' },
+  { tag: t.typeName, color: '#059669' },
+  { tag: t.string, color: '#dc2626' },
+  { tag: t.number, color: '#b45309' },
+  { tag: t.comment, color: '#94a3b8', fontStyle: 'italic' },
+  { tag: t.variableName, color: '#1e293b' }
+]);
 
 export const SqlEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -33,12 +57,16 @@ export const SqlEditor: React.FC = () => {
     setError, 
     loading,
     outputDialect,
-    setOutputDialect
+    setOutputDialect,
+    theme
   } = useSchemaStore();
 
   // Initialize CodeMirror Editor
   useEffect(() => {
     if (!editorRef.current) return;
+
+    // Get current cursor selection if it exists to restore on theme toggle
+    const selection = viewRef.current?.state.selection;
 
     const startState = EditorState.create({
       doc: sql,
@@ -46,6 +74,7 @@ export const SqlEditor: React.FC = () => {
         basicSetup,
         sqlLang(),
         keymap.of(defaultKeymap),
+        syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             setSql(update.state.doc.toString());
@@ -57,7 +86,8 @@ export const SqlEditor: React.FC = () => {
           '.cm-gutters': { backgroundColor: 'var(--bg-tertiary)', color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)' },
           '.cm-cursor': { borderLeftColor: 'var(--color-indigo)' }
         })
-      ]
+      ],
+      selection: selection || undefined
     });
 
     const view = new EditorView({
@@ -70,7 +100,7 @@ export const SqlEditor: React.FC = () => {
     return () => {
       view.destroy();
     };
-  }, []);
+  }, [theme]);
 
   const handleParse = async () => {
     setLoading(true);
