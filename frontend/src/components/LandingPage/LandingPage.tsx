@@ -10,6 +10,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
   const featuresRef = useRef<HTMLDivElement>(null);
   const stepsRef = useRef<HTMLDivElement>(null);
 
+  // Enable body scrolling on landing page (body has overflow:hidden for app mode)
+  useEffect(() => {
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    return () => {
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+    };
+  }, []);
+
   useEffect(() => {
     setIsVisible(true);
 
