@@ -79,6 +79,13 @@
   gap: 4px;
 }
 
+.lineage-col-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 3px 0;
+}
+
 .lineage-col-flow {
   font-family: var(--font-mono);
   font-size: 11px;

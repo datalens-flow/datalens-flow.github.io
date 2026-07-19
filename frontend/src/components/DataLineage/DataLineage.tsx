@@ -17,34 +17,63 @@ import { basicSetup } from 'codemirror';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { useSchemaStore } from '../../store/useSchemaStore';
-import { parseLineage, LineageFlow } from '../../utils/lineageParser';
+import { parseLineage } from '../../utils/lineageParser';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
-// Custom Lineage Node with Left/Right handles strictly positioned
+// Custom Lineage Node with per-column handles
 const LineageNode: React.FC<{ data: any }> = ({ data }) => {
   const isSource = data.isSource;
+  const columns: string[] = data.columns || [];
   return (
-    <div style={{ position: 'relative', width: '160px', height: '100%' }}>
-      {/* Target/Input handle strictly on the Left side */}
-      {!isSource && (
-        <Handle
-          type="target"
-          position={Position.Left}
-          style={{ background: 'var(--color-emerald)', width: '8px', height: '8px', top: '50%', transform: 'translateY(-50%)', left: '-4px' }}
-        />
-      )}
-      
-      {data.label}
-
-      {/* Source/Output handle strictly on the Right side */}
-      {isSource && (
-        <Handle
-          type="source"
-          position={Position.Right}
-          style={{ background: 'var(--color-indigo)', width: '8px', height: '8px', top: '50%', transform: 'translateY(-50%)', right: '-4px' }}
-        />
-      )}
+    <div style={{ position: 'relative', width: '160px' }}>
+      {/* Node content */}
+      <div className="lineage-node">
+        <div className={`lineage-node-header ${isSource ? 'source' : 'target'}`}>
+          {isSource ? 'Source' : 'Target'}: {data.tableName}
+        </div>
+        <div className="lineage-node-body">
+          {columns.map((col, i) => (
+            <div key={i} className="lineage-col-row">
+              {/* Per-column target handle on the left */}
+              {!isSource && (
+                <Handle
+                  type="target"
+                  position={Position.Left}
+                  id={`col-${col}`}
+                  style={{
+                    background: 'var(--color-emerald)',
+                    width: '8px',
+                    height: '8px',
+                    left: '-4px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    position: 'absolute',
+                  }}
+                />
+              )}
+              <span className="lineage-col-flow">{col}</span>
+              {/* Per-column source handle on the right */}
+              {isSource && (
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={`col-${col}`}
+                  style={{
+                    background: 'var(--color-indigo)',
+                    width: '8px',
+                    height: '8px',
+                    right: '-4px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    position: 'absolute',
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
@@ -159,31 +188,34 @@ JOIN orders o ON u.id = o.user_id;`);
     const newNodes: any[] = [];
     const newEdges: any[] = [];
 
+    const NODE_WIDTH = 160;
+    const NODE_SPACING_Y = 180;
+    const HORIZONTAL_GAP = 350;
+    const SOURCE_X = 80;
+    const TARGET_X = SOURCE_X + HORIZONTAL_GAP;
+
+    // Calculate total height of source nodes for centering targets
+    const sourceTotalHeight = (result.sources.length - 1) * NODE_SPACING_Y;
+    const sourceCenterY = 50 + sourceTotalHeight / 2;
+
     // Layout source nodes on the left
     result.sources.forEach((src, idx) => {
       const relatedFlows = result.flows.filter(f => f.sourceTable === src);
+      const columns = relatedFlows.map(f => f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
       newNodes.push({
         id: src,
         type: 'lineageNode',
-        position: { x: 80, y: 50 + idx * 180 },
-        data: { 
+        position: { x: SOURCE_X, y: 50 + idx * NODE_SPACING_Y },
+        data: {
           isSource: true,
-          label: (
-            <div className="lineage-node">
-              <div className="lineage-node-header source">Source: {src.toUpperCase()}</div>
-              <div className="lineage-node-body">
-                {relatedFlows.map((f, i) => (
-                  <div key={i} className="lineage-col-flow">{f.sourceCol === '*' ? 'All Columns' : f.sourceCol}</div>
-                ))}
-              </div>
-            </div>
-          )
+          tableName: src.toUpperCase(),
+          columns,
         },
-        style: { 
-          width: 160, 
-          background: 'var(--bg-secondary)', 
-          border: '1px solid var(--color-border)', 
-          color: 'var(--color-text-primary)', 
+        style: {
+          width: NODE_WIDTH,
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-primary)',
           borderRadius: '6px',
           padding: 0,
           opacity: 1,
@@ -192,31 +224,27 @@ JOIN orders o ON u.id = o.user_id;`);
       });
     });
 
-    // Layout target nodes on the right
+    // Layout target nodes on the right, centered vertically relative to sources
+    const targetTotalHeight = (result.targets.length - 1) * NODE_SPACING_Y;
+    const targetStartY = sourceCenterY - targetTotalHeight / 2;
+
     result.targets.forEach((tgt, idx) => {
       const relatedFlows = result.flows.filter(f => f.targetTable === tgt);
+      const columns = relatedFlows.map(f => f.targetCol === '*' ? 'All Columns' : f.targetCol);
       newNodes.push({
         id: tgt,
         type: 'lineageNode',
-        position: { x: 400, y: 50 + idx * 180 },
-        data: { 
+        position: { x: TARGET_X, y: targetStartY + idx * NODE_SPACING_Y },
+        data: {
           isSource: false,
-          label: (
-            <div className="lineage-node">
-              <div className="lineage-node-header target">Target: {tgt.toUpperCase()}</div>
-              <div className="lineage-node-body">
-                {relatedFlows.map((f, i) => (
-                  <div key={i} className="lineage-col-flow">{f.targetCol === '*' ? 'All Columns' : f.targetCol}</div>
-                ))}
-              </div>
-            </div>
-          )
+          tableName: tgt.toUpperCase(),
+          columns,
         },
-        style: { 
-          width: 160, 
-          background: 'var(--bg-secondary)', 
-          border: '1px solid var(--color-border)', 
-          color: 'var(--color-text-primary)', 
+        style: {
+          width: NODE_WIDTH,
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-primary)',
           borderRadius: '6px',
           padding: 0,
           opacity: 1,
@@ -225,25 +253,21 @@ JOIN orders o ON u.id = o.user_id;`);
       });
     });
 
-    // Group flows by source→target pair, then create one edge per pair
-    const edgeMap: Record<string, LineageFlow[]> = {};
-    result.flows.forEach((flow) => {
-      const key = `${flow.sourceTable}→${flow.targetTable}`;
-      if (!edgeMap[key]) edgeMap[key] = [];
-      edgeMap[key].push(flow);
-    });
-
-    Object.entries(edgeMap).forEach(([key, groupedFlows], idx) => {
-      const label = groupedFlows
-        .map(f => f.sourceCol === '*' ? 'Full Flow' : `${f.sourceCol} ➜ ${f.targetCol}`)
-        .join('\n');
-      
+    // Create per-column edges with sourceHandle and targetHandle
+    result.flows.forEach((flow, idx) => {
+      const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
+      const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
       newEdges.push({
-        id: `e-${key}-${idx}`,
-        source: groupedFlows[0].sourceTable,
-        target: groupedFlows[0].targetTable,
-        label,
+        id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${idx}`,
+        source: flow.sourceTable,
+        target: flow.targetTable,
+        sourceHandle: `col-${sourceCol}`,
+        targetHandle: `col-${targetCol}`,
+        label: `${sourceCol} ➜ ${targetCol}`,
         style: { stroke: 'var(--color-indigo)', strokeWidth: 2 },
+        labelStyle: { fontSize: '10px', fill: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' },
+        labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.85 },
+        labelBgPadding: [4, 2] as [number, number],
         markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--color-indigo)' }
       });
     });
