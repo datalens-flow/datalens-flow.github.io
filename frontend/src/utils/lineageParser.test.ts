@@ -365,6 +365,142 @@ WHERE s.sales_date = p_batch_date;
       { src: 'stg_sales', srcCol: 'amount', tgt: 'fact_sales', tgtCol: 'amount' },
     ],
   },
+
+  // ===== 16. CTE (WITH ... AS) =====
+  {
+    name: '16a. Simple CTE with INSERT',
+    sql: `
+      WITH active_customers AS (
+        SELECT customer_id, name
+        FROM customers
+        WHERE status = 'A'
+      )
+      INSERT INTO target (customer_id, name)
+      SELECT customer_id, name
+      FROM active_customers;
+    `,
+    expectedSources: ['customers'],
+    expectedTargets: ['target'],
+    expectedFlows: [
+      { src: 'customers', srcCol: 'customer_id', tgt: 'target', tgtCol: 'customer_id' },
+      { src: 'customers', srcCol: 'name', tgt: 'target', tgtCol: 'name' },
+    ],
+  },
+  {
+    name: '16b. CTE with JOIN in final query',
+    sql: `
+      WITH latest_customer AS (
+        SELECT customer_id, customer_name, salary
+        FROM ext_customer
+        WHERE rn = 1
+      )
+      INSERT INTO stg_customer (customer_id, customer_name, salary)
+      SELECT lc.customer_id, lc.customer_name, lc.salary
+      FROM latest_customer lc
+      JOIN dim_province dp ON lc.province_id = dp.province_id;
+    `,
+    expectedSources: ['ext_customer', 'dim_province'],
+    expectedTargets: ['stg_customer'],
+    expectedFlows: [
+      { src: 'ext_customer', srcCol: 'customer_id', tgt: 'stg_customer', tgtCol: 'customer_id' },
+      { src: 'ext_customer', srcCol: 'customer_name', tgt: 'stg_customer', tgtCol: 'customer_name' },
+      { src: 'ext_customer', srcCol: 'salary', tgt: 'stg_customer', tgtCol: 'salary' },
+    ],
+  },
+  {
+    name: '16c. Multiple CTEs chained',
+    sql: `
+      WITH step1 AS (
+        SELECT id, amount FROM raw_orders
+      ),
+      step2 AS (
+        SELECT id, amount * 1.07 as amount_vat FROM step1
+      )
+      INSERT INTO final_orders (id, amount_vat)
+      SELECT id, amount_vat FROM step2;
+    `,
+    expectedSources: ['raw_orders'],
+    expectedTargets: ['final_orders'],
+    expectedFlows: [
+      // CTE chains should resolve to the real source table
+    ],
+  },
+
+  // ===== 17. WINDOW FUNCTIONS (should be filtered) =====
+  {
+    name: '17a. ROW_NUMBER() should be filtered',
+    sql: `INSERT INTO target (customer_id, rn)
+          SELECT customer_id, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY load_date DESC)
+          FROM source;`,
+    expectedSources: ['source'],
+    expectedTargets: ['target'],
+    expectedFlows: [
+      { src: 'source', srcCol: 'customer_id', tgt: 'target', tgtCol: 'customer_id' },
+      // ROW_NUMBER() should NOT appear as a flow
+    ],
+  },
+  {
+    name: '17b. Other window functions filtered',
+    sql: `INSERT INTO target (id, ranking, total)
+          SELECT id, RANK() OVER (ORDER BY score DESC), SUM(amount) OVER ()
+          FROM source;`,
+    expectedSources: ['source'],
+    expectedTargets: ['target'],
+    expectedFlows: [
+      { src: 'source', srcCol: 'id', tgt: 'target', tgtCol: 'id' },
+    ],
+  },
+
+  // ===== 18. CASE WHEN (should be filtered or handled) =====
+  {
+    name: '18a. CASE WHEN without nested commas',
+    sql: `INSERT INTO target (customer_id, grade)
+          SELECT customer_id, CASE WHEN salary > 50000 THEN 'A' ELSE 'B' END
+          FROM source;`,
+    expectedSources: ['source'],
+    expectedTargets: ['target'],
+    expectedFlows: [
+      { src: 'source', srcCol: 'customer_id', tgt: 'target', tgtCol: 'customer_id' },
+    ],
+  },
+
+  // ===== 19. AGGREGATE FUNCTIONS (should be filtered) =====
+  {
+    name: '19a. COUNT, SUM, MAX should be filtered',
+    sql: `INSERT INTO summary (customer_id, total, cnt, max_amount)
+          SELECT customer_id, SUM(amount), COUNT(*), MAX(amount)
+          FROM orders GROUP BY customer_id;`,
+    expectedSources: ['orders'],
+    expectedTargets: ['summary'],
+    expectedFlows: [
+      { src: 'orders', srcCol: 'customer_id', tgt: 'summary', tgtCol: 'customer_id' },
+    ],
+  },
+
+  // ===== 20. EXPRESSIONS WITH PARENTHESES (should be filtered) =====
+  {
+    name: '20a. Arithmetic expressions should be filtered',
+    sql: `INSERT INTO target (id, profit)
+          SELECT id, (amount - cost) FROM source;`,
+    expectedSources: ['source'],
+    expectedTargets: ['target'],
+    expectedFlows: [
+      { src: 'source', srcCol: 'id', tgt: 'target', tgtCol: 'id' },
+    ],
+  },
+
+  // ===== 21. COALESCE / FUNCTION wrapping real column =====
+  {
+    name: '21a. COALESCE should be filtered (not extract inner col)',
+    sql: `INSERT INTO target (name, code)
+          SELECT COALESCE(s.name, 'Unknown'), TRIM(s.code)
+          FROM source s;`,
+    expectedSources: ['source'],
+    expectedTargets: ['target'],
+    expectedFlows: [
+      // Functions wrapping columns are complex expressions, should be filtered
+    ],
+  },
 ];
 
 // ===== Run Tests =====

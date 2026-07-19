@@ -46,6 +46,60 @@ export const parseLineage = (sql: string): LineageResult => {
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/--.*$/gm, '');
 
+  // --- Extract CTEs (WITH ... AS (...)) ---
+  // CTE names are virtual tables — not real source/target
+  const cteNames = new Set<string>();
+  // Map CTE name → real source tables it reads from
+  const cteToRealSources: Record<string, string[]> = {};
+
+  // Find all WITH blocks (can appear anywhere, not just at start)
+  const cteBlockMatches = [...cleanSql.matchAll(/\bwith\s+([\s\S]+?)(?=\s*(?:insert|update|delete|merge)\s)/gi)];
+  cteBlockMatches.forEach(cteBlockMatch => {
+    const cteBlock = cteBlockMatch[1];
+    // Match CTE definitions carefully handling nested parens
+    const cteDefRegex = /(\w+)\s+as\s*\(/gi;
+    let match;
+    while ((match = cteDefRegex.exec(cteBlock)) !== null) {
+      const cteName = match[1].toLowerCase();
+      if (SQL_KEYWORDS.has(cteName)) continue;
+      cteNames.add(cteName);
+
+      // Extract FROM/JOIN tables inside this CTE's body
+      const startIdx = match.index + match[0].length;
+      let depth = 1;
+      let endIdx = startIdx;
+      for (let i = startIdx; i < cteBlock.length && depth > 0; i++) {
+        if (cteBlock[i] === '(') depth++;
+        if (cteBlock[i] === ')') depth--;
+        endIdx = i;
+      }
+      const cteBody = cteBlock.substring(startIdx, endIdx);
+      const fromMatches = [...cteBody.matchAll(/(?:from|join)\s+([\w.]+)/gi)];
+      const realSources: string[] = [];
+      fromMatches.forEach(m => {
+        const tbl = extractTableName(m[1]);
+        if (!SQL_KEYWORDS.has(tbl)) realSources.push(tbl);
+      });
+      cteToRealSources[cteName] = realSources;
+    }
+  });
+
+  // Resolve CTE chains: if a CTE references another CTE, follow the chain to find real tables
+  const resolveCteSources = (cteName: string, visited = new Set<string>()): string[] => {
+    if (visited.has(cteName)) return [];
+    visited.add(cteName);
+    const directSources = cteToRealSources[cteName] || [];
+    const resolved: string[] = [];
+    directSources.forEach(src => {
+      if (cteNames.has(src)) {
+        resolved.push(...resolveCteSources(src, visited));
+      } else {
+        resolved.push(src);
+      }
+    });
+    return [...new Set(resolved)];
+  };
+
   // Split into separate statements
   const statements = cleanSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
 
@@ -103,11 +157,36 @@ export const parseLineage = (sql: string): LineageResult => {
       }
     }
 
-    // Source tables = all aliased tables EXCEPT the target of this statement
-    const sourceTables = [...new Set(Object.values(aliasMap))].filter(t => t !== targetTable);
+    // --- Resolve CTE references to real source tables ---
+    // If aliasMap has a CTE name, replace it with the real source tables
+    const cteAliasExpansions: Record<string, string[]> = {};
+    Object.entries(aliasMap).forEach(([alias, tableName]) => {
+      if (cteNames.has(tableName)) {
+        const realSources = resolveCteSources(tableName);
+        cteAliasExpansions[alias] = realSources;
+        // Replace the CTE name with the first real source for column resolution
+        if (realSources.length > 0) {
+          aliasMap[alias] = realSources[0];
+        }
+      }
+    });
 
-    // Mark source roles
+    // Source tables = all aliased tables EXCEPT the target and CTEs
+    const sourceTables = [...new Set(Object.values(aliasMap))]
+      .filter(t => t !== targetTable && !cteNames.has(t));
+
+    // Also add any additional real sources from CTE expansion
+    Object.values(cteAliasExpansions).forEach(realSources => {
+      realSources.forEach(src => {
+        if (src !== targetTable && !sourceTables.includes(src)) {
+          sourceTables.push(src);
+        }
+      });
+    });
+
+    // Mark source roles (skip CTE names)
     sourceTables.forEach(srcTable => {
+      if (cteNames.has(srcTable)) return;
       if (!tableRoles[srcTable]) tableRoles[srcTable] = { isSource: false, isTarget: false };
       tableRoles[srcTable].isSource = true;
     });
@@ -194,10 +273,20 @@ export const parseLineage = (sql: string): LineageResult => {
 
   // Build final source/target lists from tableRoles
   // A table CAN appear in BOTH lists (dual-role)
-  const sources = Object.entries(tableRoles).filter(([, r]) => r.isSource).map(([t]) => t);
-  const targets = Object.entries(tableRoles).filter(([, r]) => r.isTarget).map(([t]) => t);
+  // Filter out CTE names — they are virtual tables
+  const sources = Object.entries(tableRoles)
+    .filter(([t, r]) => r.isSource && !cteNames.has(t))
+    .map(([t]) => t);
+  const targets = Object.entries(tableRoles)
+    .filter(([t, r]) => r.isTarget && !cteNames.has(t))
+    .map(([t]) => t);
 
-  return { sources, targets, flows: allFlows };
+  // Also filter flows that reference CTE names as source/target
+  const filteredFlows = allFlows.filter(
+    f => !cteNames.has(f.sourceTable) && !cteNames.has(f.targetTable)
+  );
+
+  return { sources, targets, flows: filteredFlows };
 };
 
 export default parseLineage;
