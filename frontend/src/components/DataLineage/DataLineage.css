@@ -72,6 +72,11 @@
   color: var(--color-emerald);
 }
 
+.lineage-node-header.both {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+}
+
 .lineage-node-body {
   padding: 8px 12px;
   display: flex;

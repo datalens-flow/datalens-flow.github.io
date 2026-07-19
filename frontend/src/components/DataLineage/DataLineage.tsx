@@ -21,26 +21,32 @@ import { parseLineage } from '../../utils/lineageParser';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
-// Custom Lineage Node with per-column handles outside the box
+// Column data for LineageNode
+interface ColInfo {
+  name: string;
+  hasLeft: boolean;   // incoming handle (target)
+  hasRight: boolean;  // outgoing handle (source)
+}
+
+// Custom Lineage Node with per-column handles (supports dual-role: both source + target)
 const LineageNode: React.FC<{ data: any }> = ({ data }) => {
-  const isSource = data.isSource;
-  const columns: string[] = data.columns || [];
+  const columns: ColInfo[] = data.columns || [];
+  const role: 'source' | 'target' | 'both' = data.role || 'source';
   return (
-    <div style={{ position: 'relative', width: '160px' }}>
-      {/* Node content */}
+    <div style={{ position: 'relative', width: '180px' }}>
       <div className="lineage-node">
-        <div className={`lineage-node-header ${isSource ? 'source' : 'target'}`}>
-          {isSource ? 'Source' : 'Target'}: {data.tableName}
+        <div className={`lineage-node-header ${role}`}>
+          {role === 'source' ? '◀ Source' : role === 'target' ? 'Target ▶' : '◀ ▶'}&nbsp;&nbsp;{data.tableName}
         </div>
         <div className="lineage-node-body">
           {columns.map((col, i) => (
             <div key={i} className="lineage-col-row">
-              {/* Per-column target handle — fully outside the left edge */}
-              {!isSource && (
+              {/* Left handle (incoming) */}
+              {col.hasLeft && (
                 <Handle
                   type="target"
                   position={Position.Left}
-                  id={`col-${col}`}
+                  id={`col-${col.name}`}
                   style={{
                     background: 'var(--color-emerald)',
                     border: '2px solid var(--bg-primary)',
@@ -53,13 +59,13 @@ const LineageNode: React.FC<{ data: any }> = ({ data }) => {
                   }}
                 />
               )}
-              <span className="lineage-col-flow">{col}</span>
-              {/* Per-column source handle — fully outside the right edge */}
-              {isSource && (
+              <span className="lineage-col-flow">{col.name}</span>
+              {/* Right handle (outgoing) */}
+              {col.hasRight && (
                 <Handle
                   type="source"
                   position={Position.Right}
-                  id={`col-${col}`}
+                  id={`col-${col.name}`}
                   style={{
                     background: 'var(--color-indigo)',
                     border: '2px solid var(--bg-primary)',
@@ -190,77 +196,104 @@ JOIN orders o ON u.id = o.user_id;`);
     const newNodes: any[] = [];
     const newEdges: any[] = [];
 
-    const NODE_WIDTH = 160;
-    const NODE_SPACING_Y = 180;
-    const HORIZONTAL_GAP = 350;
-    const SOURCE_X = 80;
-    const TARGET_X = SOURCE_X + HORIZONTAL_GAP;
+    // --- Classify tables into 3 columns ---
+    const sourceOnly: string[] = [];
+    const targetOnly: string[] = [];
+    const bothTables: string[] = [];
 
-    // Calculate total height of source nodes for centering targets
-    const sourceTotalHeight = (result.sources.length - 1) * NODE_SPACING_Y;
-    const sourceCenterY = 50 + sourceTotalHeight / 2;
-
-    // Layout source nodes on the left
-    result.sources.forEach((src, idx) => {
-      const relatedFlows = result.flows.filter(f => f.sourceTable === src);
-      const columns = relatedFlows.map(f => f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
-      newNodes.push({
-        id: src,
-        type: 'lineageNode',
-        position: { x: SOURCE_X, y: 50 + idx * NODE_SPACING_Y },
-        data: {
-          isSource: true,
-          tableName: src.toUpperCase(),
-          columns,
-        },
-        style: {
-          width: NODE_WIDTH,
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--color-border)',
-          color: 'var(--color-text-primary)',
-          borderRadius: '6px',
-          padding: 0,
-          opacity: 1,
-          transition: 'opacity 0.2s ease'
-        }
-      });
+    const allTables = new Set([...result.sources, ...result.targets]);
+    allTables.forEach(table => {
+      const isSrc = result.sources.includes(table);
+      const isTgt = result.targets.includes(table);
+      if (isSrc && isTgt) bothTables.push(table);
+      else if (isSrc) sourceOnly.push(table);
+      else targetOnly.push(table);
     });
 
-    // Layout target nodes on the right, centered vertically relative to sources
-    const targetTotalHeight = (result.targets.length - 1) * NODE_SPACING_Y;
-    const targetStartY = sourceCenterY - targetTotalHeight / 2;
+    // --- Layout constants ---
+    const NODE_WIDTH = 180;
+    const NODE_SPACING_Y = 150;
+    const hasBothColumn = bothTables.length > 0;
+    const COL_X_SOURCE = 50;
+    const COL_X_BOTH = hasBothColumn ? 330 : 0;
+    const COL_X_TARGET = hasBothColumn ? 610 : 380;
 
-    result.targets.forEach((tgt, idx) => {
-      const relatedFlows = result.flows.filter(f => f.targetTable === tgt);
-      const columns = relatedFlows.map(f => f.targetCol === '*' ? 'All Columns' : f.targetCol);
-      newNodes.push({
-        id: tgt,
-        type: 'lineageNode',
-        position: { x: TARGET_X, y: targetStartY + idx * NODE_SPACING_Y },
-        data: {
-          isSource: false,
-          tableName: tgt.toUpperCase(),
-          columns,
-        },
-        style: {
-          width: NODE_WIDTH,
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--color-border)',
-          color: 'var(--color-text-primary)',
-          borderRadius: '6px',
-          padding: 0,
-          opacity: 1,
-          transition: 'opacity 0.2s ease'
+    // Vertical centering: all columns center relative to max column height
+    const maxCount = Math.max(sourceOnly.length, bothTables.length, targetOnly.length, 1);
+    const totalMaxHeight = (maxCount - 1) * NODE_SPACING_Y;
+    const centerY = 50 + totalMaxHeight / 2;
+
+    // --- Helper: get columns with handle directions for a table ---
+    const getColumnsForTable = (table: string): ColInfo[] => {
+      const incomingCols = new Set<string>();
+      const outgoingCols = new Set<string>();
+
+      result.flows.forEach(f => {
+        if (f.targetTable === table) {
+          incomingCols.add(f.targetCol === '*' ? 'All Columns' : f.targetCol);
+        }
+        if (f.sourceTable === table) {
+          outgoingCols.add(f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
         }
       });
-    });
 
-    // Create per-column edges with sourceHandle and targetHandle
+      // Merge all unique columns, preserving order (incoming first, then outgoing-only)
+      const allCols: ColInfo[] = [];
+      const seen = new Set<string>();
+
+      incomingCols.forEach(col => {
+        seen.add(col);
+        allCols.push({ name: col, hasLeft: true, hasRight: outgoingCols.has(col) });
+      });
+      outgoingCols.forEach(col => {
+        if (!seen.has(col)) {
+          allCols.push({ name: col, hasLeft: false, hasRight: true });
+        }
+      });
+
+      return allCols;
+    };
+
+    // --- Create nodes for a column of tables ---
+    const createColumnNodes = (tables: string[], xPos: number, role: 'source' | 'target' | 'both') => {
+      const colHeight = (tables.length - 1) * NODE_SPACING_Y;
+      const startY = centerY - colHeight / 2;
+
+      tables.forEach((table, idx) => {
+        const columns = getColumnsForTable(table);
+        newNodes.push({
+          id: table,
+          type: 'lineageNode',
+          position: { x: xPos, y: startY + idx * NODE_SPACING_Y },
+          data: {
+            tableName: table.toUpperCase(),
+            role,
+            columns,
+          },
+          style: {
+            width: NODE_WIDTH,
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-primary)',
+            borderRadius: '6px',
+            padding: 0,
+            opacity: 1,
+            transition: 'opacity 0.2s ease'
+          }
+        });
+      });
+    };
+
+    createColumnNodes(sourceOnly, COL_X_SOURCE, 'source');
+    createColumnNodes(bothTables, COL_X_BOTH, 'both');
+    createColumnNodes(targetOnly, COL_X_TARGET, 'target');
+
+    // --- Create per-flow edges ---
     result.flows.forEach((flow, idx) => {
       const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
       const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
       newEdges.push({
-        id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${idx}`,
+        id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
         source: flow.sourceTable,
         target: flow.targetTable,
         sourceHandle: `col-${sourceCol}`,
