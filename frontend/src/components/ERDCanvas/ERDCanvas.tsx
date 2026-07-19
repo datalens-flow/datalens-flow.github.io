@@ -33,7 +33,8 @@ const ERDCanvasContent: React.FC = () => {
     deleteRelationship,
     layoutDir,
     inferRelationships,
-    searchQuery
+    searchQuery,
+    showGrid
   } = useSchemaStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
@@ -172,7 +173,7 @@ const ERDCanvasContent: React.FC = () => {
         maxZoom={2}
         fitView
       >
-        <Background color="var(--color-grid)" gap={16} size={1} />
+        {showGrid && <Background color="var(--color-grid)" gap={16} size={1} />}
         <Controls style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }} />
         <MiniMap 
           style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)' }} 

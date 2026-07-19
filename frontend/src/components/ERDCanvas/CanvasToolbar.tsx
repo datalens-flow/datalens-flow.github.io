@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSchemaStore } from '../../store/useSchemaStore';
 
 export const CanvasToolbar: React.FC = () => {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const {
     addTable,
     layoutDir,
     setLayoutDir,
     inferRelationships,
     setInferRelationships,
+    showGrid,
+    setShowGrid,
     theme,
     setTheme,
     searchQuery,
@@ -43,16 +46,6 @@ export const CanvasToolbar: React.FC = () => {
 
       <div className="toolbar-divider"></div>
 
-      {/* Implicit relationship toggle */}
-      <button 
-        className={`toolbar-btn implicit-btn ${inferRelationships ? 'active' : ''}`}
-        onClick={() => setInferRelationships(!inferRelationships)}
-      >
-        {inferRelationships ? '🟢 Heuristics: ON' : '⚫ Heuristics: OFF'}
-      </button>
-
-      <div className="toolbar-divider"></div>
-
       {/* Theme Selectors */}
       <div className="toolbar-group">
         <span className="toolbar-label">Theme:</span>
@@ -68,6 +61,61 @@ export const CanvasToolbar: React.FC = () => {
         >
           ☀️ Light
         </button>
+      </div>
+
+      <div className="toolbar-divider"></div>
+
+      {/* Canvas Settings Dropdown */}
+      <div className="toolbar-settings-container" style={{ position: 'relative' }}>
+        <button 
+          className={`toolbar-btn ${settingsOpen ? 'active' : ''}`}
+          onClick={() => setSettingsOpen(!settingsOpen)}
+          style={{ minWidth: '110px' }}
+        >
+          ⚙️ Settings ▼
+        </button>
+        
+        {settingsOpen && (
+          <div className="toolbar-settings-dropdown glass-panel" style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            right: 0,
+            width: '200px',
+            borderRadius: '6px',
+            border: '1px solid var(--color-border)',
+            backgroundColor: 'var(--bg-secondary)',
+            boxShadow: 'var(--shadow-lg)',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '10px 12px',
+            gap: '8px'
+          }}>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
+              Canvas Options
+            </div>
+            
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--color-text-primary)', cursor: 'pointer', userSelect: 'none' }}>
+              <input 
+                type="checkbox" 
+                checked={showGrid} 
+                onChange={(e) => setShowGrid(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+              Show Background Grid
+            </label>
+            
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--color-text-primary)', cursor: 'pointer', userSelect: 'none' }}>
+              <input 
+                type="checkbox" 
+                checked={inferRelationships} 
+                onChange={(e) => setInferRelationships(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+              Heuristic Relations
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="toolbar-divider"></div>

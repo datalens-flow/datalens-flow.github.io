@@ -32,6 +32,8 @@ interface SchemaState {
   theme: 'dark' | 'light';
   layoutDir: 'LR' | 'TB';
   inferRelationships: boolean;
+  showGrid: boolean;
+  setShowGrid: (show: boolean) => void;
   outputDialect: string;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -99,6 +101,8 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
   theme: 'dark',
   layoutDir: 'LR',
   inferRelationships: false,
+  showGrid: true,
+  setShowGrid: (showGrid) => set({ showGrid }),
   outputDialect: 'postgres',
   searchQuery: '',
   setSearchQuery: (searchQuery) => set({ searchQuery }),
