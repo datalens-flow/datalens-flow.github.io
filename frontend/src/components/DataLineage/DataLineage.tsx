@@ -130,7 +130,7 @@ JOIN orders o ON u.id = o.user_id;`);
       const relatedFlows = result.flows.filter(f => f.sourceTable === src);
       newNodes.push({
         id: src,
-        type: 'default',
+        type: 'input',
         position: { x: 80, y: 50 + idx * 180 },
         data: { 
           label: (
@@ -162,7 +162,7 @@ JOIN orders o ON u.id = o.user_id;`);
       const relatedFlows = result.flows.filter(f => f.targetTable === tgt);
       newNodes.push({
         id: tgt,
-        type: 'default',
+        type: 'output',
         position: { x: 480, y: 50 + idx * 180 },
         data: { 
           label: (
