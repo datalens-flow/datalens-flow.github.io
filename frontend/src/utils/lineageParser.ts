@@ -201,6 +201,8 @@ export const parseLineage = (sql: string): LineageResult => {
       if (SQL_KEYWORDS.has(tableName)) return;
       const alias = m[2] && !SQL_KEYWORDS.has(m[2].toLowerCase()) ? m[2].toLowerCase() : tableName;
       aliasMap[alias] = tableName;
+      // Also map the table name itself to the table name to handle full table name qualification
+      aliasMap[tableName] = tableName;
     });
 
     // For UPDATE, also capture the target table alias (e.g., UPDATE dim_customer d SET ...)
@@ -306,7 +308,27 @@ export const parseLineage = (sql: string): LineageResult => {
       // Multi-line SELECT support: [\s\S]+? crosses newlines
       const selectMatch = stmt.match(/select\s+([\s\S]+?)\s+from\s/i);
       if (selectMatch && targetCols.length > 0) {
-        const selectExprs = selectMatch[1].split(',').map(c => c.trim().replace(/\s+/g, ' '));
+        // Depth-aware splitting of SELECT expressions to avoid breaking on commas inside functions e.g. COALESCE(pm.promotion_key,-1)
+        const selectText = selectMatch[1];
+        const selectExprs: string[] = [];
+        let currentExpr = '';
+        let parenDepth = 0;
+        
+        for (let i = 0; i < selectText.length; i++) {
+          const char = selectText[i];
+          if (char === '(') parenDepth++;
+          if (char === ')') parenDepth--;
+          
+          if (char === ',' && parenDepth === 0) {
+            selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
+            currentExpr = '';
+          } else {
+            currentExpr += char;
+          }
+        }
+        if (currentExpr.trim()) {
+          selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
+        }
 
         selectExprs.forEach((expr, idx) => {
           const targetCol = targetCols[idx];
