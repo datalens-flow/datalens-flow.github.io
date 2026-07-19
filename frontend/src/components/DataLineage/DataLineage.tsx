@@ -25,13 +25,13 @@ import './DataLineage.css';
 const LineageNode: React.FC<{ data: any }> = ({ data }) => {
   const isSource = data.isSource;
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div style={{ position: 'relative', width: '160px', height: '100%' }}>
       {/* Target/Input handle strictly on the Left side */}
       {!isSource && (
         <Handle
           type="target"
           position={Position.Left}
-          style={{ background: 'var(--color-emerald)', width: '8px', height: '8px', left: '-5px' }}
+          style={{ background: 'var(--color-emerald)', width: '8px', height: '8px', top: '50%', transform: 'translateY(-50%)', left: '-4px' }}
         />
       )}
       
@@ -42,7 +42,7 @@ const LineageNode: React.FC<{ data: any }> = ({ data }) => {
         <Handle
           type="source"
           position={Position.Right}
-          style={{ background: 'var(--color-indigo)', width: '8px', height: '8px', right: '-5px' }}
+          style={{ background: 'var(--color-indigo)', width: '8px', height: '8px', top: '50%', transform: 'translateY(-50%)', right: '-4px' }}
         />
       )}
     </div>
@@ -198,7 +198,7 @@ JOIN orders o ON u.id = o.user_id;`);
       newNodes.push({
         id: tgt,
         type: 'lineageNode',
-        position: { x: 420, y: 50 + idx * 180 },
+        position: { x: 400, y: 50 + idx * 180 },
         data: { 
           isSource: false,
           label: (
