@@ -8,8 +8,11 @@ import {
   exportSql,
   exportMigration
 } from '../../api/client';
+import { generateHtmlReport } from '../../utils/exporters';
 import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import './ExportPanel.css';
+
+import { useEffect, useRef } from 'react';
 
 interface ExportPanelProps {
   mode?: 'diagram' | 'lineage';
@@ -18,11 +21,22 @@ interface ExportPanelProps {
 export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const { schema, originalSchema, renameEvents, descriptions, theme } = useSchemaStore();
+  const { schema, originalSchema, renameEvents, descriptions, theme, tableColors } = useSchemaStore();
   const { getNodes } = useReactFlow();
   const [prefix, setPrefix] = useState('datalens-flow');
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const triggerDownload = (blob: Blob, filename: string) => {
     const url = window.URL.createObjectURL(blob);
@@ -158,6 +172,14 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
     }
   };
 
+  const handleExportHtmlReport = () => {
+    if (!schema) return;
+    const htmlContent = generateHtmlReport(schema, descriptions, tableColors);
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    triggerDownload(blob, `${prefix}-report.html`);
+    setIsOpen(false);
+  };
+
   const handleExportSql = async () => {
     if (!schema) return;
     setExporting(true);
@@ -207,7 +229,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
   };
 
   return (
-    <div className="export-panel-container">
+    <div className="export-panel-container" ref={panelRef}>
       <button 
         onClick={toggleDropdown} 
         disabled={exporting || (mode === 'diagram' && !schema)}
@@ -256,6 +278,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
               <div className="dropdown-section-title">Data Dictionary</div>
               <button onClick={handleExportXlsx} className="dropdown-item">📊 Export Excel (.xlsx)</button>
               <button onClick={handleExportMarkdown} className="dropdown-item">📝 Export Markdown (.md)</button>
+              <button onClick={handleExportHtmlReport} className="dropdown-item">📄 Export HTML Report</button>
               
               <div className="dropdown-divider"></div>
               
