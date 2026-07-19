@@ -276,3 +276,18 @@
   from { box-shadow: 0 0 10px var(--accent-glow); }
   to   { box-shadow: 0 0 20px var(--color-indigo); }
 }
+
+/* ── Sidebar Explorer ── */
+.erd-sidebar-explorer {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.erd-explorer-item:hover {
+  background-color: var(--color-row-hover) !important;
+}
+
+.erd-explorer-item:active {
+  transform: scale(0.98);
+}
+
