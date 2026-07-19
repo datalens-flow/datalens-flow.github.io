@@ -21,7 +21,7 @@ import { parseLineage } from '../../utils/lineageParser';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
-// Custom Lineage Node with per-column handles
+// Custom Lineage Node with per-column handles outside the box
 const LineageNode: React.FC<{ data: any }> = ({ data }) => {
   const isSource = data.isSource;
   const columns: string[] = data.columns || [];
@@ -35,7 +35,7 @@ const LineageNode: React.FC<{ data: any }> = ({ data }) => {
         <div className="lineage-node-body">
           {columns.map((col, i) => (
             <div key={i} className="lineage-col-row">
-              {/* Per-column target handle on the left */}
+              {/* Per-column target handle — fully outside the left edge */}
               {!isSource && (
                 <Handle
                   type="target"
@@ -43,9 +43,10 @@ const LineageNode: React.FC<{ data: any }> = ({ data }) => {
                   id={`col-${col}`}
                   style={{
                     background: 'var(--color-emerald)',
-                    width: '8px',
-                    height: '8px',
-                    left: '-4px',
+                    border: '2px solid var(--bg-primary)',
+                    width: '10px',
+                    height: '10px',
+                    left: '-17px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     position: 'absolute',
@@ -53,7 +54,7 @@ const LineageNode: React.FC<{ data: any }> = ({ data }) => {
                 />
               )}
               <span className="lineage-col-flow">{col}</span>
-              {/* Per-column source handle on the right */}
+              {/* Per-column source handle — fully outside the right edge */}
               {isSource && (
                 <Handle
                   type="source"
@@ -61,9 +62,10 @@ const LineageNode: React.FC<{ data: any }> = ({ data }) => {
                   id={`col-${col}`}
                   style={{
                     background: 'var(--color-indigo)',
-                    width: '8px',
-                    height: '8px',
-                    right: '-4px',
+                    border: '2px solid var(--bg-primary)',
+                    width: '10px',
+                    height: '10px',
+                    right: '-17px',
                     top: '50%',
                     transform: 'translateY(-50%)',
                     position: 'absolute',
