@@ -20,7 +20,10 @@ export interface Project {
   outputDialect: string;
   schema: SchemaResponse | null;
   descriptions: Record<string, Record<string, string>>;
+  tableDescriptions: Record<string, string>;
+  dataClassifications: Record<string, Record<string, string>>;
   nodePositions: Record<string, { x: number; y: number }>;
+  tableColors?: Record<string, string>;
 }
 
 export interface RenameEvents {
@@ -36,8 +39,10 @@ interface SchemaState {
   originalSchema: SchemaResponse | null;
   renameEvents: RenameEvents;
   descriptions: Record<string, Record<string, string>>; // tableId -> colName -> description
+  tableDescriptions: Record<string, string>; // tableId -> description
+  dataClassifications: Record<string, Record<string, string>>; // tableId -> colName -> classification (Public, PII, Confidential)
   nodePositions: Record<string, { x: number; y: number }>;
-  activeTab: 'erd' | 'dict';
+  activeTab: 'erd' | 'dict' | 'metadata';
   sql: string;
   dialect: string;
   loading: boolean;
@@ -69,8 +74,10 @@ interface SchemaState {
   setSchema: (schema: SchemaResponse | null) => void;
   setOriginalSchema: (schema: SchemaResponse | null) => void;
   updateDescription: (tableId: string, colName: string, text: string) => void;
+  updateTableDescription: (tableId: string, text: string) => void;
+  updateDataClassification: (tableId: string, colName: string, text: string) => void;
   setDescriptions: (descriptions: Record<string, Record<string, string>>) => void;
-  setActiveTab: (tab: 'erd' | 'dict') => void;
+  setActiveTab: (tab: 'erd' | 'dict' | 'metadata') => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setNodePositions: (positions: Record<string, { x: number; y: number }>) => void;
@@ -133,6 +140,8 @@ export const useSchemaStore = create<SchemaState>()(
       originalSchema: null,
       renameEvents: { tables: {}, columns: {} },
       descriptions: {},
+      tableDescriptions: {},
+      dataClassifications: {},
       nodePositions: {},
       activeTab: 'erd',
       sql: DEFAULT_SQL,
@@ -215,6 +224,24 @@ export const useSchemaStore = create<SchemaState>()(
               [colName]: text,
             },
           },
+        };
+      }),
+      updateTableDescription: (tableId, text) => set((state) => ({
+        tableDescriptions: {
+          ...state.tableDescriptions,
+          [tableId]: text
+        }
+      })),
+      updateDataClassification: (tableId, colName, text) => set((state) => {
+        const tableClassification = state.dataClassifications[tableId] || {};
+        return {
+          dataClassifications: {
+            ...state.dataClassifications,
+            [tableId]: {
+              ...tableClassification,
+              [colName]: text
+            }
+          }
         };
       }),
       setDescriptions: (descriptions) => set({ descriptions }),
@@ -439,7 +466,10 @@ export const useSchemaStore = create<SchemaState>()(
           outputDialect: state.outputDialect,
           schema: state.schema,
           descriptions: state.descriptions,
+          tableDescriptions: state.tableDescriptions || {},
+          dataClassifications: state.dataClassifications || {},
           nodePositions: state.nodePositions,
+          tableColors: state.tableColors,
         };
         set({
           projects: [...state.projects, newProject],
@@ -459,7 +489,10 @@ export const useSchemaStore = create<SchemaState>()(
             schema: project.schema,
             originalSchema: project.schema,
             descriptions: project.descriptions || {},
+            tableDescriptions: project.tableDescriptions || {},
+            dataClassifications: project.dataClassifications || {},
             nodePositions: project.nodePositions || {},
+            tableColors: project.tableColors || {},
             renameEvents: { tables: {}, columns: {} },
             _history: project.schema ? [JSON.parse(JSON.stringify(project.schema))] : [],
             _historyIndex: project.schema ? 0 : -1,
@@ -490,7 +523,10 @@ export const useSchemaStore = create<SchemaState>()(
                 outputDialect: state.outputDialect,
                 schema: state.schema,
                 descriptions: state.descriptions,
+                tableDescriptions: state.tableDescriptions,
+                dataClassifications: state.dataClassifications,
                 nodePositions: state.nodePositions,
+                tableColors: state.tableColors,
               };
             }
             return p;
@@ -510,7 +546,10 @@ export const useSchemaStore = create<SchemaState>()(
             outputDialect: data.outputDialect || 'postgres',
             schema: data.schema || null,
             descriptions: data.descriptions || {},
+            tableDescriptions: data.tableDescriptions || {},
+            dataClassifications: data.dataClassifications || {},
             nodePositions: data.nodePositions || {},
+            tableColors: data.tableColors || {},
           };
           
           set((state) => {
@@ -528,7 +567,10 @@ export const useSchemaStore = create<SchemaState>()(
               schema: newProject.schema,
               originalSchema: newProject.schema,
               descriptions: newProject.descriptions,
+              tableDescriptions: newProject.tableDescriptions,
+              dataClassifications: newProject.dataClassifications,
               nodePositions: newProject.nodePositions,
+              tableColors: newProject.tableColors || {},
               renameEvents: { tables: {}, columns: {} },
               _history: newProject.schema ? [JSON.parse(JSON.stringify(newProject.schema))] : [],
               _historyIndex: newProject.schema ? 0 : -1,
@@ -547,6 +589,8 @@ export const useSchemaStore = create<SchemaState>()(
         schema: state.schema,
         originalSchema: state.originalSchema,
         descriptions: state.descriptions,
+        tableDescriptions: state.tableDescriptions,
+        dataClassifications: state.dataClassifications,
         nodePositions: state.nodePositions,
         sql: state.sql,
         dialect: state.dialect,
