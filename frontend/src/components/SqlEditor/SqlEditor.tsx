@@ -8,7 +8,7 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { useToastStore } from '../../store/useToastStore';
-import { parseSql } from '../../api/client';
+import { parseSql, exportSql } from '../../api/client';
 import './SqlEditor.css';
 
 const DIALECTS = [
@@ -69,6 +69,7 @@ export const SqlEditor: React.FC = () => {
     setSql, 
     dialect, 
     setDialect, 
+    schema,
     setSchema, 
     setOriginalSchema,
     clearRenameEvents,
@@ -258,32 +259,107 @@ CREATE TABLE orders (
             </button>
           </div>
         </div>
-        <div className="sql-editor-controls" style={{ justifyContent: 'space-between', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Input:</span>
-            <select 
-              value={dialect} 
-              onChange={(e) => setDialect(e.target.value)}
-              className="dialect-select"
-            >
-              {DIALECTS.map((d) => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </select>
+        <div className="sql-editor-controls" style={{ flexDirection: 'column', gap: '8px', width: '100%', marginTop: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Input:</span>
+              <select 
+                value={dialect} 
+                onChange={(e) => setDialect(e.target.value)}
+                className="dialect-select"
+              >
+                {DIALECTS.map((d) => (
+                  <option key={d.value} value={d.value}>{d.label}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Output:</span>
+              <select 
+                value={outputDialect} 
+                onChange={(e) => setOutputDialect(e.target.value)}
+                className="dialect-select"
+              >
+                {DIALECTS.map((d) => (
+                  <option key={d.value} value={d.value}>{d.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Output:</span>
-            <select 
-              value={outputDialect} 
-              onChange={(e) => setOutputDialect(e.target.value)}
-              className="dialect-select"
-            >
-              {DIALECTS.map((d) => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </select>
-          </div>
+
+          {/* Data Type Converter quick action button */}
+          <button
+            onClick={async () => {
+              if (!schema) {
+                useToastStore.getState().addToast({ type: 'warning', message: 'Please parse your DDL schema first before converting types.' });
+                return;
+              }
+              setLoading(true);
+              try {
+                // Map the current column types to the selected outputDialect
+                const mapType = (type: string, targetDialect: string): string => {
+                  let t = type.toUpperCase().trim();
+                  if (targetDialect === 'oracle') {
+                    if (t.startsWith('VARCHAR')) return t.replace('VARCHAR', 'VARCHAR2');
+                    if (t === 'INT' || t === 'INTEGER') return 'NUMBER(10)';
+                    if (t === 'BOOLEAN') return 'NUMBER(1)';
+                  } else if (targetDialect === 'mysql') {
+                    if (t === 'BOOLEAN') return 'TINYINT(1)';
+                  } else if (targetDialect === 'sqlite') {
+                    if (t.startsWith('VARCHAR') || t === 'TEXT') return 'TEXT';
+                    if (t.startsWith('DECIMAL') || t === 'FLOAT' || t === 'DOUBLE') return 'REAL';
+                  } else if (targetDialect === 'postgres') {
+                    if (t.startsWith('VARCHAR2')) return t.replace('VARCHAR2', 'VARCHAR');
+                    if (t === 'NUMBER(10)') return 'INT';
+                    if (t === 'NUMBER(1)') return 'BOOLEAN';
+                    if (t === 'TINYINT(1)') return 'BOOLEAN';
+                  }
+                  return t;
+                };
+
+                const convertedTables = schema.tables.map((table: any) => ({
+                  ...table,
+                  columns: table.columns.map((col: any) => ({
+                    ...col,
+                    type: mapType(col.type, outputDialect)
+                  }))
+                }));
+
+                const convertedSchema = { ...schema, tables: convertedTables };
+                
+                // Export converted SQL
+                const blob = await exportSql(convertedSchema, outputDialect);
+                const sqlText = await blob.text();
+                
+                // Update store state
+                setSql(sqlText);
+                setSchema(convertedSchema);
+                setDialect(outputDialect); // input dialect matches new schema
+                
+                // Update CodeMirror editor view
+                if (viewRef.current) {
+                  viewRef.current.dispatch({
+                    changes: { from: 0, to: viewRef.current.state.doc.length, insert: sqlText }
+                  });
+                }
+                
+                useToastStore.getState().addToast({ type: 'success', message: `Successfully converted types to ${outputDialect.toUpperCase()}` });
+              } catch (err: any) {
+                useToastStore.getState().addToast({ type: 'error', message: err.message || 'Failed to convert data types' });
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="btn btn-secondary"
+            style={{ width: '100%', padding: '6px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.08)', border: '1px dashed rgba(99, 102, 241, 0.25)', color: 'var(--color-indigo)' }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l3 3-3 3M4 14l-3-3 3-3M2 11h11M14 5H3"/>
+            </svg>
+            Convert Data Types (ข้าม Dialect)
+          </button>
         </div>
       </div>
       <div className="editor-workspace" ref={editorRef}></div>
