@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { SqlEditor } from './components/SqlEditor/SqlEditor';
 import { ERDCanvas } from './components/ERDCanvas/ERDCanvas';
 import { DataDictionary } from './components/DataDictionary/DataDictionary';
 import { ExportPanel } from './components/ExportPanel/ExportPanel';
 import { CanvasToolbar } from './components/ERDCanvas/CanvasToolbar';
+import { DataLineage } from './components/DataLineage/DataLineage';
 import { useSchemaStore } from './store/useSchemaStore';
 
 function App() {
+  const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>('diagram');
   const { activeTab, setActiveTab, error, theme, schema } = useSchemaStore();
   const tableCount = schema?.tables?.length || 0;
 
@@ -20,70 +23,96 @@ function App() {
         backgroundColor: 'var(--bg-secondary)', 
         borderBottom: '1px solid var(--color-border)' 
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '20px' }}>🔷</span>
-          <h1 style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '0.02em' }}>
-            DataLens Flow
-          </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>🔷</span>
+            <h1 style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '0.02em', margin: 0 }}>
+              DataLens Flow
+            </h1>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="toolbar-group" style={{ display: 'flex', background: 'var(--bg-primary)', borderRadius: '6px', padding: '3px' }}>
+            <button 
+              className={`toolbar-toggle-btn ${currentMode === 'diagram' ? 'active' : ''}`}
+              onClick={() => setCurrentMode('diagram')}
+              style={{ fontSize: '12px', padding: '4px 12px' }}
+            >
+              📁 Database Diagram
+            </button>
+            <button 
+              className={`toolbar-toggle-btn ${currentMode === 'lineage' ? 'active' : ''}`}
+              onClick={() => setCurrentMode('lineage')}
+              style={{ fontSize: '12px', padding: '4px 12px' }}
+            >
+              🌿 Data Lineage
+            </button>
+          </div>
         </div>
         
-        {/* Canvas Controls (only active on ERD tab) */}
-        {activeTab === 'erd' && <CanvasToolbar />}
+        {/* Canvas Controls (only active on ERD tab in Diagram Mode) */}
+        {currentMode === 'diagram' && activeTab === 'erd' && <CanvasToolbar />}
         
-        {/* Export options dropdown */}
-        <ExportPanel />
+        {/* Export options dropdown (only active in Diagram Mode) */}
+        {currentMode === 'diagram' && <ExportPanel />}
       </header>
 
       {/* Main Workspace */}
-      <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden', padding: '16px', gap: '16px' }}>
-        {/* Left Side: SQL Input */}
-        <section style={{ width: '400px', height: '100%', flexShrink: 0 }}>
-          <SqlEditor />
-        </section>
+      {currentMode === 'diagram' ? (
+        <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden', padding: '16px', gap: '16px' }}>
+          {/* Left Side: SQL Input */}
+          <section style={{ width: '400px', height: '100%', flexShrink: 0 }}>
+            <SqlEditor />
+          </section>
 
-        {/* Right Side: Visualizers */}
-        <section className="glass-panel" style={{ flexGrow: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Tab Selection */}
-          <div className="tabs-container">
-            <button 
-              className={`tab-btn ${activeTab === 'erd' ? 'active' : ''}`}
-              onClick={() => setActiveTab('erd')}
-            >
-              📊 Interactive ERD {tableCount > 0 ? `(${tableCount})` : ''}
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'dict' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dict')}
-            >
-              📖 Data Dictionary {tableCount > 0 ? `(${tableCount})` : ''}
-            </button>
-          </div>
-
-          {/* Status Message or Warnings */}
-          {error && (
-            <div style={{ 
-              padding: '8px 16px', 
-              backgroundColor: 'rgba(244, 63, 94, 0.1)', 
-              borderBottom: '1px solid var(--color-rose)', 
-              color: 'var(--color-rose)', 
-              fontSize: '13px',
-              whiteSpace: 'pre-wrap',
-              fontFamily: 'var(--font-mono)'
-            }}>
-              ⚠️ {error}
+          {/* Right Side: Visualizers */}
+          <section className="glass-panel" style={{ flexGrow: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Tab Selection */}
+            <div className="tabs-container">
+              <button 
+                className={`tab-btn ${activeTab === 'erd' ? 'active' : ''}`}
+                onClick={() => setActiveTab('erd')}
+              >
+                📊 Interactive ERD {tableCount > 0 ? `(${tableCount})` : ''}
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'dict' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dict')}
+              >
+                📖 Data Dictionary {tableCount > 0 ? `(${tableCount})` : ''}
+              </button>
             </div>
-          )}
 
-          {/* Canvas Workspace */}
-          <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
-            {activeTab === 'erd' ? (
-              <ERDCanvas />
-            ) : (
-              <DataDictionary />
+            {/* Status Message or Warnings */}
+            {error && (
+              <div style={{ 
+                padding: '8px 16px', 
+                backgroundColor: 'rgba(244, 63, 94, 0.1)', 
+                borderBottom: '1px solid var(--color-rose)', 
+                color: 'var(--color-rose)', 
+                fontSize: '13px',
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'var(--font-mono)'
+              }}>
+                ⚠️ {error}
+              </div>
             )}
-          </div>
-        </section>
-      </main>
+
+            {/* Canvas Workspace */}
+            <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
+              {activeTab === 'erd' ? (
+                <ERDCanvas />
+              ) : (
+                <DataDictionary />
+              )}
+            </div>
+          </section>
+        </main>
+      ) : (
+        <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+          <DataLineage />
+        </main>
+      )}
     </div>
   );
 }

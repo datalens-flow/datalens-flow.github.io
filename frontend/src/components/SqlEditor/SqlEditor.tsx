@@ -114,12 +114,52 @@ CREATE TABLE orders (
     }
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        setSql(content);
+        if (viewRef.current) {
+          viewRef.current.dispatch({
+            changes: { from: 0, to: viewRef.current.state.doc.length, insert: content }
+          });
+        }
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <div className="sql-editor-container glass-panel">
       <div className="sql-editor-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="sql-editor-title">SQL Script Input</span>
           <div style={{ display: 'flex', gap: '6px' }}>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              accept=".sql" 
+              style={{ display: 'none' }} 
+              onChange={handleFileChange} 
+            />
+            <button 
+              onClick={handleImportClick}
+              disabled={loading}
+              className="btn btn-secondary"
+              style={{ padding: '4px 10px', fontSize: '11px' }}
+            >
+              📁 Import SQL
+            </button>
             <button 
               onClick={handleLoadSample}
               disabled={loading}
