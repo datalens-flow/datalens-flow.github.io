@@ -118,7 +118,7 @@ const ERDCanvasContent: React.FC = () => {
 
     // Fit view to correctly display all tables formatted nicely without overlapping on initial render or parse
     requestAnimationFrame(() => {
-      fitView({ padding: 0.25, duration: 600 });
+      fitView({ padding: 0.3, duration: 800, includeHiddenNodes: false });
     });
   }, [schema, layoutDir, inferRelationships, searchQuery, nodePositions, fitView]);
 
