@@ -89,6 +89,8 @@ export const CanvasToolbar: React.FC = () => {
     setShowGrid,
     showTableExplorer,
     setShowTableExplorer,
+    showSidebarExplorer,
+    setShowSidebarExplorer,
     theme,
     setTheme
   } = useSchemaStore();
@@ -139,6 +141,10 @@ export const CanvasToolbar: React.FC = () => {
         <label className="toolbar-dropdown-check">
           <input type="checkbox" checked={showTableExplorer} onChange={(e) => setShowTableExplorer(e.target.checked)} />
           SQL Input Panel
+        </label>
+        <label className="toolbar-dropdown-check">
+          <input type="checkbox" checked={showSidebarExplorer} onChange={(e) => setShowSidebarExplorer(e.target.checked)} />
+          Table Explorer
         </label>
       </ToolbarDropdown>
     </div>

@@ -37,7 +37,8 @@ const ERDCanvasContent: React.FC = () => {
     inferRelationships,
     searchQuery,
     showGrid,
-    tableColors
+    tableColors,
+    showSidebarExplorer
   } = useSchemaStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
@@ -196,7 +197,7 @@ const ERDCanvasContent: React.FC = () => {
           maxZoom={2}
           fitView
         >
-          {showGrid && <Background variant={BackgroundVariant.Lines} color="var(--color-grid)" gap={24} size={0.6} />}
+          {showGrid && <Background color="var(--color-grid)" variant={BackgroundVariant.Lines} gap={24} size={1} />}
           <Controls style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }} />
           <MiniMap 
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)' }} 
@@ -207,11 +208,13 @@ const ERDCanvasContent: React.FC = () => {
       </div>
 
       {/* Sidebar Explorer */}
-      {schema && schema.tables.length > 0 && (
+      {schema && schema.tables.length > 0 && showSidebarExplorer && (
         <div 
           className="erd-sidebar-explorer glass-panel"
           style={{
-            width: '240px',
+            width: 'fit-content',
+            minWidth: '180px',
+            maxWidth: '260px',
             borderLeft: '1px solid var(--color-border)',
             backgroundColor: 'var(--bg-secondary)',
             display: 'flex',
@@ -221,7 +224,7 @@ const ERDCanvasContent: React.FC = () => {
         >
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-indigo)" strokeWidth="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M7 4h2M4 7v2M12 7v2"/></svg>
-            <strong style={{ fontSize: '13px', color: 'var(--color-text-primary)' }}>Table Explorer</strong>
+            <strong style={{ fontSize: '13px', color: 'var(--color-text-primary)', whiteSpace: 'nowrap' }}>Table Explorer</strong>
           </div>
           
           <div style={{ flexGrow: 1, overflowY: 'auto', padding: '8px' }}>
