@@ -150,7 +150,8 @@ const EDGE_COLORS = [
 
 const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const { fitView } = useReactFlow();
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const { fitView, setCenter, getZoom } = useReactFlow();
 
   const [procedureSql, setProcedureSql] = useState<string>(`-- Sample ETL Stored Procedure
 INSERT INTO sales_summary (customer_name, revenue)
@@ -522,6 +523,97 @@ JOIN orders o ON u.id = o.user_id;`);
         )}
       </div>
       <div className="lineage-canvas">
+        {/* Search Bar */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '8px',
+          padding: '6px 12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          minWidth: '280px',
+        }}>
+          <span style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>🔍</span>
+          <input
+            type="text"
+            placeholder="Search tables or columns..."
+            value={searchQuery}
+            onChange={(e) => {
+              const q = e.target.value;
+              setSearchQuery(q);
+              if (!q.trim()) {
+                // Reset all nodes to full opacity
+                setNodes(nds => nds.map(n => ({ ...n, style: { ...n.style, opacity: 1 } })));
+                setEdges(eds => eds.map(e => ({ ...e, style: { ...e.style, opacity: 0.8 } })));
+                return;
+              }
+              const lower = q.toLowerCase();
+              // Find matching node IDs (table name or column name match)
+              const matchIds = new Set<string>();
+              nodes.forEach(n => {
+                if (n.id.toLowerCase().includes(lower)) {
+                  matchIds.add(n.id);
+                } else if (n.data?.columns?.some((c: any) => (c.name || '').toLowerCase().includes(lower))) {
+                  matchIds.add(n.id);
+                }
+              });
+              // Highlight matching, dim others
+              setNodes(nds => nds.map(n => ({
+                ...n,
+                style: { ...n.style, opacity: matchIds.has(n.id) ? 1 : 0.15 }
+              })));
+              // Dim edges not connected to matching nodes
+              setEdges(eds => eds.map(e => ({
+                ...e,
+                style: { ...e.style, opacity: matchIds.has(e.source) || matchIds.has(e.target) ? 0.8 : 0.08 }
+              })));
+              // Zoom to first match
+              if (matchIds.size > 0) {
+                const firstMatch = nodes.find(n => matchIds.has(n.id));
+                if (firstMatch) {
+                  const x = firstMatch.position.x + 100;
+                  const y = firstMatch.position.y + 60;
+                  setCenter(x, y, { zoom: getZoom(), duration: 300 });
+                }
+              }
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: 'var(--color-text-primary)',
+              fontSize: '13px',
+              fontFamily: 'var(--font-mono)',
+              flex: 1,
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setNodes(nds => nds.map(n => ({ ...n, style: { ...n.style, opacity: 1 } })));
+                setEdges(eds => eds.map(e => ({ ...e, style: { ...e.style, opacity: 0.8 } })));
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-text-muted)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                padding: '2px',
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
         <ReactFlow
           nodes={nodes}
           edges={edges}
