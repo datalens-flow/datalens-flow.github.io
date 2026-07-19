@@ -31,6 +31,12 @@ const isNonColumnExpr = (expr: string): boolean => {
   return false;
 };
 
+/** Extract table name from possibly schema-qualified identifier (schema.table → table) */
+const extractTableName = (name: string): string => {
+  const parts = name.split('.');
+  return parts[parts.length - 1].toLowerCase();
+};
+
 export const parseLineage = (sql: string): LineageResult => {
   const allFlows: LineageFlow[] = [];
   const tableRoles: Record<string, { isSource: boolean; isTarget: boolean }> = {};
@@ -48,27 +54,29 @@ export const parseLineage = (sql: string): LineageResult => {
     let targetCols: string[] = [];
     let isInsert = false;
     let isUpdate = false;
+    let isMerge = false;
 
-    // --- Detect Target Table ---
-    const insertMatch = stmt.match(/insert\s+into\s+(\w+)\s*(?:\(([^)]+)\))?/i);
-    const createMatch = stmt.match(/create\s+(?:table|view)\s+(\w+)\s+as\s/i);
-    const updateMatch = stmt.match(/update\s+(\w+)(?:\s+(\w+))?\s+set\s/i);
-    const mergeMatch = stmt.match(/merge\s+into\s+(\w+)\s+/i);
+    // --- Detect Target Table (supports schema.table notation) ---
+    const insertMatch = stmt.match(/insert\s+into\s+([\w.]+)\s*(?:\(([^)]+)\))?/i);
+    const createMatch = stmt.match(/create\s+(?:table|view)\s+([\w.]+)\s+as\s/i);
+    const updateMatch = stmt.match(/update\s+([\w.]+)(?:\s+(\w+))?\s+set\s/i);
+    const mergeMatch = stmt.match(/merge\s+into\s+([\w.]+)\s+/i);
 
     if (insertMatch) {
-      targetTable = insertMatch[1].toLowerCase();
+      targetTable = extractTableName(insertMatch[1]);
       if (insertMatch[2]) {
         targetCols = insertMatch[2].split(',').map(c => c.trim().toLowerCase());
       }
       isInsert = true;
     } else if (createMatch) {
-      targetTable = createMatch[1].toLowerCase();
+      targetTable = extractTableName(createMatch[1]);
       isInsert = true;
     } else if (updateMatch) {
-      targetTable = updateMatch[1].toLowerCase();
+      targetTable = extractTableName(updateMatch[1]);
       isUpdate = true;
     } else if (mergeMatch) {
-      targetTable = mergeMatch[1].toLowerCase();
+      targetTable = extractTableName(mergeMatch[1]);
+      isMerge = true;
     } else {
       return; // skip DELETE-only, etc.
     }
@@ -79,9 +87,9 @@ export const parseLineage = (sql: string): LineageResult => {
 
     // --- Build alias → table mapping from FROM / JOIN / USING ---
     const aliasMap: Record<string, string> = {};
-    const aliasMatches = [...stmt.matchAll(/(?:from|join|using)\s+(\w+)(?:\s+(?:as\s+)?(\w+))?/gi)];
+    const aliasMatches = [...stmt.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
     aliasMatches.forEach(m => {
-      const tableName = m[1].toLowerCase();
+      const tableName = extractTableName(m[1]);
       if (SQL_KEYWORDS.has(tableName)) return;
       const alias = m[2] && !SQL_KEYWORDS.has(m[2].toLowerCase()) ? m[2].toLowerCase() : tableName;
       aliasMap[alias] = tableName;
@@ -174,6 +182,13 @@ export const parseLineage = (sql: string): LineageResult => {
           });
         });
       }
+    }
+
+    // --- Parse MERGE...USING for table-level flows ---
+    if (isMerge) {
+      sourceTables.forEach(srcTable => {
+        allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
+      });
     }
   });
 
