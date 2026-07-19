@@ -15,7 +15,7 @@ import { basicSetup } from 'codemirror';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { useSchemaStore } from '../../store/useSchemaStore';
-import { parseLineage } from '../../utils/lineageParser';
+import { parseLineage, LineageFlow } from '../../utils/lineageParser';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -189,13 +189,24 @@ JOIN orders o ON u.id = o.user_id;`);
       });
     });
 
-    // Connect edges
-    result.flows.forEach((flow, idx) => {
+    // Group flows by source→target pair, then create one edge per pair
+    const edgeMap: Record<string, LineageFlow[]> = {};
+    result.flows.forEach((flow) => {
+      const key = `${flow.sourceTable}→${flow.targetTable}`;
+      if (!edgeMap[key]) edgeMap[key] = [];
+      edgeMap[key].push(flow);
+    });
+
+    Object.entries(edgeMap).forEach(([key, groupedFlows], idx) => {
+      const label = groupedFlows
+        .map(f => f.sourceCol === '*' ? 'Full Flow' : `${f.sourceCol} ➜ ${f.targetCol}`)
+        .join('\n');
+      
       newEdges.push({
-        id: `e-${flow.sourceTable}-${flow.targetTable}-${idx}`,
-        source: flow.sourceTable,
-        target: flow.targetTable,
-        label: flow.sourceCol === '*' ? 'Full Flow' : `${flow.sourceCol} ➜ ${flow.targetCol}`,
+        id: `e-${key}-${idx}`,
+        source: groupedFlows[0].sourceTable,
+        target: groupedFlows[0].targetTable,
+        label,
         style: { stroke: 'var(--color-indigo)', strokeWidth: 2 },
         markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--color-indigo)' }
       });

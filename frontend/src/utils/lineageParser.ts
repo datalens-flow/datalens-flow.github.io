@@ -56,11 +56,23 @@ export const parseLineage = (sql: string): LineageResult => {
       targets.push(targetTable);
     }
 
-    // Detect Source Tables from FROM or JOIN or USING
-    const fromMatches = [...stmt.matchAll(/(?:from|join|using)\s+(\w+)/gi)];
-    const sourceTables = fromMatches.map(m => m[1].toLowerCase()).filter(t => t !== targetTable);
+    // Build alias → table mapping
+    // Match patterns like: FROM users u, JOIN orders o, FROM users AS u
+    const aliasMap: Record<string, string> = {};
+    const aliasMatches = [...stmt.matchAll(/(?:from|join|using)\s+(\w+)(?:\s+(?:as\s+)?(\w+))?/gi)];
+    
+    aliasMatches.forEach(m => {
+      const tableName = m[1].toLowerCase();
+      const alias = m[2] ? m[2].toLowerCase() : tableName;
+      aliasMap[alias] = tableName;
+    });
 
-    sourceTables.forEach((srcTable) => {
+    // Detect Source Tables
+    const sourceTables = Object.values(aliasMap).filter(t => t !== targetTable);
+    // Deduplicate
+    const uniqueSourceTables = [...new Set(sourceTables)];
+
+    uniqueSourceTables.forEach((srcTable) => {
       if (!sources.includes(srcTable)) {
         sources.push(srcTable);
       }
@@ -69,31 +81,40 @@ export const parseLineage = (sql: string): LineageResult => {
     // Capture simple SELECT columns mapping
     const selectMatch = stmt.match(/select\s+(.+?)\s+from/i);
     if (isSelectBased && selectMatch && targetCols.length > 0) {
-      const selectCols = selectMatch[1].split(',').map(c => {
-        const parts = c.trim().split(/\s+/);
-        // Get the actual source column name (strip table aliases if any, e.g. u.name -> name)
-        const colPart = parts[0];
-        return colPart.split('.').pop()?.toLowerCase() || '';
-      });
+      const selectExprs = selectMatch[1].split(',').map(c => c.trim());
 
-      // Map each select column to the target column by index
-      selectCols.forEach((sourceCol, idx) => {
+      selectExprs.forEach((expr, idx) => {
         const targetCol = targetCols[idx];
-        if (targetCol && sourceCol) {
-          // Find which source table this column might belong to.
-          // For simplicity in a client-side parser, we map it to the first source table
-          const mappedSourceTable = sourceTables[0] || 'source';
-          flows.push({
-            sourceTable: mappedSourceTable,
-            sourceCol,
-            targetTable,
-            targetCol
-          });
+        if (!targetCol) return;
+
+        // Parse "alias.colname" or just "colname"
+        const parts = expr.split(/\s+/)[0]; // take first token (ignore AS alias)
+        const dotParts = parts.split('.');
+        
+        let sourceCol: string;
+        let mappedSourceTable: string;
+
+        if (dotParts.length === 2) {
+          // Has alias prefix like "u.name" or "o.amount"
+          const alias = dotParts[0].toLowerCase();
+          sourceCol = dotParts[1].toLowerCase();
+          mappedSourceTable = aliasMap[alias] || uniqueSourceTables[0] || 'source';
+        } else {
+          // No alias — map to first source table
+          sourceCol = dotParts[0].toLowerCase();
+          mappedSourceTable = uniqueSourceTables[0] || 'source';
         }
+
+        flows.push({
+          sourceTable: mappedSourceTable,
+          sourceCol,
+          targetTable,
+          targetCol: targetCol.toLowerCase()
+        });
       });
     } else {
       // If we don't have explicit columns, draw table-level flow
-      sourceTables.forEach((srcTable) => {
+      uniqueSourceTables.forEach((srcTable) => {
         flows.push({
           sourceTable: srcTable,
           sourceCol: '*',
