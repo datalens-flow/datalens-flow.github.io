@@ -29,16 +29,46 @@
 }
 
 .lineage-textarea {
-  flex-grow: 1;
+  flex: 1 1 0;
+  min-height: 120px;
+  overflow-y: auto;
   border: none;
   background-color: var(--bg-secondary);
   color: var(--color-text-primary);
   font-family: var(--font-mono);
   font-size: 12px;
-  padding: 16px;
+  padding: 0;
   resize: none;
   outline: none;
   border-bottom: 1px solid var(--color-border);
+}
+
+.lineage-textarea .cm-editor {
+  height: 100%;
+}
+
+.lineage-textarea .cm-scroller {
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.lineage-textarea .cm-scroller::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lineage-textarea .cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lineage-textarea .cm-scroller::-webkit-scrollbar-thumb {
+  background-color: var(--color-text-muted);
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.lineage-textarea .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-secondary);
 }
 
 .lineage-canvas {
