@@ -115,7 +115,12 @@ const ERDCanvasContent: React.FC = () => {
 
     setNodes(positionedNodes);
     setEdges(processedEdges);
-  }, [schema, layoutDir, inferRelationships, searchQuery, nodePositions]);
+
+    // Fit view to correctly display all tables formatted nicely without overlapping on initial render or parse
+    requestAnimationFrame(() => {
+      fitView({ padding: 0.25, duration: 600 });
+    });
+  }, [schema, layoutDir, inferRelationships, searchQuery, nodePositions, fitView]);
 
   // Viewport Autofocus Zoom
   useEffect(() => {
