@@ -17,6 +17,7 @@ const SQL_KEYWORDS = new Set([
   'values', 'group', 'order', 'having', 'limit', 'offset', 'as', 'case',
   'when', 'then', 'else', 'end', 'between', 'like', 'in', 'exists', 'is',
   'delete', 'insert', 'update', 'merge', 'using', 'matched', 'by', 'excluded',
+  'unnest',
 ]);
 
 /** Check if an expression is NOT a real source column (literals, functions, etc.) */
@@ -51,6 +52,9 @@ export const parseLineage = (sql: string): LineageResult => {
   const cteNames = new Set<string>();
   // Map CTE name → real source tables it reads from
   const cteToRealSources: Record<string, string[]> = {};
+
+  // Track CTE declaration order (list of CTE names in order of definition)
+  const cteOrder: string[] = [];
 
   // Extract CTE block using parenthesis depth parsing
   // Find "WITH" blocks anywhere in the cleanSql. Since WITH can be part of multiple statements,
@@ -110,6 +114,7 @@ export const parseLineage = (sql: string): LineageResult => {
 
       if (!SQL_KEYWORDS.has(cteName)) {
         cteNames.add(cteName);
+        cteOrder.push(cteName);
         
         const cteBody = cteBlock.substring(bodyStart, bodyEnd);
         // Find base tables inside the CTE's FROM/JOIN clauses (case insensitive)
@@ -137,13 +142,18 @@ export const parseLineage = (sql: string): LineageResult => {
   }
 
   // Resolve CTE chains: if a CTE references another CTE, follow the chain to find real tables
+  // Scoping rule: a CTE can only reference a CTE defined BEFORE it.
   const resolveCteSources = (cteName: string, visited = new Set<string>()): string[] => {
     if (visited.has(cteName)) return [];
     visited.add(cteName);
     const directSources = cteToRealSources[cteName] || [];
     const resolved: string[] = [];
+    const currentCteIdx = cteOrder.indexOf(cteName);
+
     directSources.forEach(src => {
-      if (cteNames.has(src)) {
+      const srcIdx = cteOrder.indexOf(src);
+      // It is only a CTE reference if it exists in cteOrder and was defined BEFORE the current CTE
+      if (srcIdx !== -1 && srcIdx < currentCteIdx) {
         resolved.push(...resolveCteSources(src, visited));
       } else {
         resolved.push(src);
@@ -191,6 +201,7 @@ export const parseLineage = (sql: string): LineageResult => {
     let isInsert = false;
     let isUpdate = false;
     let isMerge = false;
+    let isCtas = false;
 
     // --- Detect Target Table (supports schema.table notation) ---
     const insertMatch = cleanStmt.match(/insert\s+into\s+([\w.]+)\s*(?:\(([^)]+)\))?/i);
@@ -207,6 +218,7 @@ export const parseLineage = (sql: string): LineageResult => {
     } else if (createMatch) {
       targetTable = extractTableName(createMatch[1]);
       isInsert = true;
+      isCtas = true;
     } else if (updateMatch) {
       targetTable = extractTableName(updateMatch[1]);
       isUpdate = true;
@@ -276,9 +288,15 @@ export const parseLineage = (sql: string): LineageResult => {
       }
     });
 
-    // Source tables = all aliased tables EXCEPT the target and CTEs
+    // Keep track of any base tables resolved from CTEs to bypass CTE filtering
+    const resolvedCteBases = new Set<string>();
+    Object.values(cteAliasExpansions).forEach(realSources => {
+      realSources.forEach(src => resolvedCteBases.add(src));
+    });
+
+    // Source tables = all aliased tables EXCEPT the target and CTEs (unless they are resolved base tables)
     const sourceTables = [...new Set(Object.values(aliasMap))]
-      .filter(t => t !== targetTable && !cteNames.has(t));
+      .filter(t => t !== targetTable && (!cteNames.has(t) || resolvedCteBases.has(t)));
 
     // Also add any additional real sources from CTE expansion
     Object.values(cteAliasExpansions).forEach(realSources => {
@@ -289,9 +307,9 @@ export const parseLineage = (sql: string): LineageResult => {
       });
     });
 
-    // Mark source roles (skip CTE names)
+    // Mark source roles (skip CTE names unless they represent resolved base tables)
     sourceTables.forEach(srcTable => {
-      if (cteNames.has(srcTable)) return;
+      if (cteNames.has(srcTable) && !resolvedCteBases.has(srcTable)) return;
       if (!tableRoles[srcTable]) tableRoles[srcTable] = { isSource: false, isTarget: false };
       tableRoles[srcTable].isSource = true;
     });
@@ -302,6 +320,31 @@ export const parseLineage = (sql: string): LineageResult => {
 
       let cleanExpr = expr.trim();
       
+      // Strip JSON operators (->, ->>) to avoid interference with column name matching
+      if (cleanExpr.includes('->')) {
+        cleanExpr = cleanExpr.split('->')[0].trim();
+      }
+
+      // Check if expression is a subquery: (SELECT col FROM subtable WHERE ...)
+      // We extract the projected column and the source table of the subquery
+      const subqueryMatch = cleanExpr.match(/^\(\s*select\s+([\s\S]+?)\s+from\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/i);
+      if (subqueryMatch) {
+        const subqueryInnerExpr = subqueryMatch[1].trim();
+        const subqueryTable = extractTableName(subqueryMatch[2]);
+        const subqueryAlias = subqueryMatch[3] ? subqueryMatch[3].toLowerCase() : subqueryTable;
+        
+        // Temporarily map the subquery alias
+        const tempAliasMap: Record<string, string> = { ...aliasMap, [subqueryAlias]: subqueryTable, [subqueryTable]: subqueryTable };
+        
+        // Resolve the inner expression with a sub-call using tempAliasMap
+        const innerResolved = resolveColumn(subqueryInnerExpr);
+        if (innerResolved) {
+          const resolvedTable = tempAliasMap[innerResolved.table] || subqueryTable;
+          return { table: resolvedTable, col: innerResolved.col };
+        }
+        return { table: subqueryTable, col: '*' };
+      }
+
       // If it contains CASE WHEN, we extract the first column mentioned or treat it as a general flow if too complex
       if (cleanExpr.toLowerCase().startsWith('case ')) {
         const match = cleanExpr.match(/(?:then|else)\s+([\w.]+)/i);
@@ -310,9 +353,9 @@ export const parseLineage = (sql: string): LineageResult => {
         }
       }
 
-      // Strip SQL function wrappers like UPPER(, TRIM(, COALESCE(, ROUND(, GREATEST(, LEAST(
+      // Strip SQL function wrappers like UPPER(, TRIM(, COALESCE(, ROUND(, GREATEST(, LEAST(, MAX(, MIN(, SUM(, AVG(, COUNT(
       // by grabbing the column/alias identifier inside (supports optional leading parenthesises)
-      const funcMatch = cleanExpr.match(/\b(?:upper|trim|coalesce|round|lower|abs|nullif|concat|nvl|greatest|least)\s*\(\s*\(?\s*([\w.]+)/i);
+      const funcMatch = cleanExpr.match(/\b(?:upper|trim|coalesce|round|lower|abs|nullif|concat|nvl|greatest|least|max|min|sum|avg|count)\s*\(\s*\(?\s*([\w.]+)/i);
       if (funcMatch) {
         cleanExpr = funcMatch[1];
       }
@@ -324,66 +367,165 @@ export const parseLineage = (sql: string): LineageResult => {
       
       const firstToken = colIdMatch[1].toLowerCase();
       // Ignore known SQL keywords, functions, or non-column indicators
-      const ignoredWords = new Set([...SQL_KEYWORDS, 'upper', 'trim', 'coalesce', 'round', 'lower', 'abs', 'nullif', 'concat', 'nvl', 'greatest', 'least']);
+      const ignoredWords = new Set([...SQL_KEYWORDS, 'upper', 'trim', 'coalesce', 'round', 'lower', 'abs', 'nullif', 'concat', 'nvl', 'greatest', 'least', 'max', 'min', 'sum', 'avg', 'count']);
       if (ignoredWords.has(firstToken) || isNonColumnExpr(firstToken)) return null;
 
       const dotParts = firstToken.split('.');
       if (dotParts.length === 2) {
         const alias = dotParts[0];
         const col = dotParts[1];
+
+        // Lateral / UNNEST join lookback resolution:
+        // If the alias matches tags or any unnested column, look up the UNNEST(source_column) in cleanStmt
+        const unnestRegex = new RegExp(`\\bunnest\\s*\\(\\s*([\\w.]+)\\s*\\)\\s*(?:as\\s+)?${alias}\\b`, 'i');
+        const unnestMatch = cleanStmt.match(unnestRegex);
+        if (unnestMatch) {
+          return resolveColumn(unnestMatch[1]);
+        }
+
         const table = aliasMap[alias] || sourceTables[0] || 'unknown';
         return { table, col };
       }
       return { table: sourceTables[0] || 'unknown', col: dotParts[0] };
     };
 
-    // --- Parse INSERT...SELECT column mapping ---
+    // --- Parse INSERT...SELECT column mapping (handles UNION / UNION ALL / INTERSECT / EXCEPT) ---
     if (isInsert) {
-      // Multi-line SELECT support: [\s\S]+? crosses newlines
-      const selectMatch = cleanStmt.match(/select\s+([\s\S]+?)\s+from\s/i);
-      if (selectMatch && targetCols.length > 0) {
-        // Depth-aware splitting of SELECT expressions to avoid breaking on commas inside functions e.g. COALESCE(pm.promotion_key,-1)
-        const selectText = selectMatch[1];
-        const selectExprs: string[] = [];
-        let currentExpr = '';
-        let parenDepth = 0;
-        
-        for (let i = 0; i < selectText.length; i++) {
-          const char = selectText[i];
-          if (char === '(') parenDepth++;
-          if (char === ')') parenDepth--;
-          
-          if (char === ',' && parenDepth === 0) {
-            selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
-            currentExpr = '';
-          } else {
-            currentExpr += char;
+      const subQueries = cleanStmt.split(/\b(?:union\s+all|union|intersect|except)\b/i);
+      
+      subQueries.forEach(subQuery => {
+        // Build subquery-local aliasMap and sourceTables to correctly resolve columns to the proper query block
+        const subAliasMap: Record<string, string> = { ...aliasMap };
+        const subAliasMatches = [...subQuery.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
+        subAliasMatches.forEach(m => {
+          const tableName = extractTableName(m[1]);
+          if (SQL_KEYWORDS.has(tableName)) return;
+          const alias = m[2] && !SQL_KEYWORDS.has(m[2].toLowerCase()) ? m[2].toLowerCase() : tableName;
+          subAliasMap[alias] = tableName;
+          subAliasMap[tableName] = tableName;
+        });
+
+        // Resolve CTEs locally for this subquery
+        Object.entries(subAliasMap).forEach(([alias, tableName]) => {
+          if (cteNames.has(tableName)) {
+            const realSources = resolveCteSources(tableName);
+            if (realSources.length > 0) {
+              subAliasMap[alias] = realSources[0];
+            } else {
+              delete subAliasMap[alias];
+            }
+          }
+        });
+
+        const subSourceTables = [...new Set(Object.values(subAliasMap))]
+          .filter(t => t !== targetTable && !cteNames.has(t));
+
+        // Fallback to global sourceTables if local resolved nothing
+        const activeSources = subSourceTables.length > 0 ? subSourceTables : sourceTables;
+
+        // Local column resolver for this subquery
+        const resolveSubColumn = (expr: string): { table: string; col: string } | null => {
+          const res = resolveColumn(expr);
+          if (!res) return null;
+          if (res.table === 'unknown' || !activeSources.includes(res.table)) {
+            // Re-resolve table based on subquery sources if unknown or misaligned
+            const dotParts = expr.trim().split('.');
+            if (dotParts.length === 2) {
+              const alias = dotParts[0].toLowerCase();
+              const table = subAliasMap[alias] || activeSources[0] || 'unknown';
+              return { table, col: dotParts[1] };
+            }
+            return { table: activeSources[0] || 'unknown', col: res.col };
+          }
+          return res;
+        };
+
+        let selectText = '';
+        const selectIdx = subQuery.toLowerCase().indexOf('select');
+        if (selectIdx !== -1) {
+          let depth = 0;
+          let fromIdx = -1;
+          for (let i = selectIdx + 6; i < subQuery.length; i++) {
+            if (subQuery[i] === '(') depth++;
+            if (subQuery[i] === ')') depth--;
+            if (depth === 0) {
+              const sub = subQuery.substring(i).trim();
+              if (/^from\b/i.test(sub)) {
+                // Find where "from" actually starts in the original subQuery string (ignoring leading whitespace of .trim())
+                const fromOffset = subQuery.substring(i).toLowerCase().indexOf('from');
+                fromIdx = i + fromOffset;
+                break;
+              }
+            }
+          }
+          if (fromIdx !== -1) {
+            selectText = subQuery.substring(selectIdx + 6, fromIdx).trim();
           }
         }
-        if (currentExpr.trim()) {
-          selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
-        }
 
-        selectExprs.forEach((expr, idx) => {
-          const targetCol = targetCols[idx];
-          if (!targetCol) return;
+        if (selectText) {
+          if (isCtas || selectText === '*') {
+            // Blind star or CTAS fallback: map all columns of active source tables
+            activeSources.forEach(srcTable => {
+              allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
+            });
+            return;
+          }
 
-          const resolved = resolveColumn(expr);
-          if (!resolved) return; // skip CURRENT_TIMESTAMP, literals, etc.
+          // Depth-aware splitting of SELECT expressions
+          const selectExprs: string[] = [];
+          let currentExpr = '';
+          let parenDepth = 0;
+          
+          for (let i = 0; i < selectText.length; i++) {
+            const char = selectText[i];
+            if (char === '(') parenDepth++;
+            if (char === ')') parenDepth--;
+            
+            if (char === ',' && parenDepth === 0) {
+              selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
+              currentExpr = '';
+            } else {
+              currentExpr += char;
+            }
+          }
+          if (currentExpr.trim()) {
+            selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
+          }
 
-          allFlows.push({
-            sourceTable: resolved.table,
-            sourceCol: resolved.col,
-            targetTable,
-            targetCol,
+          // If targetCols is empty (e.g. CTAS), infer dynamically
+          let subTargetCols = [...targetCols];
+          if (subTargetCols.length === 0) {
+            subTargetCols = selectExprs.map(expr => {
+              const aliasMatch = expr.match(/\b(?:as\s+)?(\w+)\s*$/i);
+              if (aliasMatch && !SQL_KEYWORDS.has(aliasMatch[1].toLowerCase())) {
+                return aliasMatch[1].toLowerCase();
+              }
+              const parts = expr.split(/\s+/)[0].split('.');
+              return parts[parts.length - 1].toLowerCase();
+            });
+          }
+
+          selectExprs.forEach((expr, idx) => {
+            const targetCol = subTargetCols[idx];
+            if (!targetCol) return;
+
+            const resolved = resolveSubColumn(expr);
+            if (!resolved) return;
+
+            allFlows.push({
+              sourceTable: resolved.table,
+              sourceCol: resolved.col,
+              targetTable,
+              targetCol,
+            });
           });
-        });
-      } else if (sourceTables.length > 0) {
-        // Fallback: table-level flow
-        sourceTables.forEach(srcTable => {
-          allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
-        });
-      }
+        } else if (activeSources.length > 0) {
+          activeSources.forEach(srcTable => {
+            allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
+          });
+        }
+      });
     }
 
     // --- Parse UPDATE...SET column mapping ---
@@ -423,20 +565,39 @@ export const parseLineage = (sql: string): LineageResult => {
     }
   });
 
-  // Build final source/target lists from tableRoles
-  // A table CAN appear in BOTH lists (dual-role)
-  // Filter out CTE names — they are virtual tables
+  // Collect all resolved CTE base tables globally to bypass filtering in the final results
+  const globalResolvedCteBases = new Set<string>();
+
+  // Resolve CTE references across all statement CTE definitions
+  statements.forEach((stmt) => {
+    // Recreate statement-level aliasMap just to find any CTE resolutions
+    const aliasMap: Record<string, string> = {};
+    const aliasMatches = [...stmt.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
+    aliasMatches.forEach(m => {
+      const tableName = extractTableName(m[1]);
+      if (SQL_KEYWORDS.has(tableName)) return;
+      const alias = m[2] && !SQL_KEYWORDS.has(m[2].toLowerCase()) ? m[2].toLowerCase() : tableName;
+      aliasMap[alias] = tableName;
+      aliasMap[tableName] = tableName;
+    });
+    Object.values(aliasMap).forEach(tableName => {
+      if (cteNames.has(tableName)) {
+        resolveCteSources(tableName).forEach(src => globalResolvedCteBases.add(src));
+      }
+    });
+  });
 
   const sources = Object.entries(tableRoles)
-    .filter(([t, r]) => r.isSource && !cteNames.has(t))
+    .filter(([t, r]) => r.isSource && (!cteNames.has(t) || globalResolvedCteBases.has(t)))
     .map(([t]) => t);
   const targets = Object.entries(tableRoles)
-    .filter(([t, r]) => r.isTarget && !cteNames.has(t))
+    .filter(([t, r]) => r.isTarget && (!cteNames.has(t) || globalResolvedCteBases.has(t)))
     .map(([t]) => t);
 
-  // Also filter flows that reference CTE names as source/target
+  // Also filter flows that reference CTE names as source/target (unless they represent resolved base tables)
   const filteredFlows = allFlows.filter(
-    f => !cteNames.has(f.sourceTable) && !cteNames.has(f.targetTable)
+    f => (!cteNames.has(f.sourceTable) || globalResolvedCteBases.has(f.sourceTable)) &&
+         (!cteNames.has(f.targetTable) || globalResolvedCteBases.has(f.targetTable))
   );
 
   return { sources, targets, flows: filteredFlows };
