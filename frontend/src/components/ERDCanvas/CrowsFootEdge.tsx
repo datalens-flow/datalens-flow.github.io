@@ -24,7 +24,7 @@ export const CrowsFootEdge: React.FC<EdgeProps> = ({
     <BaseEdge
       id={id}
       path={edgePath}
-      style={{ stroke: '#6366f1', strokeWidth: 2, ...style }}
+      style={{ stroke: 'var(--color-edge)', strokeWidth: 2, ...style }}
       markerStart="url(#one-cardinality)"
       markerEnd="url(#many-cardinality)"
     />

@@ -132,7 +132,7 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
                   type="target"
                   position={Position.Left}
                   id={`left_${col.name}`}
-                  style={{ top: '50%', transform: 'translateY(-50%)', left: '-6px', background: '#6366f1' }}
+                  style={{ top: '50%', transform: 'translateY(-50%)', left: '-6px', background: 'var(--color-edge)' }}
                 />
 
                 {/* Column Meta/Keys - Double click to toggle PK */}
@@ -218,7 +218,7 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
                   type="source"
                   position={Position.Right}
                   id={`right_${col.name}`}
-                  style={{ top: '50%', transform: 'translateY(-50%)', right: '-6px', background: '#10b981' }}
+                  style={{ top: '50%', transform: 'translateY(-50%)', right: '-6px', background: 'var(--color-emerald)' }}
                 />
               </div>
 

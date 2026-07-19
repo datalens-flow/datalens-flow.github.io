@@ -114,7 +114,7 @@ export function getLayoutedElements(
         targetHandle: `left_${rel.to_column}`,
         type: 'crowsFootEdge',
         animated: isInferred,
-        style: isInferred ? { strokeDasharray: '5,5', stroke: '#a5b4fc', opacity: 0.6 } : undefined
+        style: isInferred ? { strokeDasharray: '5,5', stroke: '#38bdf8', opacity: 0.6 } : undefined
       };
     });
 

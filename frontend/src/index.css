@@ -21,7 +21,7 @@
   --bg-primary: #090b11;
   --bg-secondary: #0e121e;
   --bg-tertiary: #171c2d;
-  --accent-glow: rgba(99, 102, 241, 0.15);
+  --accent-glow: rgba(14, 165, 233, 0.15);
   
   --color-text-primary: #f8fafc;
   --color-text-secondary: #94a3b8;
@@ -29,14 +29,14 @@
   --color-border: #1e293b;
   --color-border-hover: #334155;
   
-  --color-indigo: #6366f1;
-  --color-indigo-hover: #4f46e5;
+  --color-indigo: #0ea5e9;
+  --color-indigo-hover: #0284c7;
   --color-emerald: #10b981;
   --color-emerald-hover: #059669;
-  --color-edge: #4f46e5;
+  --color-edge: #0284c7;
   --color-grid: #181f30;
   --color-amber: #fbbf24;
-  --color-fk: #818cf8;
+  --color-fk: #06b6d4;
   --color-row-hover: rgba(255, 255, 255, 0.03);
   
   --header-bg: #090b11;
@@ -48,7 +48,7 @@
   --bg-primary: #f5f7fb;
   --bg-secondary: #ffffff;
   --bg-tertiary: #fafbfc;
-  --accent-glow: rgba(79, 70, 229, 0.08);
+  --accent-glow: rgba(2, 132, 199, 0.08);
   
   --color-text-primary: #1e293b;
   --color-text-secondary: #475569;
@@ -56,14 +56,14 @@
   --color-border: #e2e8f0;
   --color-border-hover: #cbd5e1;
   
-  --color-indigo: #4f46e5;
-  --color-indigo-hover: #3730a3;
+  --color-indigo: #0284c7;
+  --color-indigo-hover: #0369a1;
   --color-emerald: #10b981;
   --color-emerald-hover: #047857;
-  --color-edge: #6366f1;
+  --color-edge: #0284c7;
   --color-grid: #e2e8f0;
   --color-amber: #d97706;
-  --color-fk: #4f46e5;
+  --color-fk: #0891b2;
   --color-row-hover: rgba(0, 0, 0, 0.02);
   
   --header-bg: #ffffff;

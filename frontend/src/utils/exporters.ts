@@ -30,7 +30,7 @@ export function generateDrawioXml(schema: SchemaResponse): string {
 
     // Generate table cell
     mxCells.push(
-      `<mxCell id="${tableCellId}" value="${table.name}" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;fillColor=#6366f1;strokeColor=#4f46e5;fontColor=#ffffff;rounded=1;" vertex="1" parent="1">`,
+      `<mxCell id="${tableCellId}" value="${table.name}" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;fillColor=#0284c7;strokeColor=#0369a1;fontColor=#ffffff;rounded=1;" vertex="1" parent="1">`,
       `  <mxGeometry x="${posX}" y="${posY}" width="180" height="${30 + table.columns.length * 24}" as="geometry" />`,
       `</mxCell>`
     );
