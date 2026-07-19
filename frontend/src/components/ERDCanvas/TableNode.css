@@ -1,44 +1,52 @@
 .table-node {
   border-radius: 8px;
-  border: 1.5px solid var(--color-border);
-  min-width: 220px;
+  border: 1px solid var(--color-border);
+  min-width: 240px;
   box-shadow: var(--shadow-lg);
   overflow: visible;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   background-color: var(--bg-secondary) !important;
 }
 
 .table-node:hover {
   border-color: var(--color-indigo);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.15), var(--shadow-glow);
 }
 
 .table-node-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
-  background-color: rgba(99, 102, 241, 0.1);
-  border-bottom: 1.5px solid var(--color-border);
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.02) 100%);
+  border-bottom: 1px solid var(--color-border);
   font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.02em;
+  font-size: 13px;
+  letter-spacing: 0.03em;
   color: var(--color-text-primary);
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
 }
 
 .table-icon {
-  font-size: 14px;
+  font-size: 13px;
+  opacity: 0.8;
+  color: var(--color-indigo);
 }
 
 .table-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
 }
 
 .table-node-columns {
   display: flex;
   flex-direction: column;
-  padding: 6px 0;
+  padding: 4px 0;
 }
 
 .column-row {
@@ -48,6 +56,7 @@
   gap: 10px;
   font-size: 13px;
   transition: var(--transition-all);
+  border-bottom: 1px dashed transparent;
 }
 
 .column-row:hover {
@@ -64,15 +73,16 @@
 }
 
 .key-icon {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .pk-icon {
   color: var(--color-amber);
+  filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.2));
 }
 
 .fk-icon {
-  color: var(--color-indigo);
+  color: var(--color-fk);
 }
 
 .key-placeholder {
@@ -81,6 +91,7 @@
 
 .column-name {
   font-family: var(--font-mono);
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-text-primary);
   flex-grow: 1;
@@ -93,11 +104,11 @@
 .column-name-input {
   font-family: var(--font-mono);
   font-size: 12px;
-  background-color: var(--bg-primary);
+  background-color: var(--input-bg);
   color: var(--color-text-primary);
   border: 1px solid var(--color-indigo);
   border-radius: 4px;
-  padding: 2px 4px;
+  padding: 2px 6px;
   flex-grow: 1;
   outline: none;
   min-width: 0;
@@ -108,11 +119,11 @@
   font-size: 11px;
   color: var(--color-text-muted);
   flex-shrink: 0;
-  text-transform: lowercase;
 }
 
 .pk-row .column-name {
   color: var(--color-amber);
+  font-weight: 600;
 }
 
 .fk-row .column-name {
@@ -121,26 +132,27 @@
 
 .table-name-input {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  background-color: var(--bg-primary);
+  background-color: var(--input-bg);
   color: var(--color-text-primary);
   border: 1px solid var(--color-indigo);
   border-radius: 4px;
   padding: 2px 6px;
   width: 100%;
   outline: none;
+  text-transform: uppercase;
 }
 
 .column-type-input {
   font-family: var(--font-mono);
   font-size: 11px;
-  background-color: var(--bg-primary);
+  background-color: var(--input-bg);
   color: var(--color-text-primary);
   border: 1px solid var(--color-indigo);
   border-radius: 4px;
   padding: 1px 4px;
-  width: 70px;
+  width: 80px;
   outline: none;
 }
 
@@ -149,18 +161,21 @@
   border: none;
   color: var(--color-indigo);
   font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
   text-align: left;
   cursor: pointer;
   width: 100%;
   transition: var(--transition-all);
-  opacity: 0.7;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .add-column-btn:hover {
-  background-color: rgba(99, 102, 241, 0.05);
+  background-color: var(--color-row-hover);
   opacity: 1;
   padding-left: 18px;
 }
@@ -173,7 +188,7 @@
   user-select: none;
   background-color: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--color-border);
-  padding: 1px 3px;
+  padding: 1px 4px;
   border-radius: 4px;
   flex-shrink: 0;
   transition: var(--transition-all);
@@ -182,7 +197,7 @@
 .column-nullable:hover {
   color: var(--color-indigo);
   border-color: var(--color-indigo);
-  background-color: rgba(99, 102, 241, 0.05);
+  background-color: var(--color-row-hover);
 }
 
 .comment-bubble-btn {
@@ -190,29 +205,32 @@
   border: none;
   cursor: pointer;
   font-size: 11px;
-  opacity: 0.25;
+  opacity: 0.3;
   padding: 0 2px;
   transition: var(--transition-all);
+  color: var(--color-text-secondary);
 }
 
 .comment-bubble-btn:hover, .comment-bubble-btn.has-comment {
   opacity: 1;
+  color: var(--color-indigo);
 }
 
 .column-comment-editor {
   padding: 4px 14px 8px 14px;
-  background-color: rgba(255, 255, 255, 0.01);
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .column-comment-input {
   width: 100%;
   font-family: var(--font-sans);
   font-size: 11px;
-  background-color: var(--bg-primary);
+  background-color: var(--input-bg);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  padding: 3px 6px;
+  padding: 4px 8px;
   outline: none;
   transition: var(--transition-all);
 }
@@ -220,6 +238,3 @@
 .column-comment-input:focus {
   border-color: var(--color-indigo);
 }
-
-
-

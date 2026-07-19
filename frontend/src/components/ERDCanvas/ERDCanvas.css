@@ -3,51 +3,54 @@
   height: 100%;
   position: relative;
   background-color: var(--bg-primary);
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 /* Canvas Toolbar Overlay */
 .canvas-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   padding: 4px 8px;
 }
 
 .toolbar-btn {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--input-bg);
   border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   transition: var(--transition-all);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .toolbar-btn:hover {
-  background-color: rgba(99, 102, 241, 0.15);
+  background-color: var(--color-row-hover);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
 }
 
 .add-btn {
-  background-color: rgba(99, 102, 241, 0.1);
+  background-color: rgba(99, 102, 241, 0.05);
   border-color: var(--color-indigo);
+  color: var(--color-indigo);
 }
 
 .add-btn:hover {
   background-color: var(--color-indigo);
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .implicit-btn.active {
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: rgba(16, 185, 129, 0.06);
   border-color: #10b981;
   color: #10b981;
 }
@@ -61,26 +64,31 @@
 .toolbar-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--color-border);
+  padding: 2px;
+  border-radius: 6px;
 }
 
 .toolbar-label {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
-  font-weight: 600;
-  margin-right: 4px;
+  font-weight: 700;
+  padding: 0 8px;
+  user-select: none;
 }
 
 .toolbar-toggle-btn {
   background: none;
-  border: 1px solid transparent;
-  color: var(--color-text-muted);
+  border: none;
+  color: var(--color-text-secondary);
   font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
   transition: var(--transition-all);
@@ -88,13 +96,13 @@
 
 .toolbar-toggle-btn:hover {
   color: var(--color-text-primary);
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--color-row-hover);
 }
 
 .toolbar-toggle-btn.active {
   color: var(--color-indigo);
-  border-color: var(--color-indigo);
-  background-color: rgba(99, 102, 241, 0.08);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
 }
 
 /* React Flow controls/minimap styles */
@@ -111,24 +119,24 @@
 .react-flow__minimap {
   border: 1px solid var(--color-border) !important;
   border-radius: 8px;
+  background-color: var(--bg-secondary) !important;
 }
 
 .toolbar-search-input {
-  background-color: var(--bg-primary);
+  background-color: transparent;
   color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 6px 12px;
+  border: none;
+  padding: 4px 8px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
   outline: none;
-  width: 150px;
+  width: 140px;
   transition: var(--transition-all);
 }
 
 .toolbar-search-input:focus {
-  border-color: var(--color-indigo);
-  width: 200px;
+  width: 180px;
 }
 
 .highlighted-node {
@@ -144,4 +152,3 @@
     box-shadow: 0 0 20px var(--color-indigo);
   }
 }
-

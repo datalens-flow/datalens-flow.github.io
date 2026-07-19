@@ -14,7 +14,7 @@ import './ExportPanel.css';
 export const ExportPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const { schema, originalSchema, renameEvents, descriptions } = useSchemaStore();
+  const { schema, originalSchema, renameEvents, descriptions, theme } = useSchemaStore();
   const { getNodes } = useReactFlow();
   const [prefix, setPrefix] = useState('datalens-flow');
 
@@ -51,8 +51,10 @@ export const ExportPanel: React.FC = () => {
       const erdElement = document.querySelector('.react-flow__viewport') as HTMLElement;
       if (!erdElement) return;
 
+      const bgColor = theme === 'light' ? '#f5f7fb' : '#090b11';
+
       const dataUrl = await toPng(erdElement, {
-        backgroundColor: '#0b0f19',
+        backgroundColor: bgColor,
         width: width,
         height: height,
         style: {
@@ -86,8 +88,10 @@ export const ExportPanel: React.FC = () => {
       const erdElement = document.querySelector('.react-flow__viewport') as HTMLElement;
       if (!erdElement) return;
 
+      const bgColor = theme === 'light' ? '#f5f7fb' : '#090b11';
+
       const dataUrl = await toSvg(erdElement, {
-        backgroundColor: '#0b0f19',
+        backgroundColor: bgColor,
         width: width,
         height: height,
         style: {
