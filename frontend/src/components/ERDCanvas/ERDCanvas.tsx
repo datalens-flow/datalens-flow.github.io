@@ -168,6 +168,8 @@ const ERDCanvasContent: React.FC = () => {
         onEdgeDoubleClick={handleEdgeDoubleClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        minZoom={0.05}
+        maxZoom={2}
         fitView
       >
         <Background color="var(--color-grid)" gap={16} size={1} />
