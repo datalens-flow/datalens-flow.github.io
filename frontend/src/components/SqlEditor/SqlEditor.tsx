@@ -168,22 +168,38 @@ CREATE TABLE orders (
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      if (content) {
-        setSql(content);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files);
+    
+    try {
+      const contents = await Promise.all(
+        fileList.map((file) => {
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target?.result as string || '');
+            reader.onerror = () => reject(new Error(`Failed to read file ${file.name}`));
+            reader.readAsText(file);
+          });
+        })
+      );
+
+      const combinedContent = contents.join('\n\n-- ==========================================\n-- IMPORTED: FILE\n-- ==========================================\n\n');
+      
+      if (combinedContent) {
+        setSql(combinedContent);
         if (viewRef.current) {
           viewRef.current.dispatch({
-            changes: { from: 0, to: viewRef.current.state.doc.length, insert: content }
+            changes: { from: 0, to: viewRef.current.state.doc.length, insert: combinedContent }
           });
         }
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      console.error(err);
+    }
+    
     e.target.value = '';
   };
 
@@ -197,6 +213,7 @@ CREATE TABLE orders (
               type="file" 
               ref={fileInputRef} 
               accept=".sql" 
+              multiple
               style={{ display: 'none' }} 
               onChange={handleFileChange} 
             />

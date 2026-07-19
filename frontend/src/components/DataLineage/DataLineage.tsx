@@ -195,22 +195,38 @@ JOIN orders o ON u.id = o.user_id;`);
     setEdges(newEdges);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (text) {
-        setProcedureSql(text);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files);
+
+    try {
+      const contents = await Promise.all(
+        fileList.map((file) => {
+          return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target?.result as string || '');
+            reader.onerror = () => reject(new Error(`Failed to read file ${file.name}`));
+            reader.readAsText(file);
+          });
+        })
+      );
+
+      const combinedContent = contents.join('\n\n-- ==========================================\n-- IMPORTED: LINEAGE PROCEDURE\n-- ==========================================\n\n');
+
+      if (combinedContent) {
+        setProcedureSql(combinedContent);
         if (viewRef.current) {
           viewRef.current.dispatch({
-            changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
+            changes: { from: 0, to: viewRef.current.state.doc.length, insert: combinedContent }
           });
         }
       }
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      console.error(err);
+    }
+    
     e.target.value = '';
   };
 
@@ -228,6 +244,7 @@ JOIN orders o ON u.id = o.user_id;`);
               type="file" 
               ref={fileInputRef} 
               accept=".sql" 
+              multiple
               style={{ display: 'none' }} 
               onChange={handleFileUpload} 
             />
