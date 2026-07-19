@@ -54,11 +54,15 @@ interface SchemaState {
   inferRelationships: boolean;
   showGrid: boolean;
   setShowGrid: (show: boolean) => void;
+  showTableExplorer: boolean;
+  setShowTableExplorer: (show: boolean) => void;
   tableColors: Record<string, string>; // tableId -> hexColor
   setTableColor: (tableId: string, color: string) => void;
   outputDialect: string;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  lineageSearchQuery: string;
+  setLineageSearchQuery: (query: string) => void;
   
   // Undo/Redo
   _history: SchemaResponse[];
@@ -154,9 +158,13 @@ export const useSchemaStore = create<SchemaState>()(
       inferRelationships: false,
       showGrid: true,
       setShowGrid: (showGrid) => set({ showGrid }),
+      showTableExplorer: true,
+      setShowTableExplorer: (showTableExplorer) => set({ showTableExplorer }),
       outputDialect: 'postgres',
       searchQuery: '',
       setSearchQuery: (searchQuery) => set({ searchQuery }),
+      lineageSearchQuery: '',
+      setLineageSearchQuery: (lineageSearchQuery) => set({ lineageSearchQuery }),
 
       // Undo/Redo state
       _history: [],
@@ -604,7 +612,9 @@ export const useSchemaStore = create<SchemaState>()(
         layoutDir: state.layoutDir,
         inferRelationships: state.inferRelationships,
         showGrid: state.showGrid,
+        showTableExplorer: state.showTableExplorer,
         outputDialect: state.outputDialect,
+        lineageSearchQuery: state.lineageSearchQuery,
         renameEvents: state.renameEvents,
         tableColors: (state as any).tableColors || {},
       }),

@@ -87,7 +87,22 @@ function App() {
     return !sessionStorage.getItem('datalens-launched');
   });
   const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>('diagram');
-  const { activeTab, setActiveTab, error, theme, schema, undo, redo, canUndo, canRedo } = useSchemaStore();
+  const { 
+    activeTab, 
+    setActiveTab, 
+    error, 
+    theme, 
+    schema, 
+    undo, 
+    redo, 
+    canUndo, 
+    canRedo,
+    showTableExplorer,
+    searchQuery,
+    setSearchQuery,
+    lineageSearchQuery,
+    setLineageSearchQuery
+  } = useSchemaStore();
   const tableCount = schema?.tables?.length || 0;
 
   const handleLaunchApp = () => {
@@ -132,6 +147,17 @@ function App() {
     );
   }
 
+  const isDiagram = currentMode === 'diagram';
+  const showSearch = isDiagram ? activeTab === 'erd' : true;
+  const currentSearchVal = isDiagram ? searchQuery : lineageSearchQuery;
+  const handleSearchChange = (val: string) => {
+    if (isDiagram) {
+      setSearchQuery(val);
+    } else {
+      setLineageSearchQuery(val);
+    }
+  };
+
   return (
     <div className={`theme-${theme}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-primary)', color: 'var(--color-text-primary)', transition: 'background-color 0.2s ease, color 0.2s ease' }}>
       {/* Top Header */}
@@ -139,38 +165,90 @@ function App() {
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
-        padding: '12px 24px', 
+        padding: '10px 24px', 
         backgroundColor: 'var(--bg-secondary)', 
-        borderBottom: '1px solid var(--color-border)' 
+        borderBottom: '1px solid var(--color-border)',
+        height: '56px',
+        boxSizing: 'border-box'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-indigo)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-            </svg>
-            <h1 style={{ fontSize: '18px', fontWeight: '600', letterSpacing: '0.02em', margin: 0 }}>
-              DataLens Flow
-            </h1>
-          </div>
+        {/* Left Side: Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-indigo)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+          <h1 style={{ fontSize: '16px', fontWeight: '600', letterSpacing: '0.02em', margin: 0, whiteSpace: 'nowrap' }}>
+            DataLens Flow
+          </h1>
+        </div>
 
+        {/* Center-Left: Project & Mode Selectors */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexGrow: 1, marginLeft: '24px' }}>
           <ProjectManager />
           <ModeDropdown currentMode={currentMode} setCurrentMode={setCurrentMode} />
+          
+          {/* Centered Search Bar matching both diagram & lineage */}
+          {showSearch && (
+            <div className="toolbar-search-wrapper" style={{
+              marginLeft: '20px',
+              minWidth: '240px',
+              maxWidth: '360px',
+              flexGrow: 1
+            }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/>
+              </svg>
+              <input
+                type="text"
+                placeholder={isDiagram ? "Search tables or columns..." : "Search lineage tables/columns..."}
+                value={currentSearchVal}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="toolbar-search-input"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: 'var(--color-text-primary)',
+                  fontSize: '12px',
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
+              {currentSearchVal && (
+                <button 
+                  onClick={() => handleSearchChange('')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-text-muted)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 2l6 6M8 2l-6 6"/></svg>
+                </button>
+              )}
+            </div>
+          )}
         </div>
         
-        {/* Canvas Controls (only active on ERD tab in Diagram Mode) */}
-        {currentMode === 'diagram' && activeTab === 'erd' && <CanvasToolbar />}
-        
-        {/* Export options dropdown */}
-        <ExportPanel mode={currentMode} />
+        {/* Right Side: Toolbar Settings & Export options */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+          {isDiagram && activeTab === 'erd' && <CanvasToolbar />}
+          <ExportPanel mode={currentMode} />
+        </div>
       </header>
 
       {/* Main Workspace */}
       {currentMode === 'diagram' ? (
         <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden', padding: '16px', gap: '16px' }}>
           {/* Left Side: SQL Input */}
-          <section style={{ width: '400px', height: '100%', flexShrink: 0 }}>
-            <SqlEditor />
-          </section>
+          {showTableExplorer && (
+            <section style={{ width: '380px', height: '100%', flexShrink: 0 }}>
+              <SqlEditor />
+            </section>
+          )}
 
           {/* Right Side: Visualizers */}
           <section className="glass-panel" style={{ flexGrow: 1, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

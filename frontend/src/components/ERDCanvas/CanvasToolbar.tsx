@@ -32,11 +32,7 @@ const IconPlus = () => (
     <path d="M8 3v10M3 8h10"/>
   </svg>
 );
-const IconSearch = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/>
-  </svg>
-);
+
 const IconChevron = () => (
   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2.5 3.5L5 6.5 7.5 3.5"/>
@@ -91,13 +87,11 @@ export const CanvasToolbar: React.FC = () => {
     setInferRelationships,
     showGrid,
     setShowGrid,
+    showTableExplorer,
+    setShowTableExplorer,
     theme,
-    setTheme,
-    searchQuery,
-    setSearchQuery
+    setTheme
   } = useSchemaStore();
-
-  const hasSearch = searchQuery.trim().length > 0;
 
   return (
     <div className="canvas-toolbar">
@@ -142,26 +136,11 @@ export const CanvasToolbar: React.FC = () => {
           <input type="checkbox" checked={inferRelationships} onChange={(e) => setInferRelationships(e.target.checked)} />
           Heuristic Relations
         </label>
+        <label className="toolbar-dropdown-check">
+          <input type="checkbox" checked={showTableExplorer} onChange={(e) => setShowTableExplorer(e.target.checked)} />
+          SQL Input Panel
+        </label>
       </ToolbarDropdown>
-
-      <div className="toolbar-divider" />
-
-      {/* Search */}
-      <div className="toolbar-search-wrapper">
-        <IconSearch />
-        <input
-          type="text"
-          placeholder="Search table / column..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="toolbar-search-input"
-        />
-        {hasSearch && (
-          <button className="toolbar-search-clear" onClick={() => setSearchQuery('')}>
-            <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 2l6 6M8 2l-6 6"/></svg>
-          </button>
-        )}
-      </div>
     </div>
   );
 };
