@@ -5,7 +5,9 @@ import {
   Controls, 
   useNodesState, 
   useEdgesState,
-  MarkerType
+  MarkerType,
+  Handle,
+  Position
 } from '@xyflow/react';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
@@ -18,6 +20,38 @@ import { useSchemaStore } from '../../store/useSchemaStore';
 import { parseLineage, LineageFlow } from '../../utils/lineageParser';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
+
+// Custom Lineage Node with Left/Right handles strictly positioned
+const LineageNode: React.FC<{ data: any }> = ({ data }) => {
+  const isSource = data.isSource;
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {/* Target/Input handle strictly on the Left side */}
+      {!isSource && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          style={{ background: 'var(--color-emerald)', width: '8px', height: '8px', left: '-5px' }}
+        />
+      )}
+      
+      {data.label}
+
+      {/* Source/Output handle strictly on the Right side */}
+      {isSource && (
+        <Handle
+          type="source"
+          position={Position.Right}
+          style={{ background: 'var(--color-indigo)', width: '8px', height: '8px', right: '-5px' }}
+        />
+      )}
+    </div>
+  );
+};
+
+const nodeTypes = {
+  lineageNode: LineageNode
+};
 
 const darkHighlightStyle = HighlightStyle.define([
   { tag: t.keyword, color: '#38bdf8', fontWeight: 'bold' },
@@ -130,9 +164,10 @@ JOIN orders o ON u.id = o.user_id;`);
       const relatedFlows = result.flows.filter(f => f.sourceTable === src);
       newNodes.push({
         id: src,
-        type: 'input',
+        type: 'lineageNode',
         position: { x: 80, y: 50 + idx * 180 },
         data: { 
+          isSource: true,
           label: (
             <div className="lineage-node">
               <div className="lineage-node-header source">Source: {src.toUpperCase()}</div>
@@ -145,7 +180,7 @@ JOIN orders o ON u.id = o.user_id;`);
           )
         },
         style: { 
-          width: 220, 
+          width: 160, 
           background: 'var(--bg-secondary)', 
           border: '1px solid var(--color-border)', 
           color: 'var(--color-text-primary)', 
@@ -162,9 +197,10 @@ JOIN orders o ON u.id = o.user_id;`);
       const relatedFlows = result.flows.filter(f => f.targetTable === tgt);
       newNodes.push({
         id: tgt,
-        type: 'output',
+        type: 'lineageNode',
         position: { x: 480, y: 50 + idx * 180 },
         data: { 
+          isSource: false,
           label: (
             <div className="lineage-node">
               <div className="lineage-node-header target">Target: {tgt.toUpperCase()}</div>
@@ -177,7 +213,7 @@ JOIN orders o ON u.id = o.user_id;`);
           )
         },
         style: { 
-          width: 220, 
+          width: 160, 
           background: 'var(--bg-secondary)', 
           border: '1px solid var(--color-border)', 
           color: 'var(--color-text-primary)', 
@@ -283,7 +319,7 @@ JOIN orders o ON u.id = o.user_id;`);
   }, [selectedNodeId, edges, setNodes]);
 
   const onNodeClick = (_: React.MouseEvent, node: any) => {
-    setSelectedNodeId((prev) => (prev === node.id ? null : node.id));
+    setSelectedNodeId((prev: string | null) => (prev === node.id ? null : node.id));
   };
 
   const handleInspectInDiagram = () => {
@@ -385,6 +421,7 @@ JOIN orders o ON u.id = o.user_id;`);
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
+          nodeTypes={nodeTypes}
           minZoom={0.1}
           maxZoom={2}
           fitView
