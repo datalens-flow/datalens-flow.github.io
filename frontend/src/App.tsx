@@ -5,6 +5,7 @@ import { DataDictionary } from './components/DataDictionary/DataDictionary';
 import { ExportPanel } from './components/ExportPanel/ExportPanel';
 import { CanvasToolbar } from './components/ERDCanvas/CanvasToolbar';
 import { DataLineage } from './components/DataLineage/DataLineage';
+import { LandingPage } from './components/LandingPage/LandingPage';
 import { useSchemaStore } from './store/useSchemaStore';
 import { useRef } from 'react';
 import { ProjectManager } from './components/ProjectManager/ProjectManager';
@@ -79,12 +80,19 @@ const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurrentMode
   );
 };
 
-
-
 function App() {
+  const [showLanding, setShowLanding] = useState(() => {
+    // Show landing page if user hasn't dismissed it before in this session
+    return !sessionStorage.getItem('datalens-launched');
+  });
   const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>('diagram');
   const { activeTab, setActiveTab, error, theme, schema, undo, redo, canUndo, canRedo } = useSchemaStore();
   const tableCount = schema?.tables?.length || 0;
+
+  const handleLaunchApp = () => {
+    sessionStorage.setItem('datalens-launched', 'true');
+    setShowLanding(false);
+  };
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -113,6 +121,11 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo, canUndo, canRedo]);
+
+  // Show landing page
+  if (showLanding) {
+    return <LandingPage onLaunchApp={handleLaunchApp} />;
+  }
 
   return (
     <div className={`theme-${theme}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: 'var(--bg-primary)', color: 'var(--color-text-primary)', transition: 'background-color 0.2s ease, color 0.2s ease' }}>
