@@ -66,7 +66,8 @@ const ERDCanvasContent: React.FC = () => {
     // Apply any existing user-dragged position updates and search highlights
     const positionedNodes = layoutedNodes.map((node) => {
       const savedPos = nodePositions[node.id];
-      const nodePos = savedPos || node.position;
+      // Only reuse saved position if it exists, otherwise fall back to dagre layout coordinates
+      const nodePos = savedPos && Object.keys(savedPos).length > 0 ? savedPos : node.position;
       
       let matches = false;
       if (hasSearch) {
@@ -114,7 +115,7 @@ const ERDCanvasContent: React.FC = () => {
 
     setNodes(positionedNodes);
     setEdges(processedEdges);
-  }, [schema, layoutDir, inferRelationships, searchQuery]);
+  }, [schema, layoutDir, inferRelationships, searchQuery, nodePositions]);
 
   // Viewport Autofocus Zoom
   useEffect(() => {

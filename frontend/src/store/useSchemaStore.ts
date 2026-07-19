@@ -211,7 +211,13 @@ export const useSchemaStore = create<SchemaState>()(
         // Push initial schema to history
         const snapshot = schema ? JSON.parse(JSON.stringify(schema)) : null;
         const newHistory = snapshot ? [snapshot] : [];
-        return { schema, descriptions: newDescriptions, _history: newHistory, _historyIndex: snapshot ? 0 : -1 };
+        return { 
+          schema, 
+          descriptions: newDescriptions, 
+          _history: newHistory, 
+          _historyIndex: snapshot ? 0 : -1,
+          nodePositions: {} // Reset positions so layout is re-run from scratch
+        };
       }),
       setOriginalSchema: (originalSchema) => set({ originalSchema }),
       updateDescription: (tableId, colName, text) => set((state) => {
