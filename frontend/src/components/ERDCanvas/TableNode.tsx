@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { ColumnSchema } from '../../types/schema';
 import { useSchemaStore } from '../../store/useSchemaStore';
+import { useToastStore } from '../../store/useToastStore';
 import './TableNode.css';
 
 interface TableNodeProps {
@@ -386,7 +387,7 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
                   onDoubleClick={() => toggleColumnNullable(tableId, col.name)}
                   title="Double click to toggle NULL / NOT NULL"
                 >
-                  {col.nullable ? 'NULL' : 'N-N'}
+                  {col.nullable ? 'NULL' : 'NOT NULL'}
                 </span>
 
                 {/* Description comment bubble */}
@@ -403,7 +404,7 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
                   className="delete-col-btn"
                   onClick={() => {
                     if (data.columns.length <= 1) {
-                      alert('Cannot delete the last column. Delete the table instead.');
+                      useToastStore.getState().addToast({ type: 'warning', message: 'Cannot delete the last column. Delete the table instead.' });
                       return;
                     }
                     deleteColumn(tableId, col.name);

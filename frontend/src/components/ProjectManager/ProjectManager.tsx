@@ -127,7 +127,12 @@ export const ProjectManager: React.FC = () => {
                     {p.name}
                   </button>
                   <button 
-                    onClick={(e) => { e.stopPropagation(); deleteProject(p.id); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (window.confirm(`Delete project "${p.name}"? This cannot be undone.`)) {
+                        deleteProject(p.id);
+                      }
+                    }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-rose)', padding: '4px' }}
                     title="Delete Project"
                   >

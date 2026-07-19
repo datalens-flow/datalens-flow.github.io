@@ -241,9 +241,10 @@ JOIN orders o ON u.id = o.user_id;`);
     e.target.value = '';
   };
 
+  // Parse only on initial mount with sample SQL
   useEffect(() => {
     handleAnalyze();
-  }, [procedureSql]);
+  }, []);
 
   // Update node opacities based on selection
   useEffect(() => {

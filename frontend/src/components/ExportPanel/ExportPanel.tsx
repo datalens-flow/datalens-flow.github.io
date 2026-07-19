@@ -13,6 +13,7 @@ import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import './ExportPanel.css';
 
 import { useEffect, useRef } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 
 interface ExportPanelProps {
   mode?: 'diagram' | 'lineage';
@@ -196,7 +197,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
 
   const handleExportMigration = async () => {
     if (!schema || !originalSchema) {
-      alert("No baseline schema. Please load or parse an SQL DDL script first.");
+      useToastStore.getState().addToast({ type: 'warning', message: 'No baseline schema. Parse an SQL DDL script first.' });
       return;
     }
     setExporting(true);
@@ -218,10 +219,10 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
       const blob = await exportDrawio(schema);
       const xmlText = await blob.text();
       await navigator.clipboard.writeText(xmlText);
-      alert('Draw.io XML copied to clipboard! You can paste it directly inside Draw.io.');
+      useToastStore.getState().addToast({ type: 'success', message: 'Draw.io XML copied to clipboard!' });
     } catch (err) {
       console.error(err);
-      alert('Failed to copy to clipboard.');
+      useToastStore.getState().addToast({ type: 'error', message: 'Failed to copy to clipboard' });
     } finally {
       setExporting(false);
       setIsOpen(false);

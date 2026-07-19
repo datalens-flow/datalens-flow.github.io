@@ -16,6 +16,7 @@ import TableNode from './TableNode';
 import CrowsFootEdge from './CrowsFootEdge';
 import CardinalityMarkers from './CardinalityMarkers';
 import './ERDCanvas.css';
+import { useToastStore } from '../../store/useToastStore';
 
 const nodeTypes = {
   tableNode: TableNode,
@@ -148,7 +149,7 @@ const ERDCanvasContent: React.FC = () => {
 
   const handleEdgeDoubleClick = (_event: any, edge: any) => {
     if (edge.id.startsWith('inferred_')) {
-      alert('This is an inferred relationship. You cannot delete it. Turn off Heuristic Detection to hide it.');
+      useToastStore.getState().addToast({ type: 'info', message: 'This is an inferred relationship. Turn off "Heuristic Relations" in Settings to hide it.' });
       return;
     }
     if (window.confirm('Delete this relationship connection?')) {

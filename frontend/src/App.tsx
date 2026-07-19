@@ -6,6 +6,7 @@ import { ExportPanel } from './components/ExportPanel/ExportPanel';
 import { CanvasToolbar } from './components/ERDCanvas/CanvasToolbar';
 import { DataLineage } from './components/DataLineage/DataLineage';
 import { LandingPage } from './components/LandingPage/LandingPage';
+import { ToastContainer } from './components/Toast/ToastContainer';
 import { useSchemaStore } from './store/useSchemaStore';
 import { useRef } from 'react';
 import { ProjectManager } from './components/ProjectManager/ProjectManager';
@@ -122,9 +123,13 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo, canUndo, canRedo]);
 
-  // Show landing page
   if (showLanding) {
-    return <LandingPage onLaunchApp={handleLaunchApp} />;
+    return (
+      <>
+        <LandingPage onLaunchApp={handleLaunchApp} />
+        <ToastContainer />
+      </>
+    );
   }
 
   return (
@@ -219,6 +224,7 @@ function App() {
           <DataLineage onSwitchToDiagram={() => setCurrentMode('diagram')} />
         </main>
       )}
+      <ToastContainer />
     </div>
   );
 }

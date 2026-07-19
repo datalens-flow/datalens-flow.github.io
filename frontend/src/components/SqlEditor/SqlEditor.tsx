@@ -7,6 +7,7 @@ import { basicSetup } from 'codemirror';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { useSchemaStore } from '../../store/useSchemaStore';
+import { useToastStore } from '../../store/useToastStore';
 import { parseSql } from '../../api/client';
 import './SqlEditor.css';
 
@@ -98,6 +99,13 @@ export const SqlEditor: React.FC = () => {
             setSql(update.state.doc.toString());
           }
         }),
+        keymap.of([{
+          key: 'Mod-Enter',
+          run: () => {
+            handleParseRef.current();
+            return true;
+          }
+        }]),
         EditorView.theme({
           '&': { height: '100%', backgroundColor: 'var(--bg-secondary)', color: 'var(--color-text-primary)' },
           '.cm-content': { fontFamily: 'var(--font-mono)', fontSize: '13px' },
@@ -131,14 +139,21 @@ export const SqlEditor: React.FC = () => {
       setSchema(parsed);
       setOriginalSchema(JSON.parse(JSON.stringify(parsed)));
       clearRenameEvents();
+      const tableCount = parsed.tables?.length || 0;
+      const colCount = parsed.tables?.reduce((sum: number, t: any) => sum + (t.columns?.length || 0), 0) || 0;
+      useToastStore.getState().addToast({ type: 'success', message: `Parsed ${tableCount} tables, ${colCount} columns` });
     } catch (err: any) {
       setError(err.message || 'Failed to parse SQL DDL');
       setSchema(null);
       setOriginalSchema(null);
+      useToastStore.getState().addToast({ type: 'error', message: 'Parse failed — check error panel' });
     } finally {
       setLoading(false);
     }
   };
+
+  const handleParseRef = useRef(handleParse);
+  handleParseRef.current = handleParse;
 
   const handleLoadSample = () => {
     const sampleSql = `CREATE TABLE users (
@@ -196,8 +211,8 @@ CREATE TABLE orders (
           });
         }
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      useToastStore.getState().addToast({ type: 'error', message: err.message || 'Failed to read file' });
     }
     
     e.target.value = '';
