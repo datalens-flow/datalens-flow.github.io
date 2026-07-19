@@ -171,6 +171,25 @@
   height: 14px;
 }
 
+/* ── Dropdown group label & divider ── */
+.toolbar-dropdown-group-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding: 8px 12px 4px;
+  user-select: none;
+}
+
+.toolbar-dropdown-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 6px 8px;
+  opacity: 0.5;
+}
+
 /* ── Search wrapper ── */
 .toolbar-search-wrapper {
   display: flex;

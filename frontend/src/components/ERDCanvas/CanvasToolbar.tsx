@@ -74,7 +74,6 @@ const ToolbarDropdown: React.FC<{
         <div
           className="toolbar-dropdown-panel glass-panel"
           style={{ [align === 'right' ? 'right' : 'left']: 0 }}
-          onClick={() => setOpen(false)}
         >
           {children}
         </div>
@@ -109,28 +108,32 @@ export const CanvasToolbar: React.FC = () => {
 
       <div className="toolbar-divider" />
 
-      {/* Layout Dropdown */}
-      <ToolbarDropdown label={<><span className="toolbar-dropdown-label">Layout</span> {layoutDir === 'LR' ? 'Horizontal' : 'Vertical'}</>}>
+      {/* Unified Settings Dropdown */}
+      <ToolbarDropdown label={<><IconGear /> Settings</>}>
+        {/* Layout Group */}
+        <div className="toolbar-dropdown-group-label">📐 Layout</div>
         <button className={`toolbar-dropdown-item ${layoutDir === 'LR' ? 'selected' : ''}`} onClick={() => setLayoutDir('LR')}>
           <IconHorizontal /> Horizontal
         </button>
         <button className={`toolbar-dropdown-item ${layoutDir === 'TB' ? 'selected' : ''}`} onClick={() => setLayoutDir('TB')}>
           <IconVertical /> Vertical
         </button>
-      </ToolbarDropdown>
 
-      {/* Theme Dropdown */}
-      <ToolbarDropdown label={<><span className="toolbar-dropdown-label">Theme</span> {theme === 'dark' ? 'Dark' : 'Light'}</>}>
+        <div className="toolbar-dropdown-divider" />
+
+        {/* Appearance Group */}
+        <div className="toolbar-dropdown-group-label">🎨 Appearance</div>
         <button className={`toolbar-dropdown-item ${theme === 'dark' ? 'selected' : ''}`} onClick={() => setTheme('dark')}>
           <IconDark /> Dark
         </button>
         <button className={`toolbar-dropdown-item ${theme === 'light' ? 'selected' : ''}`} onClick={() => setTheme('light')}>
           <IconLight /> Light
         </button>
-      </ToolbarDropdown>
 
-      {/* Canvas Settings Dropdown */}
-      <ToolbarDropdown label={<><IconGear /> Settings</>}>
+        <div className="toolbar-dropdown-divider" />
+
+        {/* Canvas Group */}
+        <div className="toolbar-dropdown-group-label">🔧 Canvas</div>
         <label className="toolbar-dropdown-check">
           <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
           Show Background Grid
