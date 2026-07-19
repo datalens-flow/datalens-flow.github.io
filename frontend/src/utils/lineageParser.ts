@@ -158,6 +158,32 @@ export const parseLineage = (sql: string): LineageResult => {
   const statements = cleanSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
 
   statements.forEach((stmt) => {
+    // --- Strip WITH (CTE) block from the statement to avoid matching nested CTE SELECT clauses ---
+    let cleanStmt = stmt;
+    const stmtLower = stmt.toLowerCase();
+    const withIdx = stmtLower.match(/\bwith\b/);
+    if (withIdx && withIdx.index !== undefined) {
+      // Find the main DML keyword following the CTE definitions at depth 0
+      let depth = 0;
+      let mainActionIdx = -1;
+      const searchStart = withIdx.index + 4;
+      for (let i = searchStart; i < stmt.length; i++) {
+        if (stmt[i] === '(') depth++;
+        if (stmt[i] === ')') depth--;
+        if (depth === 0) {
+          const sub = stmtLower.substring(i).trim();
+          if (sub.startsWith('select') || sub.startsWith('insert') || sub.startsWith('update') || sub.startsWith('delete') || sub.startsWith('merge')) {
+            mainActionIdx = i;
+            break;
+          }
+        }
+      }
+      if (mainActionIdx !== -1) {
+        // Remove the WITH ... part up to the DML keyword
+        cleanStmt = stmt.substring(0, withIdx.index) + ' ' + stmt.substring(mainActionIdx);
+      }
+    }
+
     let targetTable = '';
     let targetCols: string[] = [];
     let isInsert = false;
@@ -165,10 +191,10 @@ export const parseLineage = (sql: string): LineageResult => {
     let isMerge = false;
 
     // --- Detect Target Table (supports schema.table notation) ---
-    const insertMatch = stmt.match(/insert\s+into\s+([\w.]+)\s*(?:\(([^)]+)\))?/i);
-    const createMatch = stmt.match(/create\s+(?:table|view)\s+([\w.]+)\s+as\s/i);
-    const updateMatch = stmt.match(/update\s+([\w.]+)(?:\s+(\w+))?\s+set\s/i);
-    const mergeMatch = stmt.match(/merge\s+into\s+([\w.]+)\s+/i);
+    const insertMatch = cleanStmt.match(/insert\s+into\s+([\w.]+)\s*(?:\(([^)]+)\))?/i);
+    const createMatch = cleanStmt.match(/create\s+(?:table|view)\s+([\w.]+)\s+as\s/i);
+    const updateMatch = cleanStmt.match(/update\s+([\w.]+)(?:\s+(\w+))?\s+set\s/i);
+    const mergeMatch = cleanStmt.match(/merge\s+into\s+([\w.]+)\s+/i);
 
     if (insertMatch) {
       targetTable = extractTableName(insertMatch[1]);
@@ -195,7 +221,7 @@ export const parseLineage = (sql: string): LineageResult => {
 
     // --- Build alias → table mapping from FROM / JOIN / USING ---
     const aliasMap: Record<string, string> = {};
-    const aliasMatches = [...stmt.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
+    const aliasMatches = [...cleanStmt.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
     aliasMatches.forEach(m => {
       const tableName = extractTableName(m[1]);
       if (SQL_KEYWORDS.has(tableName)) return;
@@ -266,10 +292,6 @@ export const parseLineage = (sql: string): LineageResult => {
     const resolveColumn = (expr: string): { table: string; col: string } | null => {
       if (isNonColumnExpr(expr)) return null;
 
-      // Extract the target identifier from nested expressions, functions, or parentheses
-      // e.g. UPPER(TRIM(customer_name)) -> customer_name
-      // e.g. COALESCE(gender, 'U') -> gender
-      // e.g. CASE WHEN ... -> skip or match first column identifier
       let cleanExpr = expr.trim();
       
       // If it contains CASE WHEN, we extract the first column mentioned or treat it as a general flow if too complex
@@ -281,32 +303,36 @@ export const parseLineage = (sql: string): LineageResult => {
       }
 
       // Strip SQL function wrappers like UPPER(, TRIM(, COALESCE(, ROUND(
-      // by grabbing the column/alias identifier inside
-      const funcMatch = cleanExpr.match(/\b(?:upper|trim|coalesce|round|lower|abs|nullif|concat|nvl)\s*\(\s*([\w.]+)/i);
+      // by grabbing the column/alias identifier inside (supports optional leading parenthesises)
+      const funcMatch = cleanExpr.match(/\b(?:upper|trim|coalesce|round|lower|abs|nullif|concat|nvl)\s*\(\s*\(?\s*([\w.]+)/i);
       if (funcMatch) {
         cleanExpr = funcMatch[1];
       }
 
-      // Strip any residual parentheses or punctuation
-      cleanExpr = cleanExpr.replace(/[()]/g, '').trim();
-
-      const firstToken = cleanExpr.split(/\s+/)[0]; // ignore AS alias
-      if (!firstToken || isNonColumnExpr(firstToken)) return null;
+      // Extract the first alphanumeric string with optional dot (representing table.col or col)
+      // ignoring operators like -, +, *, /, numbers, parentheses, and SQL function names
+      const colIdMatch = cleanExpr.match(/\b([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)?)\b/);
+      if (!colIdMatch) return null;
+      
+      const firstToken = colIdMatch[1].toLowerCase();
+      // Ignore known SQL keywords, functions, or non-column indicators
+      const ignoredWords = new Set([...SQL_KEYWORDS, 'upper', 'trim', 'coalesce', 'round', 'lower', 'abs', 'nullif', 'concat', 'nvl']);
+      if (ignoredWords.has(firstToken) || isNonColumnExpr(firstToken)) return null;
 
       const dotParts = firstToken.split('.');
       if (dotParts.length === 2) {
-        const alias = dotParts[0].toLowerCase();
-        const col = dotParts[1].toLowerCase();
+        const alias = dotParts[0];
+        const col = dotParts[1];
         const table = aliasMap[alias] || sourceTables[0] || 'unknown';
         return { table, col };
       }
-      return { table: sourceTables[0] || 'unknown', col: dotParts[0].toLowerCase() };
+      return { table: sourceTables[0] || 'unknown', col: dotParts[0] };
     };
 
     // --- Parse INSERT...SELECT column mapping ---
     if (isInsert) {
       // Multi-line SELECT support: [\s\S]+? crosses newlines
-      const selectMatch = stmt.match(/select\s+([\s\S]+?)\s+from\s/i);
+      const selectMatch = cleanStmt.match(/select\s+([\s\S]+?)\s+from\s/i);
       if (selectMatch && targetCols.length > 0) {
         // Depth-aware splitting of SELECT expressions to avoid breaking on commas inside functions e.g. COALESCE(pm.promotion_key,-1)
         const selectText = selectMatch[1];
@@ -354,7 +380,7 @@ export const parseLineage = (sql: string): LineageResult => {
 
     // --- Parse UPDATE...SET column mapping ---
     if (isUpdate) {
-      const setMatch = stmt.match(/\bset\s+([\s\S]+?)(?:\bfrom\b|\bwhere\b|$)/i);
+      const setMatch = cleanStmt.match(/\bset\s+([\s\S]+?)(?:\bfrom\b|\bwhere\b|$)/i);
       if (setMatch) {
         const assignments = setMatch[1].split(',').map(a => a.trim());
 
