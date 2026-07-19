@@ -238,3 +238,24 @@
 .column-comment-input:focus {
   border-color: var(--color-indigo);
 }
+
+.delete-table-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  opacity: 0;
+  transition: var(--transition-all);
+  padding: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.table-node:hover .delete-table-btn {
+  opacity: 0.5;
+}
+
+.table-node:hover .delete-table-btn:hover {
+  opacity: 1;
+  background-color: rgba(244, 63, 94, 0.15);
+}

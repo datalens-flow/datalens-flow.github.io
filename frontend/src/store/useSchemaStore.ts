@@ -62,6 +62,7 @@ interface SchemaState {
   deleteRelationship: (id: string) => void;
   
   addTable: () => void;
+  deleteTable: (tableId: string) => void;
   addColumn: (tableId: string) => void;
   toggleColumnPk: (tableId: string, colName: string) => void;
   toggleColumnNullable: (tableId: string, colName: string) => void;
@@ -181,6 +182,31 @@ export const useSchemaStore = create<SchemaState>((set, get) => ({
 
   addTable: () => {
     set((state) => addTableHelper(state.schema, state.nodePositions));
+    get().syncSqlFromSchema();
+  },
+
+  deleteTable: (tableId) => {
+    set((state) => {
+      if (!state.schema) return {};
+      const updatedTables = state.schema.tables.filter((t) => t.id !== tableId);
+      const updatedRelationships = state.schema.relationships.filter(
+        (r) => r.from_table !== tableId && r.to_table !== tableId
+      );
+      const updatedPositions = { ...state.nodePositions };
+      delete updatedPositions[tableId];
+      const updatedDescriptions = { ...state.descriptions };
+      delete updatedDescriptions[tableId];
+
+      return {
+        schema: {
+          ...state.schema,
+          tables: updatedTables,
+          relationships: updatedRelationships
+        },
+        nodePositions: updatedPositions,
+        descriptions: updatedDescriptions
+      };
+    });
     get().syncSqlFromSchema();
   },
 

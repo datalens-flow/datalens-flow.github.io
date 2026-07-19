@@ -33,7 +33,8 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
     toggleColumnPk,
     toggleColumnNullable,
     descriptions,
-    updateDescription
+    updateDescription,
+    deleteTable
   } = useSchemaStore();
 
   // 1. Rename Table Name
@@ -78,30 +79,43 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
   return (
     <div className="table-node glass-panel">
       {/* Table Header */}
-      <div className="table-node-header">
-        <span className="table-icon">📁</span>
-        {editingTableName ? (
-          <input
-            type="text"
-            value={tempTableName}
-            onChange={(e) => setTempTableName(e.target.value)}
-            onBlur={handleSaveTableName}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSaveTableName();
-              if (e.key === 'Escape') setEditingTableName(false);
-            }}
-            autoFocus
-            className="table-name-input"
-          />
-        ) : (
-          <span 
-            className="table-name"
-            onDoubleClick={handleDoubleClickTable}
-            title="Double click to edit table name"
-          >
-            {data.name}
-          </span>
-        )}
+      <div className="table-node-header" style={{ justifyContent: 'space-between', width: '100%', display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1, minWidth: 0 }}>
+          <span className="table-icon">📁</span>
+          {editingTableName ? (
+            <input
+              type="text"
+              value={tempTableName}
+              onChange={(e) => setTempTableName(e.target.value)}
+              onBlur={handleSaveTableName}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTableName();
+                if (e.key === 'Escape') setEditingTableName(false);
+              }}
+              autoFocus
+              className="table-name-input"
+            />
+          ) : (
+            <span 
+              className="table-name"
+              onDoubleClick={handleDoubleClickTable}
+              title="Double click to edit table name"
+            >
+              {data.name}
+            </span>
+          )}
+        </div>
+        <button 
+          className="delete-table-btn"
+          onClick={() => {
+            if (window.confirm(`Delete table ${data.name}?`)) {
+              deleteTable(tableId);
+            }
+          }}
+          title="Delete Table"
+        >
+          🗑️
+        </button>
       </div>
 
       {/* Columns Container */}
