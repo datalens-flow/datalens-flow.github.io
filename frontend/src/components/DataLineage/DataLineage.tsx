@@ -198,7 +198,7 @@ JOIN orders o ON u.id = o.user_id;`);
       newNodes.push({
         id: tgt,
         type: 'lineageNode',
-        position: { x: 480, y: 50 + idx * 180 },
+        position: { x: 420, y: 50 + idx * 180 },
         data: { 
           isSource: false,
           label: (
