@@ -12,12 +12,26 @@ import {
   addColumnHelper
 } from './schemaHelpers';
 
+export interface Project {
+  id: string;
+  name: string;
+  sql: string;
+  dialect: string;
+  outputDialect: string;
+  schema: SchemaResponse | null;
+  descriptions: Record<string, Record<string, string>>;
+  nodePositions: Record<string, { x: number; y: number }>;
+}
+
 export interface RenameEvents {
   tables: Record<string, string>; // oldTableId -> newTableName
   columns: Record<string, Record<string, string>>; // tableId -> oldColName -> newColName
 }
 
 interface SchemaState {
+  projects: Project[];
+  activeProjectId: string | null;
+
   schema: SchemaResponse | null;
   originalSchema: SchemaResponse | null;
   renameEvents: RenameEvents;
@@ -35,6 +49,8 @@ interface SchemaState {
   inferRelationships: boolean;
   showGrid: boolean;
   setShowGrid: (show: boolean) => void;
+  tableColors: Record<string, string>; // tableId -> hexColor
+  setTableColor: (tableId: string, color: string) => void;
   outputDialect: string;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -81,6 +97,13 @@ interface SchemaState {
   toggleColumnPk: (tableId: string, colName: string) => void;
   toggleColumnNullable: (tableId: string, colName: string) => void;
   syncSqlFromSchema: () => Promise<void>;
+
+  // Project Management
+  saveProjectAs: (name: string) => void;
+  loadProject: (id: string) => void;
+  deleteProject: (id: string) => void;
+  updateProjectState: () => void;
+  importProjectJson: (jsonString: string) => void;
 }
 
 const DEFAULT_SQL = `CREATE TABLE users (
@@ -103,6 +126,9 @@ const MAX_HISTORY = 50;
 export const useSchemaStore = create<SchemaState>()(
   persist(
     (set, get) => ({
+      projects: [],
+      activeProjectId: null,
+
       schema: null,
       originalSchema: null,
       renameEvents: { tables: {}, columns: {} },
@@ -380,6 +406,17 @@ export const useSchemaStore = create<SchemaState>()(
         get().syncSqlFromSchema();
       },
 
+      tableColors: {},
+      setTableColor: (tableId, color) => {
+        get()._pushHistory();
+        set((state) => ({
+          tableColors: {
+            ...state.tableColors,
+            [tableId]: color
+          }
+        }));
+      },
+
       syncSqlFromSchema: async () => {
         const { schema, outputDialect } = get();
         if (!schema) return;
@@ -390,11 +427,123 @@ export const useSchemaStore = create<SchemaState>()(
         } catch (e) {
           console.error("Failed to sync DDL SQL:", e);
         }
+      },
+
+      saveProjectAs: (name: string) => {
+        const state = get();
+        const newProject: Project = {
+          id: crypto.randomUUID(),
+          name,
+          sql: state.sql,
+          dialect: state.dialect,
+          outputDialect: state.outputDialect,
+          schema: state.schema,
+          descriptions: state.descriptions,
+          nodePositions: state.nodePositions,
+        };
+        set({
+          projects: [...state.projects, newProject],
+          activeProjectId: newProject.id
+        });
+      },
+
+      loadProject: (id: string) => {
+        const state = get();
+        const project = state.projects.find(p => p.id === id);
+        if (project) {
+          set({
+            activeProjectId: project.id,
+            sql: project.sql,
+            dialect: project.dialect,
+            outputDialect: project.outputDialect,
+            schema: project.schema,
+            originalSchema: project.schema,
+            descriptions: project.descriptions || {},
+            nodePositions: project.nodePositions || {},
+            renameEvents: { tables: {}, columns: {} },
+            _history: project.schema ? [JSON.parse(JSON.stringify(project.schema))] : [],
+            _historyIndex: project.schema ? 0 : -1,
+          });
+        }
+      },
+
+      deleteProject: (id: string) => {
+        set((state) => {
+          const newProjects = state.projects.filter(p => p.id !== id);
+          const newActiveId = state.activeProjectId === id ? null : state.activeProjectId;
+          return {
+            projects: newProjects,
+            activeProjectId: newActiveId
+          };
+        });
+      },
+
+      updateProjectState: () => {
+        set((state) => {
+          if (!state.activeProjectId) return state;
+          const newProjects = state.projects.map(p => {
+            if (p.id === state.activeProjectId) {
+              return {
+                ...p,
+                sql: state.sql,
+                dialect: state.dialect,
+                outputDialect: state.outputDialect,
+                schema: state.schema,
+                descriptions: state.descriptions,
+                nodePositions: state.nodePositions,
+              };
+            }
+            return p;
+          });
+          return { projects: newProjects };
+        });
+      },
+
+      importProjectJson: (jsonString: string) => {
+        try {
+          const data = JSON.parse(jsonString);
+          const newProject: Project = {
+            id: data.id || crypto.randomUUID(),
+            name: data.name || 'Imported Project',
+            sql: data.sql || '',
+            dialect: data.dialect || 'postgres',
+            outputDialect: data.outputDialect || 'postgres',
+            schema: data.schema || null,
+            descriptions: data.descriptions || {},
+            nodePositions: data.nodePositions || {},
+          };
+          
+          set((state) => {
+            const exists = state.projects.find(p => p.id === newProject.id);
+            const projects = exists 
+              ? state.projects.map(p => p.id === newProject.id ? newProject : p)
+              : [...state.projects, newProject];
+              
+            return {
+              projects,
+              activeProjectId: newProject.id,
+              sql: newProject.sql,
+              dialect: newProject.dialect,
+              outputDialect: newProject.outputDialect,
+              schema: newProject.schema,
+              originalSchema: newProject.schema,
+              descriptions: newProject.descriptions,
+              nodePositions: newProject.nodePositions,
+              renameEvents: { tables: {}, columns: {} },
+              _history: newProject.schema ? [JSON.parse(JSON.stringify(newProject.schema))] : [],
+              _historyIndex: newProject.schema ? 0 : -1,
+            };
+          });
+        } catch (e) {
+          console.error("Failed to import project:", e);
+        }
       }
     }),
     {
       name: 'datalens-store',
       partialize: (state) => ({
+        projects: state.projects,
+        activeProjectId: state.activeProjectId,
         schema: state.schema,
         originalSchema: state.originalSchema,
         descriptions: state.descriptions,
@@ -407,6 +556,7 @@ export const useSchemaStore = create<SchemaState>()(
         showGrid: state.showGrid,
         outputDialect: state.outputDialect,
         renameEvents: state.renameEvents,
+        tableColors: (state as any).tableColors || {},
       }),
     }
   )

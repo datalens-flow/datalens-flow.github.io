@@ -34,6 +34,8 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
   const dragIndexRef = useRef<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  const [showColorPicker, setShowColorPicker] = useState(false);
+
   const { 
     updateTableName, 
     updateColumnName,
@@ -45,7 +47,9 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
     toggleColumnNullable,
     descriptions,
     updateDescription,
-    deleteTable
+    deleteTable,
+    tableColors,
+    setTableColor
   } = useSchemaStore();
 
   // 1. Rename Table Name with validation
@@ -144,14 +148,94 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
     setDragOverIndex(null);
   };
 
+  const activeColor = tableColors[tableId] || '#6366f1';
+
+  // Available theme-friendly colors for tagging
+  const paletteColors = [
+    { hex: '#6366f1', label: 'Indigo' },
+    { hex: '#0ea5e9', label: 'Sky' },
+    { hex: '#10b981', label: 'Emerald' },
+    { hex: '#f59e0b', label: 'Amber' },
+    { hex: '#f43f5e', label: 'Rose' },
+    { hex: '#a855f7', label: 'Purple' },
+    { hex: '#64748b', label: 'Muted' }
+  ];
+
   return (
     <div className="table-node glass-panel">
       {/* Table Header */}
-      <div className="table-node-header" style={{ justifyContent: 'space-between', width: '100%', display: 'flex', alignItems: 'center' }}>
+      <div 
+        className="table-node-header" 
+        style={{ 
+          justifyContent: 'space-between', 
+          width: '100%', 
+          display: 'flex', 
+          alignItems: 'center',
+          background: `linear-gradient(180deg, ${activeColor}1a 0%, ${activeColor}05 100%)`,
+          borderBottom: `1px solid ${activeColor}33`
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexGrow: 1, minWidth: 0 }}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--color-indigo)" strokeWidth="1.5" strokeLinecap="round">
-            <rect x="2" y="2" width="12" height="12" rx="2" /><path d="M2 6h12M6 6v8"/>
-          </svg>
+          {/* Color palette selector button */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <button
+              className="table-color-picker-trigger"
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              title="Change table tag color"
+              style={{
+                background: activeColor,
+                border: 'none',
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                boxShadow: `0 0 6px ${activeColor}66`,
+                transition: 'transform 0.15s ease'
+              }}
+            />
+            {showColorPicker && (
+              <div 
+                className="table-color-picker-dropdown glass-panel"
+                style={{
+                  position: 'absolute',
+                  top: '18px',
+                  left: '0',
+                  zIndex: 999,
+                  padding: '6px',
+                  display: 'flex',
+                  gap: '4px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--bg-secondary)',
+                  boxShadow: 'var(--shadow-lg)'
+                }}
+              >
+                {paletteColors.map((color) => (
+                  <button
+                    key={color.hex}
+                    onClick={() => {
+                      setTableColor(tableId, color.hex);
+                      setShowColorPicker(false);
+                    }}
+                    style={{
+                      background: color.hex,
+                      border: activeColor === color.hex ? '2px solid #ffffff' : 'none',
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      padding: 0,
+                      boxShadow: `0 0 4px ${color.hex}44`
+                    }}
+                    title={color.label}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
           {editingTableName ? (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <input
@@ -165,6 +249,7 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
                 }}
                 autoFocus
                 className={`table-name-input ${nameError ? 'input-error' : ''}`}
+                style={{ borderColor: activeColor }}
               />
               {nameError && <span className="validation-error">{nameError}</span>}
             </div>
@@ -363,6 +448,9 @@ export const TableNode: React.FC<TableNodeProps> = ({ id: tableId, data }) => {
           className="add-column-btn"
           onClick={() => addColumn(tableId)}
           title="Add Column"
+          style={{
+            color: activeColor
+          }}
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M5 1v8M1 5h8"/></svg>
           Add Column

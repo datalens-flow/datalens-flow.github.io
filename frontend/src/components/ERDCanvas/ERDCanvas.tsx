@@ -35,7 +35,8 @@ const ERDCanvasContent: React.FC = () => {
     layoutDir,
     inferRelationships,
     searchQuery,
-    showGrid
+    showGrid,
+    tableColors
   } = useSchemaStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
@@ -178,7 +179,7 @@ const ERDCanvasContent: React.FC = () => {
         <Controls style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }} />
         <MiniMap 
           style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)' }} 
-          nodeColor="var(--bg-primary)" 
+          nodeColor={(node) => tableColors[node.id] || "var(--bg-primary)"} 
           maskColor="rgba(0, 0, 0, 0.4)" 
         />
       </ReactFlow>

@@ -59,7 +59,13 @@ const lightHighlightStyle = HighlightStyle.define([
   { tag: t.punctuation, color: '#64748b' }
 ]);
 
-export const DataLineage: React.FC = () => {
+export interface DataLineageProps {
+  onSwitchToDiagram?: () => void;
+}
+
+export const DataLineage: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
   const [procedureSql, setProcedureSql] = useState<string>(`-- Sample ETL Stored Procedure
 INSERT INTO sales_summary (customer_name, revenue)
 SELECT u.name, o.amount
@@ -144,7 +150,9 @@ JOIN orders o ON u.id = o.user_id;`);
           border: '1px solid var(--color-border)', 
           color: 'var(--color-text-primary)', 
           borderRadius: '6px',
-          padding: 0
+          padding: 0,
+          opacity: 1,
+          transition: 'opacity 0.2s ease'
         }
       });
     });
@@ -174,7 +182,9 @@ JOIN orders o ON u.id = o.user_id;`);
           border: '1px solid var(--color-border)', 
           color: 'var(--color-text-primary)', 
           borderRadius: '6px',
-          padding: 0
+          padding: 0,
+          opacity: 1,
+          transition: 'opacity 0.2s ease'
         }
       });
     });
@@ -193,6 +203,7 @@ JOIN orders o ON u.id = o.user_id;`);
 
     setNodes(newNodes);
     setEdges(newEdges);
+    setSelectedNodeId(null);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -234,6 +245,62 @@ JOIN orders o ON u.id = o.user_id;`);
     handleAnalyze();
   }, [procedureSql]);
 
+  // Update node opacities based on selection
+  useEffect(() => {
+    setNodes((nds) => 
+      nds.map((node) => {
+        if (!selectedNodeId) {
+          // No selection, full opacity for all
+          return { ...node, style: { ...node.style, opacity: 1 } };
+        }
+
+        // Check if this node is connected to the selected node
+        const isConnected = edges.some(
+          (edge) => 
+            (edge.source === selectedNodeId && edge.target === node.id) ||
+            (edge.target === selectedNodeId && edge.source === node.id)
+        );
+
+        if (node.id === selectedNodeId || isConnected) {
+          return { ...node, style: { ...node.style, opacity: 1 } };
+        }
+
+        return { ...node, style: { ...node.style, opacity: 0.2 } };
+      })
+    );
+  }, [selectedNodeId, edges, setNodes]);
+
+  const onNodeClick = (_: React.MouseEvent, node: any) => {
+    setSelectedNodeId((prev) => (prev === node.id ? null : node.id));
+  };
+
+  const handleInspectInDiagram = () => {
+    if (!selectedNodeId) return;
+    const { setActiveTab, setSearchQuery } = useSchemaStore.getState();
+    setActiveTab('erd');
+    setSearchQuery(selectedNodeId);
+    if (onSwitchToDiagram) {
+      onSwitchToDiagram();
+    }
+  };
+
+  // Get selected node details
+  const selectedNodeData = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
+  
+  // Extract unique columns involved in flows for the selected node
+  const columnsInvolved = new Set<string>();
+  if (selectedNodeId) {
+    const result = parseLineage(procedureSql);
+    result.flows.forEach(f => {
+      if (f.sourceTable === selectedNodeId) {
+        columnsInvolved.add(f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
+      }
+      if (f.targetTable === selectedNodeId) {
+        columnsInvolved.add(f.targetCol === '*' ? 'All Columns' : f.targetCol);
+      }
+    });
+  }
+
   return (
     <div className="lineage-container">
       <div className="lineage-sidebar">
@@ -265,6 +332,39 @@ JOIN orders o ON u.id = o.user_id;`);
           </div>
         </div>
         <div className="lineage-textarea" ref={editorRef}></div>
+        
+        {/* Inspection Panel */}
+        {selectedNodeId && selectedNodeData && (
+          <div className="lineage-inspection-panel" style={{
+            padding: '16px',
+            borderTop: '1px solid var(--color-border)',
+            backgroundColor: 'var(--bg-tertiary)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>
+              Inspection: {selectedNodeId.toUpperCase()}
+            </h3>
+            
+            <div>
+              <strong style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Columns Involved:</strong>
+              <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: 'var(--color-text-primary)' }}>
+                {Array.from(columnsInvolved).map(col => (
+                  <li key={col}>{col}</li>
+                ))}
+              </ul>
+            </div>
+
+            <button 
+              className="btn btn-primary"
+              style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+              onClick={handleInspectInDiagram}
+            >
+              🔍 Inspect in Diagram
+            </button>
+          </div>
+        )}
       </div>
       <div className="lineage-canvas">
         <ReactFlow
@@ -272,6 +372,7 @@ JOIN orders o ON u.id = o.user_id;`);
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onNodeClick={onNodeClick}
           minZoom={0.1}
           maxZoom={2}
           fitView

@@ -7,6 +7,7 @@ import { CanvasToolbar } from './components/ERDCanvas/CanvasToolbar';
 import { DataLineage } from './components/DataLineage/DataLineage';
 import { useSchemaStore } from './store/useSchemaStore';
 import { useRef } from 'react';
+import { ProjectManager } from './components/ProjectManager/ProjectManager';
 
 interface ModeDropdownProps {
   currentMode: 'diagram' | 'lineage';
@@ -132,7 +133,7 @@ function App() {
             </h1>
           </div>
 
-          {/* Mode Dropdown Switcher */}
+          <ProjectManager />
           <ModeDropdown currentMode={currentMode} setCurrentMode={setCurrentMode} />
         </div>
         
@@ -199,7 +200,7 @@ function App() {
         </main>
       ) : (
         <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-          <DataLineage />
+          <DataLineage onSwitchToDiagram={() => setCurrentMode('diagram')} />
         </main>
       )}
     </div>
