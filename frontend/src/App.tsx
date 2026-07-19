@@ -79,7 +79,7 @@ const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurrentMode
   );
 };
 
-import { MetadataManager } from './components/MetadataManager/MetadataManager';
+
 
 function App() {
   const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>('diagram');
@@ -172,13 +172,7 @@ function App() {
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{marginRight: 6}}><path d="M3 1h10a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
                 Data Dictionary {tableCount > 0 ? `(${tableCount})` : ''}
               </button>
-              <button 
-                className={`tab-btn ${activeTab === 'metadata' ? 'active' : ''}`}
-                onClick={() => setActiveTab('metadata')}
-              >
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{marginRight: 6}}><path d="M4 1h8a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><circle cx="8" cy="8" r="2"/></svg>
-                Metadata
-              </button>
+
             </div>
 
             {/* Status Message or Warnings */}
@@ -201,10 +195,8 @@ function App() {
             <div style={{ flexGrow: 1, position: 'relative', overflow: 'hidden' }}>
               {activeTab === 'erd' ? (
                 <ERDCanvas />
-              ) : activeTab === 'dict' ? (
-                <DataDictionary />
               ) : (
-                <MetadataManager />
+                <DataDictionary />
               )}
             </div>
           </section>
