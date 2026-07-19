@@ -5,6 +5,8 @@ import {
   Controls, 
   useNodesState, 
   useEdgesState,
+  useReactFlow,
+  ReactFlowProvider,
   MarkerType,
   Handle,
   Position
@@ -33,7 +35,7 @@ const LineageNode: React.FC<{ data: any }> = ({ data }) => {
   const columns: ColInfo[] = data.columns || [];
   const role: 'source' | 'target' | 'both' = data.role || 'source';
   return (
-    <div style={{ position: 'relative', width: '180px' }}>
+    <div style={{ position: 'relative', width: '200px' }}>
       <div className="lineage-node">
         <div className={`lineage-node-header ${role}`}>
           {role === 'source' ? '◀ Source' : role === 'target' ? 'Target ▶' : '◀ ▶'}&nbsp;&nbsp;{data.tableName}
@@ -134,8 +136,21 @@ export interface DataLineageProps {
   onSwitchToDiagram?: () => void;
 }
 
-export const DataLineage: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
+// Edge color palette for different source tables
+const EDGE_COLORS = [
+  '#38bdf8', // sky blue
+  '#34d399', // emerald
+  '#a78bfa', // violet
+  '#fb923c', // orange
+  '#f472b6', // pink
+  '#facc15', // yellow
+  '#2dd4bf', // teal
+  '#818cf8', // indigo
+];
+
+const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const { fitView } = useReactFlow();
 
   const [procedureSql, setProcedureSql] = useState<string>(`-- Sample ETL Stored Procedure
 INSERT INTO sales_summary (customer_name, revenue)
@@ -210,19 +225,6 @@ JOIN orders o ON u.id = o.user_id;`);
       else targetOnly.push(table);
     });
 
-    // --- Layout constants ---
-    const NODE_WIDTH = 180;
-    const NODE_SPACING_Y = 150;
-    const hasBothColumn = bothTables.length > 0;
-    const COL_X_SOURCE = 50;
-    const COL_X_BOTH = hasBothColumn ? 330 : 0;
-    const COL_X_TARGET = hasBothColumn ? 610 : 380;
-
-    // Vertical centering: all columns center relative to max column height
-    const maxCount = Math.max(sourceOnly.length, bothTables.length, targetOnly.length, 1);
-    const totalMaxHeight = (maxCount - 1) * NODE_SPACING_Y;
-    const centerY = 50 + totalMaxHeight / 2;
-
     // --- Helper: get columns with handle directions for a table ---
     const getColumnsForTable = (table: string): ColInfo[] => {
       const incomingCols = new Set<string>();
@@ -237,7 +239,6 @@ JOIN orders o ON u.id = o.user_id;`);
         }
       });
 
-      // Merge all unique columns, preserving order (incoming first, then outgoing-only)
       const allCols: ColInfo[] = [];
       const seen = new Set<string>();
 
@@ -254,17 +255,52 @@ JOIN orders o ON u.id = o.user_id;`);
       return allCols;
     };
 
-    // --- Create nodes for a column of tables ---
-    const createColumnNodes = (tables: string[], xPos: number, role: 'source' | 'target' | 'both') => {
-      const colHeight = (tables.length - 1) * NODE_SPACING_Y;
-      const startY = centerY - colHeight / 2;
+    // --- Calculate actual node heights for dynamic spacing ---
+    // Header ~32px + each column row ~24px + padding ~16px
+    const NODE_HEADER_HEIGHT = 36;
+    const COL_ROW_HEIGHT = 24;
+    const NODE_PADDING = 16;
+    const NODE_GAP = 30; // gap between nodes in same column
+    const NODE_WIDTH = 200;
 
-      tables.forEach((table, idx) => {
+    const calcNodeHeight = (table: string): number => {
+      const cols = getColumnsForTable(table);
+      return NODE_HEADER_HEIGHT + cols.length * COL_ROW_HEIGHT + NODE_PADDING;
+    };
+
+    // Calculate total height for each column
+    const calcColumnTotalHeight = (tables: string[]): number => {
+      if (tables.length === 0) return 0;
+      let total = 0;
+      tables.forEach((t, i) => {
+        total += calcNodeHeight(t);
+        if (i < tables.length - 1) total += NODE_GAP;
+      });
+      return total;
+    };
+
+    const srcTotalH = calcColumnTotalHeight(sourceOnly);
+    const bothTotalH = calcColumnTotalHeight(bothTables);
+    const tgtTotalH = calcColumnTotalHeight(targetOnly);
+    const maxTotalH = Math.max(srcTotalH, bothTotalH, tgtTotalH, 100);
+
+    // --- Layout X positions ---
+    const hasBothColumn = bothTables.length > 0;
+    const COL_X_SOURCE = 0;
+    const COL_X_BOTH = hasBothColumn ? 350 : 0;
+    const COL_X_TARGET = hasBothColumn ? 700 : 400;
+
+    // --- Create nodes for a column of tables (vertically centered) ---
+    const createColumnNodes = (tables: string[], xPos: number, role: 'source' | 'target' | 'both') => {
+      const colTotalH = calcColumnTotalHeight(tables);
+      let currentY = (maxTotalH - colTotalH) / 2; // center vertically
+
+      tables.forEach((table) => {
         const columns = getColumnsForTable(table);
         newNodes.push({
           id: table,
           type: 'lineageNode',
-          position: { x: xPos, y: startY + idx * NODE_SPACING_Y },
+          position: { x: xPos, y: currentY },
           data: {
             tableName: table.toUpperCase(),
             role,
@@ -281,6 +317,7 @@ JOIN orders o ON u.id = o.user_id;`);
             transition: 'opacity 0.2s ease'
           }
         });
+        currentY += calcNodeHeight(table) + NODE_GAP;
       });
     };
 
@@ -288,28 +325,39 @@ JOIN orders o ON u.id = o.user_id;`);
     createColumnNodes(bothTables, COL_X_BOTH, 'both');
     createColumnNodes(targetOnly, COL_X_TARGET, 'target');
 
-    // --- Create per-flow edges ---
+    // --- Build color map: each source table gets a unique color ---
+    const allSourceTables = [...new Set(result.flows.map(f => f.sourceTable))];
+    const sourceColorMap: Record<string, string> = {};
+    allSourceTables.forEach((src, idx) => {
+      sourceColorMap[src] = EDGE_COLORS[idx % EDGE_COLORS.length];
+    });
+
+    // --- Create per-flow edges: NO labels, color-coded by source, smoothstep routing ---
     result.flows.forEach((flow, idx) => {
       const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
       const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
+      const edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
+
       newEdges.push({
         id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
         source: flow.sourceTable,
         target: flow.targetTable,
         sourceHandle: `col-${sourceCol}`,
         targetHandle: `col-${targetCol}`,
-        label: `${sourceCol} ➜ ${targetCol}`,
-        style: { stroke: 'var(--color-indigo)', strokeWidth: 2 },
-        labelStyle: { fontSize: '10px', fill: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' },
-        labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.85 },
-        labelBgPadding: [4, 2] as [number, number],
-        markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--color-indigo)' }
+        type: 'smoothstep',
+        style: { stroke: edgeColor, strokeWidth: 1.5, opacity: 0.8 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
       });
     });
 
     setNodes(newNodes);
     setEdges(newEdges);
     setSelectedNodeId(null);
+
+    // Auto-fit view after layout settles
+    setTimeout(() => {
+      fitView({ padding: 0.15, duration: 400 });
+    }, 50);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -492,4 +540,11 @@ JOIN orders o ON u.id = o.user_id;`);
     </div>
   );
 };
+
+// Wrap with ReactFlowProvider so useReactFlow() works
+export const DataLineage: React.FC<DataLineageProps> = (props) => (
+  <ReactFlowProvider>
+    <DataLineageInner {...props} />
+  </ReactFlowProvider>
+);
 export default DataLineage;
