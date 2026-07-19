@@ -6,11 +6,11 @@
   transition: background-color 0.2s ease;
 }
 
-/* Canvas Toolbar Overlay */
+/* ── Canvas Toolbar ── */
 .canvas-toolbar {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   padding: 4px 8px;
 }
 
@@ -28,8 +28,7 @@
   align-items: center;
   gap: 6px;
   transition: var(--transition-all);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .toolbar-btn:hover {
@@ -38,8 +37,13 @@
   color: var(--color-indigo);
 }
 
+.toolbar-btn.active {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
 .add-btn {
-  background-color: rgba(99, 102, 241, 0.05);
+  background-color: rgba(14, 165, 233, 0.06);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
 }
@@ -49,38 +53,175 @@
   color: #ffffff !important;
 }
 
-.implicit-btn.active {
-  background-color: rgba(16, 185, 129, 0.06);
-  border-color: #10b981;
-  color: #10b981;
-}
-
 .toolbar-divider {
   width: 1px;
   height: 20px;
   background-color: var(--color-border);
+  flex-shrink: 0;
 }
 
-.toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* ── Dropdown Trigger ── */
+.toolbar-dropdown-trigger {
   background-color: var(--input-bg);
   border: 1px solid var(--color-border);
-  padding: 2px;
-  border-radius: 6px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition-all);
+  white-space: nowrap;
 }
 
-.toolbar-label {
+.toolbar-dropdown-trigger:hover,
+.toolbar-dropdown-trigger.active {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+  background-color: var(--color-row-hover);
+}
+
+.toolbar-dropdown-label {
+  color: var(--color-text-muted);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted);
   font-weight: 700;
-  padding: 0 8px;
-  user-select: none;
+  margin-right: 2px;
 }
 
+/* ── Dropdown Panel ── */
+.toolbar-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  min-width: 170px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  animation: dropdown-fade-in 0.12s ease-out;
+}
+
+@keyframes dropdown-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.toolbar-dropdown-item {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition-all);
+  text-align: left;
+  width: 100%;
+}
+
+.toolbar-dropdown-item:hover {
+  background-color: var(--color-row-hover);
+  color: var(--color-text-primary);
+}
+
+.toolbar-dropdown-item.selected {
+  color: var(--color-indigo);
+  background-color: rgba(14, 165, 233, 0.06);
+  font-weight: 600;
+}
+
+.toolbar-dropdown-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: var(--transition-all);
+}
+
+.toolbar-dropdown-check:hover {
+  background-color: var(--color-row-hover);
+  color: var(--color-text-primary);
+}
+
+.toolbar-dropdown-check input[type="checkbox"] {
+  accent-color: var(--color-indigo);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Search wrapper ── */
+.toolbar-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  padding: 4px 10px;
+  transition: var(--transition-all);
+  color: var(--color-text-muted);
+}
+
+.toolbar-search-wrapper:focus-within {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.toolbar-search-input {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border: none;
+  padding: 2px 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  outline: none;
+  width: 140px;
+  transition: width 0.2s ease;
+}
+
+.toolbar-search-input:focus {
+  width: 180px;
+}
+
+.toolbar-search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: var(--transition-all);
+}
+
+.toolbar-search-clear:hover {
+  color: var(--color-text-primary);
+}
+
+/* ── Mode Switcher (used in App header) ── */
 .toolbar-toggle-btn {
   background: none;
   border: none;
@@ -88,10 +229,13 @@
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 4px;
   cursor: pointer;
   transition: var(--transition-all);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .toolbar-toggle-btn:hover {
@@ -105,7 +249,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* React Flow controls/minimap styles */
+/* ── React Flow overrides ── */
 .react-flow__controls-button {
   background-color: var(--bg-secondary) !important;
   color: var(--color-text-primary) !important;
@@ -122,33 +266,13 @@
   background-color: var(--bg-secondary) !important;
 }
 
-.toolbar-search-input {
-  background-color: transparent;
-  color: var(--color-text-primary);
-  border: none;
-  padding: 4px 8px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-  outline: none;
-  width: 140px;
-  transition: var(--transition-all);
-}
-
-.toolbar-search-input:focus {
-  width: 180px;
-}
-
+/* ── Search highlight animation ── */
 .highlighted-node {
   border-color: var(--color-indigo) !important;
   animation: neon-pulse 1.5s infinite alternate;
 }
 
 @keyframes neon-pulse {
-  from {
-    box-shadow: 0 0 10px var(--accent-glow);
-  }
-  to {
-    box-shadow: 0 0 20px var(--color-indigo);
-  }
+  from { box-shadow: 0 0 10px var(--accent-glow); }
+  to   { box-shadow: 0 0 20px var(--color-indigo); }
 }
