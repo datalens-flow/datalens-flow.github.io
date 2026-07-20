@@ -1,12 +1,6 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-
-// Column data for LineageNode
-export interface ColInfo {
-  name: string;
-  hasLeft: boolean;   // incoming handle (target)
-  hasRight: boolean;  // outgoing handle (source)
-}
+import { ColInfo } from './types';
 
 // Custom Lineage Node with per-column handles (supports dual-role: both source + target)
 const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ data }) => {

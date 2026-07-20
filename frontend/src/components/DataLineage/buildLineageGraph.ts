@@ -1,7 +1,6 @@
 import dagre from '@dagrejs/dagre';
-import { MarkerType } from '@xyflow/react';
 import { parseLineage } from '../../utils/lineageParser';
-import { ColInfo } from './LineageNode';
+import { ColInfo } from './types';
 
 const EDGE_COLORS = [
   '#38bdf8', // sky blue
@@ -299,7 +298,7 @@ export const buildLineageGraph = (
         labelBgPadding: [4, 2],
         labelBgBorderRadius: 4,
         style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 1.5, opacity: 0.8, strokeDasharray: isDestructive ? '4 4' : undefined },
-        markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
+        markerEnd: { type: 'arrowclosed', color: edgeColor, width: 12, height: 12 }
       });
     });
   } else {
@@ -340,7 +339,7 @@ export const buildLineageGraph = (
         labelBgPadding: [4, 2],
         labelBgBorderRadius: 4,
         style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 1.5, opacity: 0.8, strokeDasharray: isDestructive ? '4 4' : undefined },
-        markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
+        markerEnd: { type: 'arrowclosed', color: edgeColor, width: 12, height: 12 }
       });
     });
   }
