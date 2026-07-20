@@ -42,6 +42,7 @@ JOIN orders o ON u.id = o.user_id;`);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<'sql' | 'explorer'>('sql');
 
   const { 
     layoutDir, 
@@ -198,6 +199,34 @@ JOIN orders o ON u.id = o.user_id;`);
     }
   };
 
+  const onExplorerNodeClick = (nodeId: string) => {
+    setSelectedNodeId(prev => prev === nodeId ? null : nodeId);
+    setActiveSidebarTab('sql');
+    
+    if (viewRef.current) {
+      const docStr = viewRef.current.state.doc.toString().toLowerCase();
+      const searchStr = nodeId.toLowerCase();
+      const regex = new RegExp(`\\b${searchStr.replace(/\\./g, '\\\\.')}\\b`);
+      const match = docStr.match(regex);
+      if (match && match.index !== undefined) {
+        const pos = match.index;
+        viewRef.current.dispatch({
+          selection: { anchor: pos, head: pos + searchStr.length },
+          scrollIntoView: true
+        });
+        viewRef.current.focus();
+      }
+    }
+    
+    // Also center graph
+    const node = nodes.find((n: any) => n.id === nodeId);
+    if (node) {
+      const x = node.position.x + 100;
+      const y = node.position.y + 60;
+      setCenter(x, y, { zoom: getZoom() || 0.85, duration: 300 });
+    }
+  };
+
   const handleInspectInDiagram = () => {
     if (!selectedNodeId) return;
     const { setActiveTab, setSearchQuery } = useSchemaStore.getState();
@@ -262,6 +291,53 @@ JOIN orders o ON u.id = o.user_id;`);
       }
     }
   }, [lineageSearchQuery, nodes, setNodes, setEdges, setCenter, getZoom]);
+
+  const renderTableExplorer = () => {
+    const allTableNodes = nodes.filter(n => n.type === 'lineageNode');
+    
+    // Group nodes
+    const sources = allTableNodes.filter(n => n.data?.role === 'source' && !n.data?.isTemp);
+    const targets = allTableNodes.filter(n => n.data?.role === 'target' && !n.data?.isTemp);
+    const both = allTableNodes.filter(n => n.data?.role === 'both' && !n.data?.isTemp);
+    const temps = allTableNodes.filter(n => n.data?.isTemp);
+
+    const renderGroup = (title: string, items: any[], colorVar: string) => {
+      if (items.length === 0) return null;
+      return (
+        <div className="table-explorer-category">
+          <h4 style={{ color: `var(${colorVar})` }}>{title} ({items.length})</h4>
+          <ul className="table-explorer-list">
+            {items.map(n => {
+              const isMatch = lineageSearchQuery && n.id.toLowerCase().includes(lineageSearchQuery.toLowerCase());
+              return (
+                <li 
+                  key={n.id} 
+                  className={`table-explorer-item ${selectedNodeId === n.id ? 'selected' : ''} ${isMatch ? 'highlight' : ''}`}
+                  onClick={() => onExplorerNodeClick(n.id)}
+                >
+                  <span className="table-name">{n.id}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      );
+    };
+
+    return (
+      <div className="table-explorer-container">
+        {renderGroup('Sources', sources, '--color-emerald')}
+        {renderGroup('Intermediate (Both)', both, '--color-amber')}
+        {renderGroup('Targets', targets, '--color-indigo')}
+        {renderGroup('Temp Tables', temps, '--color-text-secondary')}
+        {allTableNodes.length === 0 && (
+          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '12px' }}>
+            No tables found. Click "Analyze" to parse the SQL.
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="lineage-container">
@@ -365,8 +441,30 @@ JOIN orders o ON u.id = o.user_id;`);
               }}
             />
           </div>
+          
+          <div className="lineage-sidebar-tabs">
+            <button 
+              className={`lineage-tab ${activeSidebarTab === 'sql' ? 'active' : ''}`}
+              onClick={() => setActiveSidebarTab('sql')}
+            >
+              SQL Editor
+            </button>
+            <button 
+              className={`lineage-tab ${activeSidebarTab === 'explorer' ? 'active' : ''}`}
+              onClick={() => setActiveSidebarTab('explorer')}
+            >
+              Explorer
+            </button>
+          </div>
         </div>
-        <div className="lineage-textarea" ref={editorRef}></div>
+        
+        {activeSidebarTab === 'sql' ? (
+          <div className="lineage-textarea" ref={editorRef}></div>
+        ) : (
+          <div className="lineage-textarea" style={{ padding: '12px', paddingBottom: '30px' }}>
+            {renderTableExplorer()}
+          </div>
+        )}
         
         {selectedNodeId && selectedNodeData && (
           <div className="lineage-inspection-panel" style={{
