@@ -3,7 +3,7 @@ export interface LineageFlow {
   sourceCol: string;
   targetTable: string;
   targetCol: string;
-  action?: 'insert' | 'update' | 'delete' | 'merge' | 'ctas' | 'create_temp';
+  action?: 'insert' | 'update' | 'delete' | 'merge' | 'ctas' | 'create_temp' | 'truncate' | 'drop';
 }
 
 export interface LineageResult {

@@ -55,12 +55,17 @@ export const parseLineage = (sql: string): LineageResult => {
     let isCtas = false;
 
     let isDelete = false;
+    let isTruncate = false;
+    let isDrop = false;
 
     const insertMatch = cleanStmt.match(/insert\s+into\s+([\w.]+)\s*(?:\(([^)]+)\))?/i);
-    const createMatch = cleanStmt.match(/create\s+(?:table|view)\s+([\w.]+)\s+as\s/i);
+    const createMatch = cleanStmt.match(/create\s+(?:(?:temp(?:orary)?\s+)?table|view|materialized\s+view)\s+([\w.]+)\s+as\s/i);
+    const selectIntoMatch = cleanStmt.match(/select\s+[\s\S]+?\s+into\s+([\w.]+)(?:\s+from\s+|$)/i);
     const updateMatch = cleanStmt.match(/update\s+([\w.]+)(?:\s+(\w+))?\s+set\s/i);
     const mergeMatch = cleanStmt.match(/merge\s+into\s+([\w.]+)\s+/i);
     const deleteMatch = cleanStmt.match(/delete\s+from\s+([\w.]+)(?:\s+(\w+))?/i);
+    const truncateMatch = cleanStmt.match(/truncate\s+(?:table\s+)?([\w.]+)/i);
+    const dropMatch = cleanStmt.match(/drop\s+(?:table|view)(?:\s+if\s+exists)?\s+([\w.]+)/i);
 
     if (insertMatch) {
       targetTable = extractTableName(insertMatch[1]);
@@ -72,6 +77,10 @@ export const parseLineage = (sql: string): LineageResult => {
       targetTable = extractTableName(createMatch[1]);
       isInsert = true;
       isCtas = true;
+    } else if (selectIntoMatch) {
+      targetTable = extractTableName(selectIntoMatch[1]);
+      isInsert = true;
+      isCtas = true; // Treats SELECT INTO basically as CTAS for lineage
     } else if (updateMatch) {
       targetTable = extractTableName(updateMatch[1]);
       isUpdate = true;
@@ -81,6 +90,12 @@ export const parseLineage = (sql: string): LineageResult => {
     } else if (deleteMatch) {
       targetTable = extractTableName(deleteMatch[1]);
       isDelete = true;
+    } else if (truncateMatch) {
+      targetTable = extractTableName(truncateMatch[1]);
+      isTruncate = true;
+    } else if (dropMatch) {
+      targetTable = extractTableName(dropMatch[1]);
+      isDrop = true;
     } else {
       return;
     }
@@ -192,9 +207,16 @@ export const parseLineage = (sql: string): LineageResult => {
           allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*', action: 'delete' });
         });
       } else {
-        // Self-loop for delete with no external source
         allFlows.push({ sourceTable: targetTable, sourceCol: '*', targetTable, targetCol: '*', action: 'delete' });
       }
+    }
+
+    if (isTruncate) {
+      allFlows.push({ sourceTable: targetTable, sourceCol: '*', targetTable, targetCol: '*', action: 'truncate' });
+    }
+
+    if (isDrop) {
+      allFlows.push({ sourceTable: targetTable, sourceCol: '*', targetTable, targetCol: '*', action: 'drop' });
     }
   });
 

@@ -126,6 +126,8 @@ export const buildLineageGraph = (
     if (flow.action === 'delete') edgeColor = '#ef4444'; // red-500
     else if (flow.action === 'update') edgeColor = '#f97316'; // orange-500
     else if (flow.action === 'merge') edgeColor = '#eab308'; // yellow-500
+    else if (flow.action === 'truncate') edgeColor = '#dc2626'; // red-600
+    else if (flow.action === 'drop') edgeColor = '#991b1b'; // red-800
 
     // If a node is collapsed and the column is beyond MAX_COLS_VISIBLE, we route the edge to the header handle 'header'
     const srcCols = getColumnsForTable(flow.sourceTable);
@@ -138,6 +140,7 @@ export const buildLineageGraph = (
     const isTgtCollapsed = (!expandedNodes.has(flow.targetTable) && tgtCols.length > MAX_COLS_VISIBLE) && tgtColIdx >= MAX_COLS_VISIBLE;
 
     const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
+    const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
 
     newEdges.push({
       id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
@@ -151,7 +154,7 @@ export const buildLineageGraph = (
       labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.8 },
       labelBgPadding: [4, 2],
       labelBgBorderRadius: 4,
-      style: { stroke: edgeColor, strokeWidth: flow.action === 'delete' ? 2 : 1.5, opacity: 0.8, strokeDasharray: flow.action === 'delete' ? '4 4' : undefined },
+      style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 1.5, opacity: 0.8, strokeDasharray: isDestructive ? '4 4' : undefined },
       markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
     });
   });
