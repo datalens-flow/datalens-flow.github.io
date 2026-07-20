@@ -5,6 +5,7 @@ import {
   Controls,
   MiniMap,
   ReactFlowProvider,
+  BackgroundVariant
 } from '@xyflow/react';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { LineageNode } from './LineageNode';
@@ -86,7 +87,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           maxZoom={2}
           fitView
         >
-          {showGrid && <Background color="rgba(255, 255, 255, 0.05)" gap={20} size={1} />}
+          {showGrid && <Background color="var(--color-grid)" variant={BackgroundVariant.Lines} gap={24} size={1} />}
           {showMiniMap && (
             <MiniMap 
               style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
