@@ -433,13 +433,6 @@ JOIN orders o ON u.id = o.user_id;`);
               📁 Import
             </button>
             <button 
-              className="btn btn-secondary" 
-              style={{ fontSize: '11px', padding: '6px 12px' }}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              📁 Import
-            </button>
-            <button 
               className="btn btn-primary" 
               onClick={handleAnalyze} 
               style={{ fontSize: '11px', padding: '6px 12px' }}
