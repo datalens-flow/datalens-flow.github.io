@@ -112,20 +112,23 @@ export const buildLineageGraph = (
 
   activeProcedures.forEach(procName => {
     if (procName === 'Global Script') return;
-    dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
-    newNodes.push({
-      id: `group-${procName}`,
-      type: 'group',
-      data: { label: procName },
-      style: {
-        backgroundColor: 'rgba(56, 189, 248, 0.05)',
-        border: '1px dashed var(--color-border)',
-        borderRadius: '8px',
-        width: 300,
-        height: 300,
-        zIndex: -1
-      }
-    });
+    // ONLY add groups if we have MULTIPLE procedures being viewed. 
+    if (procedures.length > 1 && activeProcedures.size > 1) {
+      dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
+      newNodes.push({
+        id: `group-${procName}`,
+        type: 'group',
+        data: { label: procName },
+        style: {
+          backgroundColor: 'rgba(56, 189, 248, 0.05)',
+          border: '1px dashed var(--color-border)',
+          borderRadius: '8px',
+          width: 300,
+          height: 300,
+          zIndex: -1
+        }
+      });
+    }
   });
 
   allTables.forEach(table => {
@@ -133,8 +136,14 @@ export const buildLineageGraph = (
     const isSrc = roleObj.isSource;
     const isTgt = roleObj.isTarget;
     const role = isSrc && isTgt ? 'both' : (isSrc ? 'source' : 'target');
-    const isTemp = table.toLowerCase().startsWith('tmp_') || table.toLowerCase().startsWith('temp_') || table.startsWith('#');
     
+    const lowerTable = table.toLowerCase();
+    const isTemp = lowerTable.startsWith('tmp_') || lowerTable.startsWith('temp_') || lowerTable.startsWith('#');
+    const isView = lowerTable.startsWith('v_') || lowerTable.startsWith('vw_') || lowerTable.startsWith('view_');
+    
+    // We can allow override if we pass node state, but for now we'll pass the derived type.
+    const nodeTypeOverride = isTemp ? 'temp' : (isView ? 'view' : role);
+
     const columns = getColumnsForTable(table);
     const isCollapsed = !expandedNodes.has(table) && columns.length > MAX_COLS_VISIBLE;
     const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
@@ -146,7 +155,8 @@ export const buildLineageGraph = (
 
     const procs = tableProcedures.get(table);
     let parentNodeId = undefined;
-    if (procs && procs.size === 1 && procedures.length > 1) {
+    // Only group if MULTIPLE procedures are being viewed at the same time
+    if (procs && procs.size === 1 && procedures.length > 1 && activeProcedures.size > 1) {
       const pName = procs.values().next().value!;
       if (pName !== 'Global Script') {
         parentNodeId = `group-${pName}`;
@@ -160,11 +170,11 @@ export const buildLineageGraph = (
       parentId: parentNodeId,
       extent: parentNodeId ? 'parent' : undefined,
       position: { x: 0, y: 0 },
-      data: { tableName: table, columns, role, isCollapsed, isTemp },
+      data: { tableName: table, columns, role, nodeTypeOverride, isCollapsed, isTemp, isView },
       style: {
         width: COL_WIDTH,
         background: 'var(--bg-secondary)',
-        border: isTemp ? '2px dashed var(--color-indigo)' : '1px solid var(--color-border)',
+        border: isTemp ? '2px dashed var(--color-indigo)' : (isView ? '1px solid var(--color-purple)' : '1px solid var(--color-border)'),
         borderRadius: '6px',
         color: 'var(--color-text-primary)',
       }

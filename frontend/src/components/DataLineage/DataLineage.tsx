@@ -349,11 +349,12 @@ JOIN orders o ON u.id = o.user_id;`);
   const renderTableExplorer = () => {
     const allTableNodes = nodes.filter(n => n.type === 'lineageNode');
     
-    // Group nodes
-    const sources = allTableNodes.filter(n => n.data?.role === 'source' && !n.data?.isTemp);
-    const targets = allTableNodes.filter(n => n.data?.role === 'target' && !n.data?.isTemp);
-    const both = allTableNodes.filter(n => n.data?.role === 'both' && !n.data?.isTemp);
-    const temps = allTableNodes.filter(n => n.data?.isTemp);
+    // Group nodes by nodeTypeOverride
+    const sources = allTableNodes.filter(n => n.data?.nodeTypeOverride === 'source');
+    const targets = allTableNodes.filter(n => n.data?.nodeTypeOverride === 'target');
+    const both = allTableNodes.filter(n => n.data?.nodeTypeOverride === 'both');
+    const temps = allTableNodes.filter(n => n.data?.nodeTypeOverride === 'temp');
+    const views = allTableNodes.filter(n => n.data?.nodeTypeOverride === 'view');
 
     const renderGroup = (title: string, items: any[], colorVar: string) => {
       if (items.length === 0) return null;
@@ -381,9 +382,10 @@ JOIN orders o ON u.id = o.user_id;`);
     return (
       <div className="table-explorer-container">
         {renderGroup('Sources', sources, '--color-emerald')}
+        {renderGroup('Views', views, '--color-purple')}
         {renderGroup('Intermediate (Both)', both, '--color-amber')}
-        {renderGroup('Targets', targets, '--color-indigo')}
         {renderGroup('Temp Tables', temps, '--color-text-secondary')}
+        {renderGroup('Targets', targets, '--color-indigo')}
         {allTableNodes.length === 0 && (
           <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '12px' }}>
             No tables found. Click "Analyze" to parse the SQL.
