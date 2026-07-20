@@ -39,6 +39,8 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   lineageSearchQuery: '',
   setLineageSearchQuery: (lineageSearchQuery) => set({ lineageSearchQuery }),
+  lineageViewMode: 'detailed',
+  setLineageViewMode: (lineageViewMode) => set({ lineageViewMode }),
   activeLineageProcedureIndex: 0,
   setActiveLineageProcedureIndex: (index) => set({ activeLineageProcedureIndex: index }),
   ignoredLineageTables: 'risk_log_detail, error_log',

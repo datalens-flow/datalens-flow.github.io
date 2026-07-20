@@ -59,10 +59,12 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     };
   }, [handleExpandAll, handleCollapseAll]);
 
+  const { lineageViewMode } = useSchemaStore();
+
   const handleAnalyze = useCallback(() => {
     try {
       const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
-      const { newNodes, newEdges } = buildLineageGraph(activeProcedures, layoutDir, expandedNodes, ignoredArr);
+      const { newNodes, newEdges } = buildLineageGraph(activeProcedures, layoutDir, expandedNodes, ignoredArr, lineageViewMode);
       const nodesWithCallback = newNodes.map(n => ({
         ...n, data: { ...n.data, onToggleCollapse }
       }));
@@ -74,11 +76,11 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
       console.error(err);
       useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + (err.message || 'Unknown error') });
     }
-  }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView]);
+  }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView, lineageViewMode]);
 
   useEffect(() => {
     handleAnalyze();
-  }, [layoutDir, expandedNodes, activeProcedures, ignoredLineageTables]);
+  }, [layoutDir, expandedNodes, activeProcedures, ignoredLineageTables, lineageViewMode]);
 
   useEffect(() => {
     setNodes((nds) => 

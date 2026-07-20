@@ -47,7 +47,7 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
     <div style={{ position: 'relative', width: '250px' }}>
       <div className="lineage-node" style={{ opacity: nodeType === 'temp' ? 0.9 : 1 }}>
         <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: theme.bg, color: theme.text, display: 'flex', alignItems: 'center' }}>
-          {isCollapsed && role !== 'source' && (
+          {(isCollapsed || data.viewMode === 'overview') && role !== 'source' && (
              <Handle
                type="target"
                position={Position.Left}
@@ -62,7 +62,7 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--color-text-primary)' }} title={data.tableName}>
             {data.tableName}
           </span>
-          {isCollapsed && role !== 'target' && (
+          {(isCollapsed || data.viewMode === 'overview') && role !== 'target' && (
              <Handle
                type="source"
                position={Position.Right}
@@ -71,7 +71,8 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
              />
           )}
         </div>
-        <div className="lineage-node-body">
+        {data.viewMode !== 'overview' && (
+          <div className="lineage-node-body">
           {visibleCols.map((col, i) => (
             <div key={i} className="lineage-col-row">
               {/* Left handle (incoming) */}
@@ -132,6 +133,7 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

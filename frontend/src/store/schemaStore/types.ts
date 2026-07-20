@@ -56,6 +56,8 @@ export interface SchemaState {
   setSearchQuery: (query: string) => void;
   lineageSearchQuery: string;
   setLineageSearchQuery: (query: string) => void;
+  lineageViewMode: 'overview' | 'detailed';
+  setLineageViewMode: (mode: 'overview' | 'detailed') => void;
   activeLineageProcedureIndex: number;
   setActiveLineageProcedureIndex: (index: number) => void;
   ignoredLineageTables: string;

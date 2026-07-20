@@ -18,7 +18,8 @@ export const buildLineageGraph = (
   procedures: { name: string; sql: string }[], 
   direction: 'LR' | 'TB' = 'LR',
   expandedNodes: Set<string> = new Set(),
-  ignoredTables: string[] = []
+  ignoredTables: string[] = [],
+  viewMode: 'overview' | 'detailed' = 'detailed'
 ) => {
   const newNodes: any[] = [];
   const newEdges: any[] = [];
@@ -192,7 +193,7 @@ export const buildLineageGraph = (
     const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
     const hasMoreButton = isCollapsed && columns.length > MAX_COLS_VISIBLE;
     
-    const nodeHeight = 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0);
+    const nodeHeight = viewMode === 'overview' ? 40 : 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0);
     
     dagreGraph.setNode(table, { width: COL_WIDTH, height: nodeHeight });
 
@@ -213,7 +214,7 @@ export const buildLineageGraph = (
       parentId: parentNodeId,
       extent: parentNodeId ? 'parent' : undefined,
       position: { x: 0, y: 0 },
-      data: { tableName: table, columns, role, nodeTypeOverride, isCollapsed, isTemp, isView },
+      data: { tableName: table, columns, role, nodeTypeOverride, isCollapsed, isTemp, isView, viewMode },
       style: {
         width: COL_WIDTH,
         background: 'var(--bg-secondary)',
@@ -276,46 +277,81 @@ export const buildLineageGraph = (
     sourceColorMap[src] = EDGE_COLORS[idx % EDGE_COLORS.length];
   });
 
-  combinedFlows.forEach((flow, idx) => {
-    const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
-    const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
-    
-    let edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
-    if (flow.action === 'delete') edgeColor = '#ef4444'; // red-500
-    else if (flow.action === 'update') edgeColor = '#f97316'; // orange-500
-    else if (flow.action === 'merge') edgeColor = '#eab308'; // yellow-500
-    else if (flow.action === 'truncate') edgeColor = '#dc2626'; // red-600
-    else if (flow.action === 'drop') edgeColor = '#991b1b'; // red-800
+  if (viewMode === 'overview') {
+    const edgeSet = new Set<string>();
+    combinedFlows.forEach((flow, idx) => {
+      const edgeKey = `${flow.sourceTable}-${flow.targetTable}`;
+      if (edgeSet.has(edgeKey)) return; // Deduplicate to one edge per table pair
+      edgeSet.add(edgeKey);
+      
+      let edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
+      if (flow.action === 'delete') edgeColor = '#ef4444';
+      else if (flow.action === 'update') edgeColor = '#f97316';
+      else if (flow.action === 'merge') edgeColor = '#eab308';
+      else if (flow.action === 'truncate') edgeColor = '#dc2626';
+      else if (flow.action === 'drop') edgeColor = '#991b1b';
 
-    // If a node is collapsed and the column is beyond MAX_COLS_VISIBLE, we route the edge to the header handle 'header'
-    const srcCols = getColumnsForTable(flow.sourceTable);
-    const tgtCols = getColumnsForTable(flow.targetTable);
-    
-    const srcColIdx = srcCols.findIndex(c => c.name === sourceCol);
-    const tgtColIdx = tgtCols.findIndex(c => c.name === targetCol);
-    
-    const isSrcCollapsed = (!expandedNodes.has(flow.sourceTable) && srcCols.length > MAX_COLS_VISIBLE) && srcColIdx >= MAX_COLS_VISIBLE;
-    const isTgtCollapsed = (!expandedNodes.has(flow.targetTable) && tgtCols.length > MAX_COLS_VISIBLE) && tgtColIdx >= MAX_COLS_VISIBLE;
+      const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
+      const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
 
-    const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
-    const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
-
-    newEdges.push({
-      id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
-      source: flow.sourceTable,
-      target: flow.targetTable,
-      sourceHandle: isSrcCollapsed ? 'col-header' : `col-${sourceCol}`,
-      targetHandle: isTgtCollapsed ? 'col-header' : `col-${targetCol}`,
-      type: 'smoothstep',
-      label: actionLabel,
-      labelStyle: { fill: edgeColor, fontWeight: 700, fontSize: 10 },
-      labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.8 },
-      labelBgPadding: [4, 2],
-      labelBgBorderRadius: 4,
-      style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 1.5, opacity: 0.8, strokeDasharray: isDestructive ? '4 4' : undefined },
-      markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
+      newEdges.push({
+        id: `e-${flow.sourceTable}-${flow.targetTable}-${idx}`,
+        source: flow.sourceTable,
+        target: flow.targetTable,
+        sourceHandle: 'col-header',
+        targetHandle: 'col-header',
+        type: 'smoothstep',
+        label: actionLabel,
+        labelStyle: { fill: edgeColor, fontWeight: 700, fontSize: 10 },
+        labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.8 },
+        labelBgPadding: [4, 2],
+        labelBgBorderRadius: 4,
+        style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 1.5, opacity: 0.8, strokeDasharray: isDestructive ? '4 4' : undefined },
+        markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
+      });
     });
-  });
+  } else {
+    combinedFlows.forEach((flow, idx) => {
+      const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
+      const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
+      
+      let edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
+      if (flow.action === 'delete') edgeColor = '#ef4444'; // red-500
+      else if (flow.action === 'update') edgeColor = '#f97316'; // orange-500
+      else if (flow.action === 'merge') edgeColor = '#eab308'; // yellow-500
+      else if (flow.action === 'truncate') edgeColor = '#dc2626'; // red-600
+      else if (flow.action === 'drop') edgeColor = '#991b1b'; // red-800
+
+      // If a node is collapsed and the column is beyond MAX_COLS_VISIBLE, we route the edge to the header handle 'header'
+      const srcCols = getColumnsForTable(flow.sourceTable);
+      const tgtCols = getColumnsForTable(flow.targetTable);
+      
+      const srcColIdx = srcCols.findIndex(c => c.name === sourceCol);
+      const tgtColIdx = tgtCols.findIndex(c => c.name === targetCol);
+      
+      const isSrcCollapsed = (!expandedNodes.has(flow.sourceTable) && srcCols.length > MAX_COLS_VISIBLE) && srcColIdx >= MAX_COLS_VISIBLE;
+      const isTgtCollapsed = (!expandedNodes.has(flow.targetTable) && tgtCols.length > MAX_COLS_VISIBLE) && tgtColIdx >= MAX_COLS_VISIBLE;
+
+      const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
+      const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
+
+      newEdges.push({
+        id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
+        source: flow.sourceTable,
+        target: flow.targetTable,
+        sourceHandle: isSrcCollapsed ? 'col-header' : `col-${sourceCol}`,
+        targetHandle: isTgtCollapsed ? 'col-header' : `col-${targetCol}`,
+        type: 'smoothstep',
+        label: actionLabel,
+        labelStyle: { fill: edgeColor, fontWeight: 700, fontSize: 10 },
+        labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.8 },
+        labelBgPadding: [4, 2],
+        labelBgBorderRadius: 4,
+        style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 1.5, opacity: 0.8, strokeDasharray: isDestructive ? '4 4' : undefined },
+        markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
+      });
+    });
+  }
 
   return { newNodes, newEdges };
 };

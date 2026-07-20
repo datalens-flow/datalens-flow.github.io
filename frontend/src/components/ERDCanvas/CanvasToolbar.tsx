@@ -115,7 +115,9 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
     showMiniMap,
     setShowMiniMap,
     theme,
-    setTheme
+    setTheme,
+    lineageViewMode,
+    setLineageViewMode
   } = useSchemaStore();
 
   return (
@@ -128,6 +130,34 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
           </button>
           <div className="toolbar-divider" />
         </>
+      )}
+
+      {/* Lineage View Mode Toggle */}
+      {mode === 'lineage' && (
+        <div style={{ display: 'flex', backgroundColor: 'var(--bg-tertiary)', borderRadius: '6px', padding: '2px', marginRight: '8px' }}>
+          <button 
+            className={`toolbar-btn ${lineageViewMode === 'detailed' ? 'active' : ''}`}
+            style={{ 
+              backgroundColor: lineageViewMode === 'detailed' ? 'var(--bg-primary)' : 'transparent',
+              color: lineageViewMode === 'detailed' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+              border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '12px'
+            }}
+            onClick={() => setLineageViewMode('detailed')}
+          >
+            Detailed
+          </button>
+          <button 
+            className={`toolbar-btn ${lineageViewMode === 'overview' ? 'active' : ''}`}
+            style={{ 
+              backgroundColor: lineageViewMode === 'overview' ? 'var(--bg-primary)' : 'transparent',
+              color: lineageViewMode === 'overview' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+              border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '12px'
+            }}
+            onClick={() => setLineageViewMode('overview')}
+          >
+            Overview
+          </button>
+        </div>
       )}
 
       {/* Unified Settings Dropdown */}
