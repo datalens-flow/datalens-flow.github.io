@@ -4,6 +4,12 @@ console.log('[Worker] lineageWorker script loaded successfully!');
 
 self.onmessage = (e: MessageEvent) => {
   console.log('[Worker] Received message to process:', e.data);
+  
+  if (e.data && e.data.type === 'PING') {
+    self.postMessage({ type: 'PONG' });
+    return;
+  }
+
   const { procedures, direction, expandedNodesArray, ignoredTables, viewMode } = e.data;
   
   try {

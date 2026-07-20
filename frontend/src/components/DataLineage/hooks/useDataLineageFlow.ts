@@ -4,6 +4,7 @@ import { useSchemaStore } from '../../../store/useSchemaStore';
 import { useToastStore } from '../../../store/useToastStore';
 import { splitProcedures } from '../../../utils/lineage/procedureSplitter';
 import { parseLineage } from '../../../utils/lineageParser';
+import { buildLineageGraph } from '../buildLineageGraph';
 // @ts-ignore
 import LineageWorker from '../workers/lineageWorker?worker';
 
@@ -67,25 +68,73 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
 
   const handleAnalyze = useCallback(() => {
     console.log('[Main] handleAnalyze called');
+    const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    
+    const runSynchronousFallback = (reason: string) => {
+      console.warn(`[Main] Falling back to synchronous layout calculation. Reason: ${reason}`);
+      try {
+        const t0 = performance.now();
+        const { newNodes, newEdges } = buildLineageGraph(
+          activeProcedures,
+          layoutDir,
+          expandedNodes,
+          ignoredArr,
+          lineageViewMode
+        );
+        const t1 = performance.now();
+        console.log(`[Main] Synced Graph built in ${t1 - t0}ms. Nodes: ${newNodes.length}, Edges: ${newEdges.length}`);
+        
+        if (newNodes.length > 30 && lineageViewMode !== 'overview') {
+          console.log('[Main] Large graph detected in sync fallback. Switching to overview mode.');
+          useToastStore.getState().addToast({ type: 'info', message: 'Large graph detected. Switched to Overview Mode for better performance.' });
+          useSchemaStore.getState().setLineageViewMode('overview');
+          return;
+        }
+
+        const nodesWithCallback = newNodes.map((n: any) => ({
+          ...n, data: { ...n.data, onToggleCollapse }
+        }));
+        setNodes(nodesWithCallback);
+        setEdges(newEdges);
+        setSelectedNodeId(null);
+        setIsAnalyzing(false);
+        setTimeout(() => {
+          fitView({ padding: 0.15, duration: 400 });
+        }, 50);
+      } catch (err: any) {
+        console.error('[Main] Sync fallback failed:', err);
+        setIsAnalyzing(false);
+        useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + (err.message || 'Unknown error') });
+      }
+    };
+
     try {
-      const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
-      
       console.log('[Main] Terminating old worker (if any)...');
       workerRef.current?.terminate();
+      
       console.log('[Main] Initializing new Worker...');
-      workerRef.current = new LineageWorker();
+      const worker = new LineageWorker();
+      workerRef.current = worker;
       setIsAnalyzing(true);
+
+      let workerIsResponsive = false;
       
-      console.log('[Main] Posting message to worker...', { activeProceduresLength: activeProcedures.length });
-      workerRef.current!.postMessage({
-        procedures: activeProcedures,
-        direction: layoutDir,
-        expandedNodesArray: Array.from(expandedNodes),
-        ignoredTables: ignoredArr,
-        viewMode: lineageViewMode
-      });
-      
-      workerRef.current!.onmessage = (e: MessageEvent) => {
+      // Fallback timer: if worker doesn't say PONG within 150ms, run sync fallback
+      const fallbackTimeout = setTimeout(() => {
+        if (!workerIsResponsive) {
+          worker.terminate();
+          runSynchronousFallback('Worker did not respond to PING within 150ms');
+        }
+      }, 150);
+
+      worker.onmessage = (e: MessageEvent) => {
+        if (e.data.type === 'PONG') {
+          console.log('[Main] Received PONG from worker. Worker is active!');
+          workerIsResponsive = true;
+          clearTimeout(fallbackTimeout);
+          return;
+        }
+
         console.log('[Main] Received message from worker:', e.data.type);
         setIsAnalyzing(false);
         if (e.data.type === 'SUCCESS') {
@@ -101,29 +150,41 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
           const nodesWithCallback = newNodes.map((n: any) => ({
             ...n, data: { ...n.data, onToggleCollapse }
           }));
-          console.log('[Main] Setting nodes and edges to state...');
           setNodes(nodesWithCallback);
           setEdges(newEdges);
           setSelectedNodeId(null);
           setTimeout(() => {
-            console.log('[Main] Fitting view...');
             fitView({ padding: 0.15, duration: 400 });
           }, 50);
         } else {
           console.error('[Main] Worker returned ERROR:', e.data.error);
-          useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + e.data.error });
+          runSynchronousFallback(`Worker error: ${e.data.error}`);
         }
       };
 
-      workerRef.current!.onerror = (err) => {
-        console.error('[Main] Worker initialization failed:', err);
-        setIsAnalyzing(false);
-        useToastStore.getState().addToast({ type: 'error', message: 'Worker initialization failed: ' + (err.message || 'Unknown error') });
+      worker.onerror = (err: any) => {
+        console.error('[Main] Worker initialization failed or crashed:', err);
+        clearTimeout(fallbackTimeout);
+        worker.terminate();
+        runSynchronousFallback('Worker error event triggered');
       };
+
+      // 1. Send PING to check responsiveness
+      worker.postMessage({ type: 'PING' });
+
+      // 2. Send actual job
+      console.log('[Main] Posting analysis task to worker...', { activeProceduresLength: activeProcedures.length });
+      worker.postMessage({
+        procedures: activeProcedures,
+        direction: layoutDir,
+        expandedNodesArray: Array.from(expandedNodes),
+        ignoredTables: ignoredArr,
+        viewMode: lineageViewMode
+      });
+      
     } catch (err: any) {
-      console.error('[Main] Failed to start lineage worker catch block:', err);
-      setIsAnalyzing(false);
-      useToastStore.getState().addToast({ type: 'error', message: 'Failed to start lineage worker: ' + (err.message || 'Unknown error') });
+      console.error('[Main] Failed to start lineage worker (catch block):', err);
+      runSynchronousFallback(`Worker instantiation failed: ${err.message || 'Unknown error'}`);
     }
   }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView, lineageViewMode]);
 
