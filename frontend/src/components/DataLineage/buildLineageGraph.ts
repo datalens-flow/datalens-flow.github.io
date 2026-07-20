@@ -131,6 +131,26 @@ export const buildLineageGraph = (
     }
   });
 
+  const isTempTable = (tableName: string) => {
+    const lower = tableName.toLowerCase();
+    return lower.startsWith('tmp_') || 
+           lower.startsWith('temp_') || 
+           lower.startsWith('stg_') || 
+           lower.startsWith('wrk_') || 
+           lower.startsWith('work_') || 
+           lower.startsWith('dummy_') || 
+           lower.startsWith('#');
+  };
+
+  const isArchiveTable = (tableName: string) => {
+    const lower = tableName.toLowerCase();
+    return lower.endsWith('_arch') || 
+           lower.endsWith('_bkp') || 
+           lower.endsWith('_backup') || 
+           lower.endsWith('_hist') || 
+           lower.endsWith('_log');
+  };
+
   allTables.forEach(table => {
     const roleObj = tableRoles[table];
     const isSrc = roleObj.isSource;
@@ -138,13 +158,14 @@ export const buildLineageGraph = (
     
     let role = isSrc && isTgt ? 'both' : (isSrc ? 'source' : 'target');
     
-    // Check if 'both' should actually be 'target' (if it only feeds into temp tables)
+    // Check if 'both' should actually be 'target'
     if (role === 'both') {
       const feedsNonTemp = combinedFlows.some(f => {
         if (f.sourceTable === table) {
-          const tgtLower = f.targetTable.toLowerCase();
-          const tgtIsTemp = tgtLower.startsWith('tmp_') || tgtLower.startsWith('temp_') || tgtLower.startsWith('#');
-          if (!tgtIsTemp) return true;
+          if (f.targetTable === table) return false; // Ignore self-reference
+          if (isArchiveTable(f.targetTable)) return false; // Ignore archive/backup tables
+          if (isTempTable(f.targetTable)) return false; // Ignore temp tables
+          return true; // Feeds into a non-temp target
         }
         return false;
       });
@@ -154,7 +175,7 @@ export const buildLineageGraph = (
     }
     
     const lowerTable = table.toLowerCase();
-    const isTemp = lowerTable.startsWith('tmp_') || lowerTable.startsWith('temp_') || lowerTable.startsWith('#');
+    const isTemp = isTempTable(table);
     const isView = lowerTable.startsWith('v_') || lowerTable.startsWith('vw_') || lowerTable.startsWith('view_');
     
     // We can allow override if we pass node state, but for now we'll pass the derived type.
