@@ -67,8 +67,8 @@ export function generateSqlDdlLocal(schema: SchemaResponse, targetDialect: strin
       }
     }
 
-    statements.push(`CREATE TABLE ${table.name} (\\n  ${colDefs.join(',\\n  ')}\\n);`);
+    statements.push(`CREATE TABLE ${table.name} (\n  ${colDefs.join(',\n  ')}\n);`);
   }
 
-  return statements.join('\\n\\n');
+  return statements.join('\n\n');
 }

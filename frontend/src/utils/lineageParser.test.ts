@@ -177,8 +177,8 @@ const testCases: TestCase[] = [
     expectedSources: ['orders'],
     expectedTargets: ['summary'],
     expectedFlows: [
-      // No target cols in CTAS without column list → table-level flow
-      { src: 'orders', srcCol: '*', tgt: 'summary', tgtCol: '*' },
+      { src: 'orders', srcCol: 'customer_id', tgt: 'summary', tgtCol: 'customer_id' },
+      { src: 'orders', srcCol: 'amount', tgt: 'summary', tgtCol: 'sum(amount)' },
     ],
   },
   {
@@ -188,7 +188,8 @@ const testCases: TestCase[] = [
     expectedSources: ['customers'],
     expectedTargets: ['v_active_customers'],
     expectedFlows: [
-      { src: 'customers', srcCol: '*', tgt: 'v_active_customers', tgtCol: '*' },
+      { src: 'customers', srcCol: 'customer_id', tgt: 'v_active_customers', tgtCol: 'customer_id' },
+      { src: 'customers', srcCol: 'name', tgt: 'v_active_customers', tgtCol: 'name' },
     ],
   },
 

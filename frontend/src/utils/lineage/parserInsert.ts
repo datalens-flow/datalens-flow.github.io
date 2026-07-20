@@ -80,7 +80,7 @@ export const handleInsert = (
     }
 
     if (selectText) {
-      if (isCtas || selectText === '*') {
+      if (selectText === '*') {
         activeSources.forEach(srcTable => {
           allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*', action: isCtas ? 'ctas' : action });
         });

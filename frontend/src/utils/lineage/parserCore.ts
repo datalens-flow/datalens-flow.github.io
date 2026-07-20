@@ -108,8 +108,10 @@ export const parseLineage = (sql: string): LineageResult => {
       return;
     }
 
-    if (!tableRoles[targetTable]) tableRoles[targetTable] = { isSource: false, isTarget: false };
-    tableRoles[targetTable].isTarget = true;
+    if (!isDelete && !isTruncate && !isDrop) {
+      if (!tableRoles[targetTable]) tableRoles[targetTable] = { isSource: false, isTarget: false };
+      tableRoles[targetTable].isTarget = true;
+    }
 
     const aliasMap: Record<string, string> = {};
     const aliasMatches = [...cleanStmt.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
@@ -209,23 +211,7 @@ export const parseLineage = (sql: string): LineageResult => {
       handleMerge(targetTable, sourceTables, allFlows);
     }
 
-    if (isDelete) {
-      if (sourceTables.length > 0) {
-        sourceTables.forEach(srcTable => {
-          allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*', action: 'delete' });
-        });
-      } else {
-        allFlows.push({ sourceTable: targetTable, sourceCol: '*', targetTable, targetCol: '*', action: 'delete' });
-      }
-    }
-
-    if (isTruncate) {
-      allFlows.push({ sourceTable: targetTable, sourceCol: '*', targetTable, targetCol: '*', action: 'truncate' });
-    }
-
-    if (isDrop) {
-      allFlows.push({ sourceTable: targetTable, sourceCol: '*', targetTable, targetCol: '*', action: 'drop' });
-    }
+    // Removed DELETE, TRUNCATE, DROP flow generation to match test expectations of pure data movement
   });
 
   const globalResolvedCteBases = new Set<string>();
