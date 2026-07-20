@@ -151,26 +151,34 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
         </div>
       </div>
       
-      {activeSidebarTab === 'sql' ? (
-        <div className="lineage-textarea" ref={editorRef} style={{ position: 'relative' }} onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }} onDrop={handleDrop}>
-          {isDragging && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(56, 189, 248, 0.15)', border: '2px dashed var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, pointerEvents: 'none' }}>
-              <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Drop .sql or .txt files here</span>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="lineage-textarea" style={{ padding: '12px', paddingBottom: '30px' }}>
-          <div className="table-explorer-container">
-            {renderGroup('Sources', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'source'), '--color-emerald')}
-            {renderGroup('Views', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'view'), '--color-purple')}
-            {renderGroup('Intermediate (Both)', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'both'), '--color-amber')}
-            {renderGroup('Temp Tables', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'temp'), '--color-text-secondary')}
-            {renderGroup('Targets', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'target'), '--color-indigo')}
-            {allTableNodes.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '12px' }}>No tables found. Click "Analyze" to parse the SQL.</div>}
+      <div 
+        className="lineage-textarea" 
+        ref={editorRef} 
+        style={{ position: 'relative', display: activeSidebarTab === 'sql' ? 'block' : 'none' }} 
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} 
+        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }} 
+        onDrop={handleDrop}
+      >
+        {isDragging && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(56, 189, 248, 0.15)', border: '2px dashed var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, pointerEvents: 'none' }}>
+            <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Drop .sql or .txt files here</span>
           </div>
+        )}
+      </div>
+
+      <div 
+        className="lineage-textarea" 
+        style={{ padding: '12px', paddingBottom: '30px', display: activeSidebarTab === 'explorer' ? 'block' : 'none' }}
+      >
+        <div className="table-explorer-container">
+          {renderGroup('Sources', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'source'), '--color-emerald')}
+          {renderGroup('Views', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'view'), '--color-purple')}
+          {renderGroup('Intermediate (Both)', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'both'), '--color-amber')}
+          {renderGroup('Temp Tables', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'temp'), '--color-text-secondary')}
+          {renderGroup('Targets', allTableNodes.filter(n => n.data?.nodeTypeOverride === 'target'), '--color-indigo')}
+          {allTableNodes.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '12px' }}>No tables found. Click "Analyze" to parse the SQL.</div>}
         </div>
-      )}
+      </div>
       
       {selectedNodeId && nodes.find(n => n.id === selectedNodeId) && (
         <div className="lineage-inspection-panel" style={{ padding: '16px', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--bg-tertiary)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
