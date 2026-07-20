@@ -12,6 +12,16 @@
   display: flex;
   flex-direction: column;
   background-color: var(--sidebar-bg);
+  transition: width 0.3s ease;
+}
+
+.lineage-sidebar.fullscreen {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 56px);
+  z-index: 100;
 }
 
 .lineage-sidebar-header {
