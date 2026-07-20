@@ -64,34 +64,54 @@ export const buildLineageGraph = (
 
   const allTables = new Set(Array.from(tableProcedures.keys()));
 
+  const isTempTable = (tableName: string) => {
+    const lower = tableName.toLowerCase();
+    return lower.startsWith('tmp_') || 
+           lower.startsWith('temp_') || 
+           lower.startsWith('stg_') || 
+           lower.startsWith('wrk_') || 
+           lower.startsWith('work_') || 
+           lower.startsWith('dummy_') || 
+           lower.startsWith('#');
+  };
+
+  const isArchiveTable = (tableName: string) => {
+    const lower = tableName.toLowerCase();
+    return lower.endsWith('_arch') || 
+           lower.endsWith('_bkp') || 
+           lower.endsWith('_backup') || 
+           lower.endsWith('_hist') || 
+           lower.endsWith('_log');
+  };
+
+  // --- Optimization: O(N) Pre-indexing ---
+  const tableIncomingCols = new Map<string, Set<string>>();
+  const tableOutgoingCols = new Map<string, Set<string>>();
+  const feedsNonTempMap = new Set<string>();
+
+  combinedFlows.forEach(f => {
+    if (!tableIncomingCols.has(f.targetTable)) tableIncomingCols.set(f.targetTable, new Set());
+    tableIncomingCols.get(f.targetTable)!.add(f.targetCol === '*' ? 'All Columns' : f.targetCol);
+
+    if (!tableOutgoingCols.has(f.sourceTable)) tableOutgoingCols.set(f.sourceTable, new Set());
+    tableOutgoingCols.get(f.sourceTable)!.add(f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
+    
+    if (f.sourceTable !== f.targetTable && !isArchiveTable(f.targetTable) && !isTempTable(f.targetTable)) {
+      feedsNonTempMap.add(f.sourceTable);
+    }
+  });
+
   const getColumnsForTable = (table: string): ColInfo[] => {
-    const incomingCols = new Set<string>();
-    const outgoingCols = new Set<string>();
-
-    combinedFlows.forEach(f => {
-      if (f.targetTable === table) {
-        incomingCols.add(f.targetCol === '*' ? 'All Columns' : f.targetCol);
-      }
-      if (f.sourceTable === table) {
-        outgoingCols.add(f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
-      }
-    });
-
+    const incoming = tableIncomingCols.get(table) || new Set<string>();
+    const outgoing = tableOutgoingCols.get(table) || new Set<string>();
+    
     const allCols: ColInfo[] = [];
     const seen = new Set<string>();
-
-    incomingCols.forEach(col => {
-      seen.add(col);
-      allCols.push({ name: col, hasLeft: true, hasRight: outgoingCols.has(col) });
-    });
-    outgoingCols.forEach(col => {
-      if (!seen.has(col)) {
-        allCols.push({ name: col, hasLeft: false, hasRight: true });
-      }
-    });
-
-    return allCols;
+    incoming.forEach(c => { allCols.push({ name: c, hasLeft: true, hasRight: outgoing.has(c) }); seen.add(c); });
+    outgoing.forEach(c => { if (!seen.has(c)) allCols.push({ name: c, hasLeft: false, hasRight: true }); });
+    return allCols.sort((a, b) => a.name.localeCompare(b.name));
   };
+  // ---------------------------------------
 
   const dagreGraph = new dagre.graphlib.Graph({ compound: true });
   dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -129,26 +149,6 @@ export const buildLineageGraph = (
     });
   });
 
-  const isTempTable = (tableName: string) => {
-    const lower = tableName.toLowerCase();
-    return lower.startsWith('tmp_') || 
-           lower.startsWith('temp_') || 
-           lower.startsWith('stg_') || 
-           lower.startsWith('wrk_') || 
-           lower.startsWith('work_') || 
-           lower.startsWith('dummy_') || 
-           lower.startsWith('#');
-  };
-
-  const isArchiveTable = (tableName: string) => {
-    const lower = tableName.toLowerCase();
-    return lower.endsWith('_arch') || 
-           lower.endsWith('_bkp') || 
-           lower.endsWith('_backup') || 
-           lower.endsWith('_hist') || 
-           lower.endsWith('_log');
-  };
-
   allTables.forEach(table => {
     const roleObj = tableRoles[table];
     const isSrc = roleObj.isSource;
@@ -158,20 +158,11 @@ export const buildLineageGraph = (
     
     // Check if 'both' should actually be 'target'
     if (role === 'both') {
-      const feedsNonTemp = combinedFlows.some(f => {
-        if (f.sourceTable === table) {
-          if (f.targetTable === table) return false; // Ignore self-reference
-          if (isArchiveTable(f.targetTable)) return false; // Ignore archive/backup tables
-          if (isTempTable(f.targetTable)) return false; // Ignore temp tables
-          return true; // Feeds into a non-temp target
-        }
-        return false;
-      });
-      if (!feedsNonTemp) {
+      if (!feedsNonTempMap.has(table)) {
         role = 'target';
       }
     }
-
+    
     const lowerTable = table.toLowerCase();
     
     // ext_ tables are external staging tables, they should be Intermediate (both) rather than final Targets
@@ -184,9 +175,9 @@ export const buildLineageGraph = (
     
     // We can allow override if we pass node state, but for now we'll pass the derived type.
     const nodeTypeOverride = isTemp ? 'temp' : (isView ? 'view' : role);
-
+    const isCollapsed = !expandedNodes.has(table);
+    
     const columns = getColumnsForTable(table);
-    const isCollapsed = !expandedNodes.has(table) && columns.length > MAX_COLS_VISIBLE;
     const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
     const hasMoreButton = isCollapsed && columns.length > MAX_COLS_VISIBLE;
     
@@ -275,7 +266,7 @@ export const buildLineageGraph = (
 
   if (viewMode === 'overview') {
     const edgeSet = new Set<string>();
-    combinedFlows.forEach((flow) => {
+    combinedFlows.forEach((flow, idx) => {
       const edgeKey = `${flow.sourceTable}-${flow.targetTable}`;
       if (edgeSet.has(edgeKey)) return; // Deduplicate to one edge per table pair
       edgeSet.add(edgeKey);
@@ -291,7 +282,7 @@ export const buildLineageGraph = (
       const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
 
       newEdges.push({
-        id: `e-${edgeKey}`,
+        id: `e-${flow.sourceTable}-${flow.targetTable}-${idx}`,
         source: flow.sourceTable,
         target: flow.targetTable,
         sourceHandle: 'col-header',
