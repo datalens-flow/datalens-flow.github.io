@@ -13,11 +13,13 @@ The entire application runs **100% client-side in the browser** (no-backend arch
 - **DML INSERT inference**: Infers table structures dynamically from `INSERT` datasets if full DDL definitions are missing.
 - **Dialect support**: Handles PostgreSQL, MySQL, MS SQL, SQLite, Oracle, BigQuery, and Snowflake dialect grammars.
 
-### 2. Real-Time SQL Transpiler
-- Translates schemas across database dialects. Pick an input dialect and copy/view SQL code generated in another target dialect in real-time.
+### 2. Real-Time SQL Transpiler & Type Converter
+- **Cross-Dialect Translation**: Translates schemas across database dialects. Pick an input dialect and copy/view SQL code generated in another target dialect in real-time.
+- **Smart Data Type Mapping**: Automatically maps data types correctly across systems (e.g., converting Oracle's `VARCHAR2` and `NUMBER` to Redshift's `VARCHAR` and `NUMERIC`).
 
 ### 3. Interactive ERD Canvas
 - **Visual Modeler**: Add/remove tables and columns, rename fields, change data types, and draw relationships by connecting handles.
+- **Seamless Drag-and-Drop**: Easily drag and reposition tables by clicking anywhere on the table node, providing a smooth and intuitive UX.
 - **Bi-directional Sync**: Any modification on the canvas updates the DDL code in the editor in real-time.
 - **Search & Auto-Focus**: Type search queries in the header search bar to automatically center and zoom on matching tables/columns.
 - **Implicit Relationship Heuristics**: Automatically scans and maps candidate relations (e.g. matching `user_id` or `company_id` columns to target primary key tables) with animated connection lines.
@@ -31,6 +33,12 @@ The entire application runs **100% client-side in the browser** (no-backend arch
 - **Draw.io integration**: Copy diagram XML directly to your clipboard to paste (Cmd+V/Ctrl+V) cards into your Draw.io canvas.
 - **Data Dictionary**: Export structured schemas in **Excel (.xlsx)** or **Markdown (.md)** data dictionary formats.
 - **Migration Engine**: Compares the baseline parsed schema with your current canvas to generate clean `ALTER TABLE` DDL migration scripts.
+
+### 6. Data Lineage Analysis (ETL Flow Visualizer)
+- **Stored Procedure Parsing**: Paste massive `STORED PROCEDURE` or ETL scripts to automatically visualize the data flow.
+- **Automatic Role Classification**: Intelligently classifies tables as Sources, Targets, Temp Tables, Views, or Intermediate/Staging based on read/write patterns.
+- **Overview & Detailed Modes**: Toggle between a high-level Table-to-Table overview mode, and a granular Column-to-Column detailed lineage mode.
+- **Inspection Panel**: Click on any table in the lineage graph to inspect the exact columns involved in the transformation process.
 
 ---
 
