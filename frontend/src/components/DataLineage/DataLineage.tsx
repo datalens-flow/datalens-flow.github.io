@@ -35,7 +35,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
   const {
     nodes, edges, onNodesChange, onEdgesChange, onNodeClick,
     selectedNodeId, setSelectedNodeId, columnsInvolved, handleInspectInDiagram,
-    handleAnalyze, parsedProcedures, setCenter, getZoom
+    handleAnalyze, parsedProcedures, setCenter, getZoom, isAnalyzing
   } = useDataLineageFlow(procedureSql, viewRef, onSwitchToDiagram);
 
   return (
@@ -62,7 +62,19 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           handleInspectInDiagram={handleInspectInDiagram}
         />
       )}
-      <div className="lineage-canvas">
+      <div className="lineage-canvas" style={{ position: 'relative' }}>
+        {isAnalyzing && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            color: 'white', fontWeight: 'bold'
+          }}>
+            <div style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.3)', borderTop: '4px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }} />
+            <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+            Analyzing SQL & Calculating Graph...
+          </div>
+        )}
         <ReactFlow
           nodes={nodes}
           edges={edges}

@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNodesState, useEdgesState, useReactFlow } from '@xyflow/react';
 import { useSchemaStore } from '../../../store/useSchemaStore';
 import { useToastStore } from '../../../store/useToastStore';
-import { buildLineageGraph } from '../buildLineageGraph';
 import { splitProcedures } from '../../../utils/lineage/procedureSplitter';
 import { parseLineage } from '../../../utils/lineageParser';
 
@@ -11,6 +10,8 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const workerRef = useRef<Worker | null>(null);
   const { fitView, setCenter, getZoom } = useReactFlow();
 
   const { 
@@ -56,6 +57,7 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     return () => {
       window.removeEventListener('lineage-expand-all', handleExpandAll);
       window.removeEventListener('lineage-collapse-all', handleCollapseAll);
+      workerRef.current?.terminate();
     };
   }, [handleExpandAll, handleCollapseAll]);
 
@@ -64,19 +66,49 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
   const handleAnalyze = useCallback(() => {
     try {
       const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
-      const { newNodes, newEdges } = buildLineageGraph(activeProcedures, layoutDir, expandedNodes, ignoredArr, lineageViewMode);
-      const nodesWithCallback = newNodes.map(n => ({
-        ...n, data: { ...n.data, onToggleCollapse }
-      }));
-      setNodes(nodesWithCallback);
-      setEdges(newEdges);
-      setSelectedNodeId(null);
-      setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 50);
+      
+      workerRef.current?.terminate();
+      workerRef.current = new Worker(new URL('../workers/lineageWorker', import.meta.url), { type: 'module' });
+      setIsAnalyzing(true);
+      
+      workerRef.current.postMessage({
+        procedures: activeProcedures,
+        direction: layoutDir,
+        expandedNodesArray: Array.from(expandedNodes),
+        ignoredTables: ignoredArr,
+        viewMode: lineageViewMode
+      });
+      
+      workerRef.current.onmessage = (e: MessageEvent) => {
+        setIsAnalyzing(false);
+        if (e.data.type === 'SUCCESS') {
+          const { newNodes, newEdges } = e.data.payload;
+          
+          if (newNodes.length > 30 && lineageViewMode !== 'overview') {
+            useToastStore.getState().addToast({ type: 'info', message: 'Large graph detected. Switched to Overview Mode for better performance.' });
+            useSchemaStore.getState().setLineageViewMode('overview');
+            return;
+          }
+          
+          const nodesWithCallback = newNodes.map((n: any) => ({
+            ...n, data: { ...n.data, onToggleCollapse }
+          }));
+          setNodes(nodesWithCallback);
+          setEdges(newEdges);
+          setSelectedNodeId(null);
+          setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 50);
+        } else {
+          console.error(e.data.error);
+          useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + e.data.error });
+        }
+      };
     } catch (err: any) {
+      setIsAnalyzing(false);
       console.error(err);
-      useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + (err.message || 'Unknown error') });
+      useToastStore.getState().addToast({ type: 'error', message: 'Failed to start lineage worker: ' + (err.message || 'Unknown error') });
     }
   }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView, lineageViewMode]);
+
 
   useEffect(() => {
     handleAnalyze();
@@ -163,6 +195,6 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
   return {
     nodes, edges, onNodesChange, onEdgesChange, onNodeClick,
     selectedNodeId, setSelectedNodeId, selectedNodeData, columnsInvolved, handleInspectInDiagram,
-    handleAnalyze, parsedProcedures, activeProcedures, setCenter, getZoom
+    handleAnalyze, parsedProcedures, activeProcedures, setCenter, getZoom, isAnalyzing
   };
 };

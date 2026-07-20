@@ -9,7 +9,7 @@ export interface ColInfo {
 }
 
 // Custom Lineage Node with per-column handles (supports dual-role: both source + target)
-export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
+const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ data }) => {
   const columns: ColInfo[] = data.columns || [];
   const role: 'source' | 'target' | 'both' = data.role || 'source';
   const nodeType: 'source' | 'target' | 'both' | 'temp' | 'view' = data.nodeTypeOverride || role;
@@ -146,3 +146,18 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
     </div>
   );
 };
+
+export const LineageNode = React.memo(LineageNodeComponent, (prevProps, nextProps) => {
+  if (prevProps.selected !== nextProps.selected) return false;
+  
+  const prev = prevProps.data;
+  const next = nextProps.data;
+  
+  if (prev.tableName !== next.tableName) return false;
+  if (prev.isCollapsed !== next.isCollapsed) return false;
+  if (prev.viewMode !== next.viewMode) return false;
+  if (prev.nodeTypeOverride !== next.nodeTypeOverride) return false;
+  if (prev.role !== next.role) return false;
+  
+  return true;
+});
