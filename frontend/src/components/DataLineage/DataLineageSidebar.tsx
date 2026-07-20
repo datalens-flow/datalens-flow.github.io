@@ -119,12 +119,28 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
       <div className="lineage-sidebar-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="lineage-title">STORED PROCEDURE INPUT</span>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <input type="file" ref={fileInputRef} accept=".sql" multiple style={{ display: 'none' }} onChange={handleFileUpload} />
-            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }} onClick={() => fileInputRef.current?.click()}>📁 Import</button>
-            <button className="btn btn-primary" onClick={handleAnalyze} style={{ padding: '4px 10px', fontSize: '11px' }}>Analyze</button>
-            <button className="btn btn-secondary" onClick={handleAnalyze} style={{ padding: '4px 10px', fontSize: '11px' }} title="Refresh Diagram">🔄</button>
-            <button onClick={() => setIsFullscreen(!isFullscreen)} className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '11px', display: 'flex', alignItems: 'center' }} title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
+            <button 
+              className="btn btn-secondary" 
+              style={{ padding: '4px 10px', fontSize: '11px' }} 
+              onClick={() => fileInputRef.current?.click()}
+            >
+              📁 Import SQL
+            </button>
+            <button 
+              className="btn btn-primary" 
+              onClick={handleAnalyze} 
+              style={{ padding: '4px 10px', fontSize: '11px' }}
+            >
+              Analyze SQL
+            </button>
+            <button 
+              onClick={() => setIsFullscreen(!isFullscreen)} 
+              className="btn btn-secondary" 
+              style={{ padding: '4px 8px', fontSize: '11px', display: 'flex', alignItems: 'center' }} 
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            >
               {isFullscreen ? (
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
               ) : (
