@@ -182,7 +182,18 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
       
       {selectedNodeId && nodes.find(n => n.id === selectedNodeId) && (
         <div className="lineage-inspection-panel" style={{ padding: '16px', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--bg-tertiary)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>Inspection: {selectedNodeId.toUpperCase()}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-primary)', wordBreak: 'break-all' }}>
+              Inspection:<br/>{selectedNodeId.toUpperCase()}
+            </h3>
+            <button 
+              onClick={() => setSelectedNodeId(null)}
+              style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '4px', borderRadius: '4px', display: 'flex' }}
+              title="Close"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
           <div>
             <strong style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Columns Involved:</strong>
             <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: 'var(--color-text-primary)', maxHeight: '300px', overflowY: 'auto' }}>
