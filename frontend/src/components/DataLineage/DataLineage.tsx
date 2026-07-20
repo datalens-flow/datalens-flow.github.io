@@ -69,14 +69,23 @@ JOIN orders o ON u.id = o.user_id;`);
     });
   };
 
-  const handleExpandAll = () => {
+  const handleExpandAll = React.useCallback(() => {
     const allIds = nodes.map(n => n.id);
     setExpandedNodes(new Set(allIds));
-  };
+  }, [nodes]);
 
-  const handleCollapseAll = () => {
+  const handleCollapseAll = React.useCallback(() => {
     setExpandedNodes(new Set());
-  };
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('lineage-expand-all', handleExpandAll);
+    window.addEventListener('lineage-collapse-all', handleCollapseAll);
+    return () => {
+      window.removeEventListener('lineage-expand-all', handleExpandAll);
+      window.removeEventListener('lineage-collapse-all', handleCollapseAll);
+    };
+  }, [handleExpandAll, handleCollapseAll]);
 
   const handleAnalyze = () => {
     const { newNodes, newEdges } = buildLineageGraph(activeSql, layoutDir, expandedNodes);
@@ -259,16 +268,9 @@ JOIN orders o ON u.id = o.user_id;`);
             <button 
               className="btn btn-secondary" 
               style={{ fontSize: '11px', padding: '6px 12px' }}
-              onClick={handleExpandAll}
+              onClick={() => fileInputRef.current?.click()}
             >
-              Expand All
-            </button>
-            <button 
-              className="btn btn-secondary" 
-              style={{ fontSize: '11px', padding: '6px 12px' }}
-              onClick={handleCollapseAll}
-            >
-              Collapse All
+              📁 Import
             </button>
             <button 
               className="btn btn-primary" 

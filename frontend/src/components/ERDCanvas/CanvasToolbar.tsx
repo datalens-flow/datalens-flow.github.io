@@ -152,6 +152,20 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
             </label>
           </>
         )}
+        {mode === 'lineage' && (
+          <>
+            <div className="toolbar-dropdown-divider" />
+            <div className="toolbar-dropdown-group-label">🌳 Lineage Graph</div>
+            <button className="toolbar-dropdown-item" onClick={() => window.dispatchEvent(new CustomEvent('lineage-expand-all'))}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 2v12M2 8h12M4 4l8 8M4 12l8-8"/></svg>
+              Expand All
+            </button>
+            <button className="toolbar-dropdown-item" onClick={() => window.dispatchEvent(new CustomEvent('lineage-collapse-all'))}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 8h12M4 4l4 4 4-4M4 12l4-4 4 4"/></svg>
+              Collapse All
+            </button>
+          </>
+        )}
       </ToolbarDropdown>
     </div>
   );
