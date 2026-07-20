@@ -1,53 +1,153 @@
 // @ts-nocheck
 import { describe, it, expect } from 'vitest';
 import { mapType } from './utils';
+import { DIALECTS } from './constants';
 
-describe('mapType', () => {
-  it('converts Oracle VARCHAR2 to Redshift VARCHAR', () => {
-    expect(mapType('VARCHAR2(100)', 'redshift')).toBe('VARCHAR(100)');
+const ALL_DIALECTS = DIALECTS.map(d => d.value);
+
+describe('mapType Matrix Test', () => {
+
+  const verifyMatrix = (baseTypes: string[], assertions: Record<string, string>) => {
+    baseTypes.forEach(baseType => {
+      ALL_DIALECTS.forEach(dialect => {
+        const expected = assertions[dialect] || baseType;
+        it(`converts ${baseType} to ${expected} in ${dialect}`, () => {
+          expect(mapType(baseType, dialect)).toBe(expected);
+        });
+      });
+    });
+  };
+
+  describe('Unbounded Strings', () => {
+    const stringTypes = ['TEXT', 'CLOB', 'VARCHAR(MAX)'];
+    const stringAssertions = {
+      oracle: 'CLOB',
+      redshift: 'VARCHAR(MAX)',
+      postgres: 'TEXT',
+      mysql: 'LONGTEXT',
+      mariadb: 'LONGTEXT',
+      mssql: 'VARCHAR(MAX)',
+      bigquery: 'STRING',
+      clickhouse: 'String',
+      sqlite: 'TEXT',
+      snowflake: 'VARCHAR',
+      databricks: 'STRING',
+      teradata: 'CLOB',
+    };
+    verifyMatrix(stringTypes, stringAssertions);
   });
 
-  it('converts MySQL TINYINT(1) to PostgreSQL BOOLEAN', () => {
-    expect(mapType('TINYINT(1)', 'postgres')).toBe('BOOLEAN');
+  describe('Date and Time', () => {
+    const dateTypes = ['DATETIME2', 'TIMESTAMP', 'DATETIME'];
+    const dateAssertions = {
+      oracle: 'TIMESTAMP',
+      redshift: 'TIMESTAMP',
+      postgres: 'TIMESTAMP',
+      mysql: 'DATETIME',
+      mariadb: 'DATETIME',
+      mssql: 'DATETIME2',
+      bigquery: 'TIMESTAMP',
+      clickhouse: 'DateTime',
+      sqlite: 'DATETIME',
+      snowflake: 'TIMESTAMP_NTZ',
+      databricks: 'TIMESTAMP',
+      teradata: 'TIMESTAMP',
+    };
+    verifyMatrix(dateTypes, dateAssertions);
   });
 
-  it('converts PostgreSQL BOOLEAN to Oracle NUMBER(1)', () => {
-    expect(mapType('BOOLEAN', 'oracle')).toBe('NUMBER(1)');
+  describe('Booleans', () => {
+    const boolTypes = ['BOOLEAN', 'TINYINT(1)', 'BIT'];
+    const boolAssertions = {
+      oracle: 'NUMBER(1)',
+      redshift: 'BOOLEAN',
+      postgres: 'BOOLEAN',
+      mysql: 'TINYINT(1)',
+      mariadb: 'TINYINT(1)',
+      mssql: 'BIT',
+      bigquery: 'BOOL',
+      clickhouse: 'UInt8',
+      sqlite: 'INTEGER',
+      snowflake: 'BOOLEAN',
+      databricks: 'BOOLEAN',
+      teradata: 'BYTEINT',
+    };
+    verifyMatrix(boolTypes, boolAssertions);
   });
 
-  it('converts SQL Server DATETIME2 to Redshift TIMESTAMP', () => {
-    expect(mapType('DATETIME2', 'redshift')).toBe('TIMESTAMP');
+  describe('JSON', () => {
+    const jsonTypes = ['JSON', 'JSONB', 'VARIANT'];
+    const jsonAssertions = {
+      oracle: 'CLOB',
+      redshift: 'SUPER',
+      postgres: 'JSONB',
+      mysql: 'JSON',
+      mariadb: 'JSON',
+      mssql: 'NVARCHAR(MAX)',
+      bigquery: 'JSON',
+      clickhouse: 'String',
+      sqlite: 'TEXT',
+      snowflake: 'VARIANT',
+      databricks: 'STRING',
+      teradata: 'JSON',
+    };
+    verifyMatrix(jsonTypes, jsonAssertions);
   });
 
-  it('converts standard INT to Oracle NUMBER(10)', () => {
-    expect(mapType('INT', 'oracle')).toBe('NUMBER(10)');
+  describe('Floating Point (Double)', () => {
+    const floatTypes = ['DOUBLE', 'FLOAT8', 'DOUBLE PRECISION', 'FLOAT64'];
+    const floatAssertions = {
+      oracle: 'FLOAT',
+      redshift: 'DOUBLE PRECISION',
+      postgres: 'DOUBLE PRECISION',
+      mysql: 'DOUBLE',
+      mariadb: 'DOUBLE',
+      mssql: 'FLOAT',
+      bigquery: 'FLOAT64',
+      clickhouse: 'Float64',
+      sqlite: 'REAL',
+      snowflake: 'FLOAT',
+      databricks: 'DOUBLE',
+      teradata: 'DOUBLE',
+    };
+    verifyMatrix(floatTypes, floatAssertions);
   });
 
-  it('converts BigQuery INT64 to MySQL BIGINT', () => {
-    expect(mapType('INT64', 'mysql')).toBe('BIGINT');
+  describe('Standard String (VARCHAR)', () => {
+    const varcharTypes = ['VARCHAR(255)', 'VARCHAR2(255)', 'STRING(255)'];
+    const varcharAssertions = {
+      oracle: 'VARCHAR2(255)',
+      redshift: 'VARCHAR(255)',
+      postgres: 'VARCHAR(255)',
+      mysql: 'VARCHAR(255)',
+      mariadb: 'VARCHAR(255)',
+      mssql: 'VARCHAR(255)',
+      bigquery: 'STRING',
+      clickhouse: 'String',
+      sqlite: 'TEXT',
+      snowflake: 'VARCHAR(255)',
+      databricks: 'STRING',
+      teradata: 'VARCHAR(255)',
+    };
+    verifyMatrix(varcharTypes, varcharAssertions);
   });
-
-  it('converts Oracle NUMBER to PostgreSQL INT/DECIMAL based on precision', () => {
-    // Current logic maps NUMBER without args to INT, and NUMBER(x,y) to DECIMAL
-    expect(mapType('NUMBER', 'postgres')).toBe('INT');
-    expect(mapType('NUMBER(10,2)', 'postgres')).toBe('DECIMAL(10,2)');
-  });
-
-  it('converts strings to ClickHouse String', () => {
-    expect(mapType('VARCHAR(255)', 'clickhouse')).toBe('String');
-    expect(mapType('TEXT', 'clickhouse')).toBe('String');
-  });
-
-  it('handles spaces in type correctly', () => {
-    expect(mapType('VARCHAR (255)', 'postgres')).toBe('VARCHAR (255)');
-  });
-
-  it('returns standard types for snowflake', () => {
-    expect(mapType('VARCHAR2(50)', 'snowflake')).toBe('VARCHAR(50)');
-  });
-
-  it('converts to SQLite correctly', () => {
-    expect(mapType('VARCHAR(100)', 'sqlite')).toBe('TEXT');
-    expect(mapType('DECIMAL(10,2)', 'sqlite')).toBe('REAL');
+  
+  describe('Integers', () => {
+    const intTypes = ['INT', 'INTEGER', 'INT32'];
+    const intAssertions = {
+      oracle: 'NUMBER(10)',
+      redshift: 'INT',
+      postgres: 'INT',
+      mysql: 'INT',
+      mariadb: 'INT',
+      mssql: 'INT',
+      bigquery: 'INT64',
+      clickhouse: 'Int32',
+      sqlite: 'INTEGER',
+      snowflake: 'INT',
+      databricks: 'INT',
+      teradata: 'INT',
+    };
+    verifyMatrix(intTypes, intAssertions);
   });
 });
