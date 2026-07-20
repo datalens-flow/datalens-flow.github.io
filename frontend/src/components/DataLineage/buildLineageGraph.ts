@@ -135,7 +135,23 @@ export const buildLineageGraph = (
     const roleObj = tableRoles[table];
     const isSrc = roleObj.isSource;
     const isTgt = roleObj.isTarget;
-    const role = isSrc && isTgt ? 'both' : (isSrc ? 'source' : 'target');
+    
+    let role = isSrc && isTgt ? 'both' : (isSrc ? 'source' : 'target');
+    
+    // Check if 'both' should actually be 'target' (if it only feeds into temp tables)
+    if (role === 'both') {
+      const feedsNonTemp = combinedFlows.some(f => {
+        if (f.sourceTable === table) {
+          const tgtLower = f.targetTable.toLowerCase();
+          const tgtIsTemp = tgtLower.startsWith('tmp_') || tgtLower.startsWith('temp_') || tgtLower.startsWith('#');
+          if (!tgtIsTemp) return true;
+        }
+        return false;
+      });
+      if (!feedsNonTemp) {
+        role = 'target';
+      }
+    }
     
     const lowerTable = table.toLowerCase();
     const isTemp = lowerTable.startsWith('tmp_') || lowerTable.startsWith('temp_') || lowerTable.startsWith('#');
