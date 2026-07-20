@@ -19,7 +19,36 @@ function App() {
     // Show landing page if user hasn't dismissed it before in this session
     return !sessionStorage.getItem('datalens-launched');
   });
-  const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>('diagram');
+
+  // Simple routing logic based on pathname
+  const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>(() => {
+    const path = window.location.pathname;
+    if (path.includes('/data_lineage')) return 'lineage';
+    return 'diagram'; // Default to diagram for '/' or '/database_diagram'
+  });
+
+  // Sync mode to URL
+  useEffect(() => {
+    const targetPath = currentMode === 'lineage' ? '/data_lineage' : '/database_diagram';
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState(null, '', targetPath);
+    }
+  }, [currentMode]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.includes('/data_lineage')) {
+        setCurrentMode('lineage');
+      } else {
+        setCurrentMode('diagram');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const { 
     activeTab, 
     setActiveTab, 
