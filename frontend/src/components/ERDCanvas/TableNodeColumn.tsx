@@ -92,12 +92,20 @@ export const TableNodeColumn: React.FC<TableNodeColumnProps> = ({
     setEditingColType(null);
   };
 
+  const [isDraggable, setIsDraggable] = useState(false);
+
   return (
     <div 
       className={`column-wrapper ${dragOverIndex === index ? 'drag-over' : ''}`}
       style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.02)' }}
-      draggable
-      onDragStart={(e) => onDragStart(e, index)}
+      draggable={isDraggable}
+      onDragStart={(e) => {
+        if (!isDraggable) {
+          e.preventDefault();
+          return;
+        }
+        onDragStart(e, index);
+      }}
       onDragOver={(e) => onDragOver(e, index)}
       onDrop={(e) => onDrop(e, index)}
       onDragEnd={onDragEnd}
@@ -106,7 +114,12 @@ export const TableNodeColumn: React.FC<TableNodeColumnProps> = ({
         className={`column-row ${col.is_pk ? 'pk-row' : ''} ${col.is_fk ? 'fk-row' : ''}`}
         style={{ position: 'relative' }}
       >
-        <span className="drag-handle" title="Drag to reorder">
+        <span 
+          className="drag-handle" 
+          title="Drag to reorder"
+          onMouseEnter={() => setIsDraggable(true)}
+          onMouseLeave={() => setIsDraggable(false)}
+        >
           <svg width="8" height="12" viewBox="0 0 8 12" fill="currentColor" opacity="0.3">
             <circle cx="2" cy="2" r="1"/><circle cx="6" cy="2" r="1"/>
             <circle cx="2" cy="6" r="1"/><circle cx="6" cy="6" r="1"/>

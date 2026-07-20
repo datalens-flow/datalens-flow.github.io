@@ -94,6 +94,7 @@ export function getLayoutedElements(
     return {
       id: table.id,
       type: 'tableNode',
+      dragHandle: '.custom-drag-handle',
       data: {
         name: table.name,
         columns: table.columns,

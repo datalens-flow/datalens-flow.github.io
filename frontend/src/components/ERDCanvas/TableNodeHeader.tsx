@@ -62,7 +62,7 @@ export const TableNodeHeader: React.FC<TableNodeHeaderProps> = ({
 
   return (
     <div 
-      className="table-node-header" 
+      className="table-node-header custom-drag-handle" 
       style={{ 
         justifyContent: 'space-between', 
         width: '100%', 
