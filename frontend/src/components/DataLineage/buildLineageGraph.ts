@@ -106,30 +106,27 @@ export const buildLineageGraph = (
   const activeProcedures = new Set<string>();
   allTables.forEach(table => {
     const procs = tableProcedures.get(table);
-    if (procs && procs.size === 1 && procedures.length > 1) {
+    if (procs && procs.size === 1) {
       activeProcedures.add(procs.values().next().value!);
     }
   });
 
   activeProcedures.forEach(procName => {
     if (procName === 'Global Script') return;
-    // ONLY add groups if we have MULTIPLE procedures being viewed. 
-    if (procedures.length > 1 && activeProcedures.size > 1) {
-      dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
-      newNodes.push({
-        id: `group-${procName}`,
-        type: 'group',
-        data: { label: procName },
-        style: {
-          backgroundColor: 'rgba(56, 189, 248, 0.05)',
-          border: '1px dashed var(--color-border)',
-          borderRadius: '8px',
-          width: 300,
-          height: 300,
-          zIndex: -1
-        }
-      });
-    }
+    dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
+    newNodes.push({
+      id: `group-${procName}`,
+      type: 'group',
+      data: { label: procName },
+      style: {
+        backgroundColor: 'rgba(56, 189, 248, 0.05)',
+        border: '1px dashed var(--color-border)',
+        borderRadius: '8px',
+        width: 300,
+        height: 300,
+        zIndex: -1
+      }
+    });
   });
 
   const isTempTable = (tableName: string) => {
@@ -199,8 +196,8 @@ export const buildLineageGraph = (
 
     const procs = tableProcedures.get(table);
     let parentNodeId = undefined;
-    // Only group if MULTIPLE procedures are being viewed at the same time
-    if (procs && procs.size === 1 && procedures.length > 1 && activeProcedures.size > 1) {
+    // Always group if a table belongs to exactly one procedure
+    if (procs && procs.size === 1) {
       const pName = procs.values().next().value!;
       if (pName !== 'Global Script') {
         parentNodeId = `group-${pName}`;
@@ -279,7 +276,7 @@ export const buildLineageGraph = (
 
   if (viewMode === 'overview') {
     const edgeSet = new Set<string>();
-    combinedFlows.forEach((flow, idx) => {
+    combinedFlows.forEach((flow) => {
       const edgeKey = `${flow.sourceTable}-${flow.targetTable}`;
       if (edgeSet.has(edgeKey)) return; // Deduplicate to one edge per table pair
       edgeSet.add(edgeKey);
@@ -295,7 +292,7 @@ export const buildLineageGraph = (
       const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
 
       newEdges.push({
-        id: `e-${flow.sourceTable}-${flow.targetTable}-${idx}`,
+        id: `e-${edgeKey}`,
         source: flow.sourceTable,
         target: flow.targetTable,
         sourceHandle: 'col-header',
