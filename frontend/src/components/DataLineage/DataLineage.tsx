@@ -7,18 +7,12 @@ import {
   useEdgesState,
   useReactFlow,
   ReactFlowProvider,
-  MarkerType
 } from '@xyflow/react';
-import { EditorState } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
-import { defaultKeymap } from '@codemirror/commands';
-import { sql as sqlLang } from '@codemirror/lang-sql';
-import { basicSetup } from 'codemirror';
-import { syntaxHighlighting } from '@codemirror/language';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { parseLineage } from '../../utils/lineageParser';
-import { LineageNode, ColInfo } from './LineageNode';
-import { darkHighlightStyle, lightHighlightStyle } from './codeMirrorStyles';
+import { LineageNode } from './LineageNode';
+import { buildLineageGraph } from './buildLineageGraph';
+import { useSqlEditor } from './useSqlEditor';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -30,178 +24,23 @@ export interface DataLineageProps {
   onSwitchToDiagram?: () => void;
 }
 
-const EDGE_COLORS = [
-  '#38bdf8', // sky blue
-  '#34d399', // emerald
-  '#a78bfa', // violet
-  '#fb923c', // orange
-  '#f472b6', // pink
-  '#facc15', // yellow
-  '#2dd4bf', // teal
-  '#818cf8', // indigo
-];
-
 const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const { lineageSearchQuery, theme } = useSchemaStore();
+  const { lineageSearchQuery } = useSchemaStore();
   const { fitView, setCenter, getZoom } = useReactFlow();
 
-  const [procedureSql, setProcedureSql] = useState<string>(`-- Sample ETL Stored Procedure
+  const { procedureSql, setProcedureSql, editorRef, viewRef } = useSqlEditor(`-- Sample ETL Stored Procedure
 INSERT INTO sales_summary (customer_name, revenue)
 SELECT u.name, o.amount
 FROM users u
 JOIN orders o ON u.id = o.user_id;`);
 
-  const editorRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<EditorView | null>(null);
-
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!editorRef.current) return;
-
-    const selection = viewRef.current?.state.selection;
-
-    const startState = EditorState.create({
-      doc: procedureSql,
-      extensions: [
-        basicSetup,
-        sqlLang(),
-        keymap.of(defaultKeymap),
-        syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            setProcedureSql(update.state.doc.toString());
-          }
-        }),
-        EditorView.theme({
-          '&': { height: '100%', minHeight: '300px', flex: 1, backgroundColor: 'var(--bg-secondary)', color: 'var(--color-text-primary)' },
-          '.cm-content': { fontFamily: 'var(--font-mono)', fontSize: '13px' },
-          '.cm-gutters': { backgroundColor: 'var(--bg-tertiary)', color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)' },
-          '.cm-cursor': { borderLeftColor: 'var(--color-indigo)' },
-          '.cm-scroller': { overflow: 'auto' }
-        })
-      ],
-      selection: selection || undefined
-    });
-
-    const view = new EditorView({
-      state: startState,
-      parent: editorRef.current
-    });
-
-    viewRef.current = view;
-
-    return () => {
-      view.destroy();
-    };
-  }, [theme]);
-
   const handleAnalyze = () => {
-    const result = parseLineage(procedureSql);
-    const newNodes: any[] = [];
-    const newEdges: any[] = [];
-
-    const sourceOnly: string[] = [];
-    const targetOnly: string[] = [];
-    const bothTables: string[] = [];
-
-    const allTables = new Set([...result.sources, ...result.targets]);
-    allTables.forEach(table => {
-      const isSrc = result.sources.includes(table);
-      const isTgt = result.targets.includes(table);
-      if (isSrc && isTgt) bothTables.push(table);
-      else if (isSrc) sourceOnly.push(table);
-      else targetOnly.push(table);
-    });
-
-    const getColumnsForTable = (table: string): ColInfo[] => {
-      const incomingCols = new Set<string>();
-      const outgoingCols = new Set<string>();
-
-      result.flows.forEach(f => {
-        if (f.targetTable === table) {
-          incomingCols.add(f.targetCol === '*' ? 'All Columns' : f.targetCol);
-        }
-        if (f.sourceTable === table) {
-          outgoingCols.add(f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
-        }
-      });
-
-      const allCols: ColInfo[] = [];
-      const seen = new Set<string>();
-
-      incomingCols.forEach(col => {
-        seen.add(col);
-        allCols.push({ name: col, hasLeft: true, hasRight: outgoingCols.has(col) });
-      });
-      outgoingCols.forEach(col => {
-        if (!seen.has(col)) {
-          allCols.push({ name: col, hasLeft: false, hasRight: true });
-        }
-      });
-
-      return allCols;
-    };
-
-    const COL_WIDTH = 250;
-    const ROW_HEIGHT = 45;
-    const COLUMN_GAP = 150;
-
-    const COL_X_SOURCE = 50;
-    const COL_X_BOTH = COL_X_SOURCE + COL_WIDTH + COLUMN_GAP;
-    const COL_X_TARGET = COL_X_BOTH + COL_WIDTH + COLUMN_GAP;
-
-    const createColumnNodes = (tablesList: string[], startX: number, role: 'source' | 'target' | 'both') => {
-      let currentY = 50;
-      tablesList.forEach(table => {
-        const columns = getColumnsForTable(table);
-        const nodeHeight = 50 + columns.length * ROW_HEIGHT;
-        newNodes.push({
-          id: table,
-          type: 'lineageNode',
-          position: { x: startX, y: currentY },
-          data: { tableName: table, columns, role },
-          style: {
-            width: COL_WIDTH,
-            background: 'var(--bg-secondary)',
-            border: `1px solid var(--color-border)`,
-            borderRadius: '6px',
-            color: 'var(--color-text-primary)',
-          }
-        });
-        currentY += nodeHeight + 40;
-      });
-    };
-
-    createColumnNodes(sourceOnly, COL_X_SOURCE, 'source');
-    createColumnNodes(bothTables, COL_X_BOTH, 'both');
-    createColumnNodes(targetOnly, COL_X_TARGET, 'target');
-
-    const allSourceTables = [...new Set(result.flows.map(f => f.sourceTable))];
-    const sourceColorMap: Record<string, string> = {};
-    allSourceTables.forEach((src, idx) => {
-      sourceColorMap[src] = EDGE_COLORS[idx % EDGE_COLORS.length];
-    });
-
-    result.flows.forEach((flow, idx) => {
-      const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
-      const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
-      const edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
-
-      newEdges.push({
-        id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
-        source: flow.sourceTable,
-        target: flow.targetTable,
-        sourceHandle: `col-${sourceCol}`,
-        targetHandle: `col-${targetCol}`,
-        type: 'smoothstep',
-        style: { stroke: edgeColor, strokeWidth: 1.5, opacity: 0.8 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
-      });
-    });
+    const { newNodes, newEdges } = buildLineageGraph(procedureSql);
 
     setNodes(newNodes);
     setEdges(newEdges);
@@ -421,3 +260,4 @@ export const DataLineage: React.FC<DataLineageProps> = (props) => (
   </ReactFlowProvider>
 );
 export default DataLineage;
+

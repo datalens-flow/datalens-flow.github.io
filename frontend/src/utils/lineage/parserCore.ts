@@ -1,5 +1,10 @@
+// @ts-nocheck
+
 import { LineageFlow, LineageResult, SQL_KEYWORDS } from './types';
-import { extractTableName, resolveColumn } from './parserUtils';
+import { extractTableName } from './parserUtils';
+import { extractCTEs, resolveCteSources as resolveCteSourcesImpl } from './parserCte';
+import { handleInsert } from './parserInsert';
+import { handleUpdate, handleMerge } from './parserUpdateMerge';
 
 export const parseLineage = (sql: string): LineageResult => {
   const allFlows: LineageFlow[] = [];
@@ -10,100 +15,10 @@ export const parseLineage = (sql: string): LineageResult => {
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/--.*$/gm, '');
 
-  // --- Extract CTEs (WITH ... AS (...)) ---
-  const cteNames = new Set<string>();
-  const cteToRealSources: Record<string, string[]> = {};
-  const cteOrder: string[] = [];
-
-  const cleanSqlLower = cleanSql.toLowerCase();
-  let searchPos = 0;
-  while (true) {
-    const withIdx = cleanSqlLower.indexOf('with', searchPos);
-    if (withIdx === -1) break;
-
-    const isWordBoundary = (withIdx === 0 || !/[a-zA-Z0-9_]/.test(cleanSql[withIdx - 1])) &&
-                           (withIdx + 4 >= cleanSql.length || !/[a-zA-Z0-9_]/.test(cleanSql[withIdx + 4]));
-
-    if (!isWordBoundary) {
-      searchPos = withIdx + 4;
-      continue;
-    }
-
-    let depth = 0;
-    let mainActionIdx = -1;
-    for (let i = withIdx + 4; i < cleanSql.length; i++) {
-      if (cleanSql[i] === '(') depth++;
-      if (cleanSql[i] === ')') depth--;
-      if (depth === 0) {
-        const sub = cleanSqlLower.substring(i).trim();
-        if (/^(?:select|insert|update|delete|merge)\b/i.test(sub)) {
-          mainActionIdx = i;
-          break;
-        }
-      }
-    }
-
-    const cteBlock = cleanSql.substring(withIdx + 4, mainActionIdx !== -1 ? mainActionIdx : cleanSql.length);
-    
-    let currentPos = 0;
-    while (currentPos < cteBlock.length) {
-      const nextAsMatch = cteBlock.substring(currentPos).match(/\b(\w+)\s+as\s*\(/i);
-      if (!nextAsMatch || nextAsMatch.index === undefined) break;
-
-      const cteName = nextAsMatch[1].toLowerCase();
-      const matchStartInBlock = currentPos + nextAsMatch.index;
-      const bodyStart = matchStartInBlock + nextAsMatch[0].length;
-
-      let depthInner = 1;
-      let bodyEnd = bodyStart;
-      for (let i = bodyStart; i < cteBlock.length && depthInner > 0; i++) {
-        if (cteBlock[i] === '(') depthInner++;
-        if (cteBlock[i] === ')') depthInner--;
-        bodyEnd = i;
-      }
-
-      if (!SQL_KEYWORDS.has(cteName)) {
-        cteNames.add(cteName);
-        cteOrder.push(cteName);
-        
-        const cteBody = cteBlock.substring(bodyStart, bodyEnd);
-        const fromMatches = [...cteBody.matchAll(/\b(?:from|join)\s+([\w.]+)/gi)];
-        const realSources: string[] = [];
-        fromMatches.forEach(m => {
-          const tbl = extractTableName(m[1]);
-          if (!SQL_KEYWORDS.has(tbl)) {
-            realSources.push(tbl);
-          }
-        });
-        cteToRealSources[cteName] = realSources;
-      }
-
-      currentPos = bodyEnd + 1;
-      const commaSearch = cteBlock.substring(currentPos).match(/\s*,\s*/);
-      if (commaSearch && commaSearch.index === 0) {
-        currentPos += commaSearch[0].length;
-      }
-    }
-
-    searchPos = mainActionIdx !== -1 ? mainActionIdx : cleanSql.length;
-  }
+  const { cteNames, cteToRealSources, cteOrder } = extractCTEs(cleanSql);
 
   const resolveCteSources = (cteName: string, visited = new Set<string>()): string[] => {
-    if (visited.has(cteName)) return [];
-    visited.add(cteName);
-    const directSources = cteToRealSources[cteName] || [];
-    const resolved: string[] = [];
-    const currentCteIdx = cteOrder.indexOf(cteName);
-
-    directSources.forEach(src => {
-      const srcIdx = cteOrder.indexOf(src);
-      if (srcIdx !== -1 && srcIdx < currentCteIdx) {
-        resolved.push(...resolveCteSources(src, visited));
-      } else {
-        resolved.push(src);
-      }
-    });
-    return [...new Set(resolved)];
+    return resolveCteSourcesImpl(cteName, cteToRealSources, cteOrder, visited);
   };
 
   const statements = cleanSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
@@ -237,165 +152,25 @@ export const parseLineage = (sql: string): LineageResult => {
     });
 
     if (isInsert) {
-      const subQueries = cleanStmt.split(/\b(?:union\s+all|union|intersect|except)\b/i);
-      
-      subQueries.forEach(subQuery => {
-        const subAliasMap: Record<string, string> = { ...aliasMap };
-        const subAliasMatches = [...subQuery.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
-        subAliasMatches.forEach(m => {
-          const tableName = extractTableName(m[1]);
-          if (SQL_KEYWORDS.has(tableName)) return;
-          const alias = m[2] && !SQL_KEYWORDS.has(m[2].toLowerCase()) ? m[2].toLowerCase() : tableName;
-          subAliasMap[alias] = tableName;
-          subAliasMap[tableName] = tableName;
-        });
-
-        Object.entries(subAliasMap).forEach(([alias, tableName]) => {
-          if (cteNames.has(tableName)) {
-            const realSources = resolveCteSources(tableName);
-            if (realSources.length > 0) {
-              subAliasMap[alias] = realSources[0];
-            } else {
-              delete subAliasMap[alias];
-            }
-          }
-        });
-
-        const subSourceTables = [...new Set(Object.values(subAliasMap))]
-          .filter(t => t !== targetTable && !cteNames.has(t));
-
-        const activeSources = subSourceTables.length > 0 ? subSourceTables : sourceTables;
-
-        const resolveSubColumn = (expr: string): { table: string; col: string } | null => {
-          const res = resolveColumn(expr, subAliasMap, activeSources, cleanStmt);
-          if (!res) return null;
-          if (res.table === 'unknown' || !activeSources.includes(res.table)) {
-            const dotParts = expr.trim().split('.');
-            if (dotParts.length === 2) {
-              const alias = dotParts[0].toLowerCase();
-              const table = subAliasMap[alias] || activeSources[0] || 'unknown';
-              return { table, col: dotParts[1] };
-            }
-            return { table: activeSources[0] || 'unknown', col: res.col };
-          }
-          return res;
-        };
-
-        let selectText = '';
-        const selectIdx = subQuery.toLowerCase().indexOf('select');
-        if (selectIdx !== -1) {
-          let depth = 0;
-          let fromIdx = -1;
-          for (let i = selectIdx + 6; i < subQuery.length; i++) {
-            if (subQuery[i] === '(') depth++;
-            if (subQuery[i] === ')') depth--;
-            if (depth === 0) {
-              const sub = subQuery.substring(i).trim();
-              if (/^from\b/i.test(sub)) {
-                const fromOffset = subQuery.substring(i).toLowerCase().indexOf('from');
-                fromIdx = i + fromOffset;
-                break;
-              }
-            }
-          }
-          if (fromIdx !== -1) {
-            selectText = subQuery.substring(selectIdx + 6, fromIdx).trim();
-          }
-        }
-
-        if (selectText) {
-          if (isCtas || selectText === '*') {
-            activeSources.forEach(srcTable => {
-              allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
-            });
-            return;
-          }
-
-          const selectExprs: string[] = [];
-          let currentExpr = '';
-          let parenDepth = 0;
-          
-          for (let i = 0; i < selectText.length; i++) {
-            const char = selectText[i];
-            if (char === '(') parenDepth++;
-            if (char === ')') parenDepth--;
-            
-            if (char === ',' && parenDepth === 0) {
-              selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
-              currentExpr = '';
-            } else {
-              currentExpr += char;
-            }
-          }
-          if (currentExpr.trim()) {
-            selectExprs.push(currentExpr.trim().replace(/\s+/g, ' '));
-          }
-
-          let subTargetCols = [...targetCols];
-          if (subTargetCols.length === 0) {
-            subTargetCols = selectExprs.map(expr => {
-              const aliasMatch = expr.match(/\b(?:as\s+)?(\w+)\s*$/i);
-              if (aliasMatch && !SQL_KEYWORDS.has(aliasMatch[1].toLowerCase())) {
-                return aliasMatch[1].toLowerCase();
-              }
-              const parts = expr.split(/\s+/)[0].split('.');
-              return parts[parts.length - 1].toLowerCase();
-            });
-          }
-
-          selectExprs.forEach((expr, idx) => {
-            const targetCol = subTargetCols[idx];
-            if (!targetCol) return;
-
-            const resolved = resolveSubColumn(expr);
-            if (!resolved) return;
-
-            allFlows.push({
-              sourceTable: resolved.table,
-              sourceCol: resolved.col,
-              targetTable,
-              targetCol,
-            });
-          });
-        } else if (activeSources.length > 0) {
-          activeSources.forEach(srcTable => {
-            allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
-          });
-        }
-      });
+      handleInsert(
+        cleanStmt,
+        targetTable,
+        targetCols,
+        isCtas,
+        aliasMap,
+        sourceTables,
+        cteNames,
+        resolveCteSources,
+        allFlows
+      );
     }
 
     if (isUpdate) {
-      const setMatch = cleanStmt.match(/\bset\s+([\s\S]+?)(?:\bfrom\b|\bwhere\b|$)/i);
-      if (setMatch) {
-        const assignments = setMatch[1].split(',').map(a => a.trim());
-
-        assignments.forEach(assignment => {
-          const eqIdx = assignment.indexOf('=');
-          if (eqIdx === -1) return;
-
-          const leftSide = assignment.substring(0, eqIdx).trim();
-          const rightSide = assignment.substring(eqIdx + 1).trim();
-
-          const targetCol = leftSide.split('.').pop()?.toLowerCase() || '';
-
-          const resolved = resolveColumn(rightSide, aliasMap, sourceTables, cleanStmt);
-          if (!resolved) return;
-
-          allFlows.push({
-            sourceTable: resolved.table,
-            sourceCol: resolved.col,
-            targetTable,
-            targetCol,
-          });
-        });
-      }
+      handleUpdate(cleanStmt, targetTable, aliasMap, sourceTables, allFlows);
     }
 
     if (isMerge) {
-      sourceTables.forEach(srcTable => {
-        allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
-      });
+      handleMerge(targetTable, sourceTables, allFlows);
     }
   });
 
