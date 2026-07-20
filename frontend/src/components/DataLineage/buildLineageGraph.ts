@@ -173,8 +173,14 @@ export const buildLineageGraph = (
         role = 'target';
       }
     }
-    
+
     const lowerTable = table.toLowerCase();
+    
+    // ext_ tables are external staging tables, they should be Intermediate (both) rather than final Targets
+    if (role === 'target' && lowerTable.startsWith('ext_')) {
+      role = 'both';
+    }
+    
     const isTemp = isTempTable(table);
     const isView = lowerTable.startsWith('v_') || lowerTable.startsWith('vw_') || lowerTable.startsWith('view_');
     
