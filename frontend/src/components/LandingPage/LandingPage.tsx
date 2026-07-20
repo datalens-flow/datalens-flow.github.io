@@ -58,8 +58,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
       {/* Navigation */}
       <nav className={`landing-nav ${isVisible ? 'nav-visible' : ''}`}>
         <div className="nav-brand">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 12C2 12 7 4 12 4C17 4 22 12 22 12C22 12 17 20 12 20C7 20 2 12 2 12Z" stroke="#0ea5e9" />
+            <circle cx="12" cy="12" r="3" fill="#0ea5e9" stroke="none" />
+            <path d="M4 12 Q 12 24 20 12" stroke="#10b981" strokeWidth="2" />
           </svg>
           <span>DataLens Flow</span>
         </div>
@@ -227,8 +229,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 12C2 12 7 4 12 4C17 4 22 12 22 12C22 12 17 20 12 20C7 20 2 12 2 12Z" stroke="#0ea5e9" />
+              <circle cx="12" cy="12" r="3" fill="#0ea5e9" stroke="none" />
+              <path d="M4 12 Q 12 24 20 12" stroke="#10b981" strokeWidth="2" />
             </svg>
             <span>DataLens Flow</span>
           </div>

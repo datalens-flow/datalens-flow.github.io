@@ -106,8 +106,10 @@ function App() {
       }}>
         {/* Left Side: Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-indigo)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 12C2 12 7 4 12 4C17 4 22 12 22 12C22 12 17 20 12 20C7 20 2 12 2 12Z" stroke="var(--color-indigo)" />
+            <circle cx="12" cy="12" r="3" fill="var(--color-indigo)" stroke="none" />
+            <path d="M4 12 Q 12 24 20 12" stroke="var(--color-emerald)" strokeWidth="2" />
           </svg>
           <h1 style={{ fontSize: '16px', fontWeight: '600', letterSpacing: '0.02em', margin: 0, whiteSpace: 'nowrap' }}>
             DataLens Flow

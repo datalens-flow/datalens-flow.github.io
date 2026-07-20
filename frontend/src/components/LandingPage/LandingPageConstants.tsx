@@ -47,7 +47,9 @@ export const features = [
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#grad5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <defs><linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#06b6d4"/><stop offset="100%" stopColor="#3b82f6"/></linearGradient></defs>
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        <path d="M2 12C2 12 7 4 12 4C17 4 22 12 22 12C22 12 17 20 12 20C7 20 2 12 2 12Z" stroke="url(#grad5)" />
+        <circle cx="12" cy="12" r="3" fill="url(#grad5)" stroke="none" />
+        <path d="M4 12 Q 12 24 20 12" stroke="url(#grad5)" strokeWidth="1.5" />
       </svg>
     ),
     title: 'Multi-dialect SQL',
