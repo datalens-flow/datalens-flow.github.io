@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
@@ -8,19 +8,26 @@ import { syntaxHighlighting } from '@codemirror/language';
 import { darkHighlightStyle, lightHighlightStyle } from './codeMirrorStyles';
 import { useSchemaStore } from '../../store/useSchemaStore';
 
-export const useSqlEditor = (initialSql: string) => {
-  const [procedureSql, setProcedureSql] = useState<string>(initialSql);
+export const useSqlEditor = (defaultSql: string) => {
+  const { theme, procedureSql, setProcedureSql } = useSchemaStore();
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const { theme } = useSchemaStore();
+
+  // Initialize store if empty
+  useEffect(() => {
+    if (!procedureSql) {
+      setProcedureSql(defaultSql);
+    }
+  }, []);
 
   useEffect(() => {
     if (!editorRef.current) return;
 
     const selection = viewRef.current?.state.selection;
+    const currentDoc = procedureSql || defaultSql;
 
     const startState = EditorState.create({
-      doc: procedureSql,
+      doc: currentDoc,
       extensions: [
         basicSetup,
         sqlLang(),
@@ -52,7 +59,16 @@ export const useSqlEditor = (initialSql: string) => {
     return () => {
       view.destroy();
     };
-  }, [theme]);
+  }, [theme]); // Do NOT put procedureSql in dependency array or it recreates editor every keystroke
+
+  // Sync external changes (e.g. loading a project) into the editor
+  useEffect(() => {
+    if (viewRef.current && procedureSql !== viewRef.current.state.doc.toString()) {
+      viewRef.current.dispatch({
+        changes: { from: 0, to: viewRef.current.state.doc.length, insert: procedureSql }
+      });
+    }
+  }, [procedureSql]);
 
   return { procedureSql, setProcedureSql, editorRef, viewRef };
 };

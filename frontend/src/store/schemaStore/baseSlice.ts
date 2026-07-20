@@ -18,6 +18,7 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   nodePositions: {},
   activeTab: 'erd',
   sql: DEFAULT_SQL,
+  procedureSql: '',
   dialect: 'postgres',
   loading: false,
   error: null,
@@ -72,6 +73,7 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   canRedo: () => get()._historyIndex < get()._history.length - 1,
 
   setSql: (sql) => set({ sql }),
+  setProcedureSql: (procedureSql) => set({ procedureSql }),
   setDialect: (dialect) => set({ dialect }),
   setSchema: (schema) => set((state) => {
     const newDescriptions = { ...state.descriptions };

@@ -12,14 +12,36 @@ export interface ColInfo {
 export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
   const columns: ColInfo[] = data.columns || [];
   const role: 'source' | 'target' | 'both' = data.role || 'source';
+  const isCollapsed: boolean = data.isCollapsed || false;
+  
+  const MAX_COLS_VISIBLE = 5;
+  const visibleCols = isCollapsed ? columns.slice(0, MAX_COLS_VISIBLE) : columns;
+  const hiddenCount = columns.length - visibleCols.length;
+
   return (
-    <div style={{ position: 'relative', width: '200px' }}>
+    <div style={{ position: 'relative', width: '250px' }}>
       <div className="lineage-node">
-        <div className={`lineage-node-header ${role}`}>
+        <div className={`lineage-node-header ${role}`} style={{ position: 'relative' }}>
+          {isCollapsed && role !== 'source' && (
+             <Handle
+               type="target"
+               position={Position.Left}
+               id="col-header"
+               style={{ background: 'var(--color-emerald)', width: '10px', height: '10px', left: '-17px' }}
+             />
+          )}
           {role === 'source' ? '◀ Source' : role === 'target' ? 'Target ▶' : '◀ ▶'}&nbsp;&nbsp;{data.tableName}
+          {isCollapsed && role !== 'target' && (
+             <Handle
+               type="source"
+               position={Position.Right}
+               id="col-header"
+               style={{ background: 'var(--color-indigo)', width: '10px', height: '10px', right: '-17px' }}
+             />
+          )}
         </div>
         <div className="lineage-node-body">
-          {columns.map((col, i) => (
+          {visibleCols.map((col, i) => (
             <div key={i} className="lineage-col-row">
               {/* Left handle (incoming) */}
               {col.hasLeft && (
@@ -39,7 +61,7 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
                   }}
                 />
               )}
-              <span className="lineage-col-flow">{col.name}</span>
+              <span className="lineage-col-flow" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col.name}</span>
               {/* Right handle (outgoing) */}
               {col.hasRight && (
                 <Handle
@@ -60,6 +82,24 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
               )}
             </div>
           ))}
+          {hiddenCount > 0 && (
+            <div 
+              className="lineage-col-row" 
+              style={{ justifyContent: 'center', cursor: 'pointer', color: 'var(--color-indigo)', fontWeight: 600, fontSize: '11px', background: 'rgba(99, 102, 241, 0.05)' }}
+              onClick={() => data.onToggleCollapse && data.onToggleCollapse(data.tableName)}
+            >
+              Show {hiddenCount} more...
+            </div>
+          )}
+          {!isCollapsed && columns.length > MAX_COLS_VISIBLE && (
+            <div 
+              className="lineage-col-row" 
+              style={{ justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '11px' }}
+              onClick={() => data.onToggleCollapse && data.onToggleCollapse(data.tableName)}
+            >
+              ▲ Collapse
+            </div>
+          )}
         </div>
       </div>
     </div>

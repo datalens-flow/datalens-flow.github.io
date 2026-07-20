@@ -1,3 +1,4 @@
+import dagre from '@dagrejs/dagre';
 import { MarkerType } from '@xyflow/react';
 import { parseLineage } from '../../utils/lineageParser';
 import { ColInfo } from './LineageNode';
@@ -13,23 +14,16 @@ const EDGE_COLORS = [
   '#818cf8', // indigo
 ];
 
-export const buildLineageGraph = (procedureSql: string) => {
+export const buildLineageGraph = (
+  procedureSql: string, 
+  direction: 'LR' | 'TB' = 'LR',
+  collapsedNodes: Set<string> = new Set()
+) => {
   const result = parseLineage(procedureSql);
   const newNodes: any[] = [];
   const newEdges: any[] = [];
 
-  const sourceOnly: string[] = [];
-  const targetOnly: string[] = [];
-  const bothTables: string[] = [];
-
   const allTables = new Set([...result.sources, ...result.targets]);
-  allTables.forEach(table => {
-    const isSrc = result.sources.includes(table);
-    const isTgt = result.targets.includes(table);
-    if (isSrc && isTgt) bothTables.push(table);
-    else if (isSrc) sourceOnly.push(table);
-    else targetOnly.push(table);
-  });
 
   const getColumnsForTable = (table: string): ColInfo[] => {
     const incomingCols = new Set<string>();
@@ -60,39 +54,61 @@ export const buildLineageGraph = (procedureSql: string) => {
     return allCols;
   };
 
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 50, ranksep: 150 });
+
   const COL_WIDTH = 250;
   const ROW_HEIGHT = 45;
-  const COLUMN_GAP = 150;
+  const MAX_COLS_VISIBLE = 5;
 
-  const COL_X_SOURCE = 50;
-  const COL_X_BOTH = COL_X_SOURCE + COL_WIDTH + COLUMN_GAP;
-  const COL_X_TARGET = COL_X_BOTH + COL_WIDTH + COLUMN_GAP;
+  allTables.forEach(table => {
+    const isSrc = result.sources.includes(table);
+    const isTgt = result.targets.includes(table);
+    const role = isSrc && isTgt ? 'both' : (isSrc ? 'source' : 'target');
+    
+    const columns = getColumnsForTable(table);
+    const isCollapsed = collapsedNodes.has(table);
+    const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
+    const hasMoreButton = isCollapsed && columns.length > MAX_COLS_VISIBLE;
+    
+    const nodeHeight = 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0);
+    
+    dagreGraph.setNode(table, { width: COL_WIDTH, height: nodeHeight });
 
-  const createColumnNodes = (tablesList: string[], startX: number, role: 'source' | 'target' | 'both') => {
-    let currentY = 50;
-    tablesList.forEach(table => {
-      const columns = getColumnsForTable(table);
-      const nodeHeight = 50 + columns.length * ROW_HEIGHT;
-      newNodes.push({
-        id: table,
-        type: 'lineageNode',
-        position: { x: startX, y: currentY },
-        data: { tableName: table, columns, role },
-        style: {
-          width: COL_WIDTH,
-          background: 'var(--bg-secondary)',
-          border: `1px solid var(--color-border)`,
-          borderRadius: '6px',
-          color: 'var(--color-text-primary)',
-        }
-      });
-      currentY += nodeHeight + 40;
+    newNodes.push({
+      id: table,
+      type: 'lineageNode',
+      position: { x: 0, y: 0 },
+      data: { tableName: table, columns, role, isCollapsed },
+      style: {
+        width: COL_WIDTH,
+        background: 'var(--bg-secondary)',
+        border: `1px solid var(--color-border)`,
+        borderRadius: '6px',
+        color: 'var(--color-text-primary)',
+      }
     });
-  };
+  });
 
-  createColumnNodes(sourceOnly, COL_X_SOURCE, 'source');
-  createColumnNodes(bothTables, COL_X_BOTH, 'both');
-  createColumnNodes(targetOnly, COL_X_TARGET, 'target');
+  const tableLevelEdges = new Set<string>();
+  result.flows.forEach(flow => {
+    const edgeId = `${flow.sourceTable}-${flow.targetTable}`;
+    if (!tableLevelEdges.has(edgeId)) {
+      tableLevelEdges.add(edgeId);
+      dagreGraph.setEdge(flow.sourceTable, flow.targetTable);
+    }
+  });
+
+  dagre.layout(dagreGraph);
+
+  newNodes.forEach(node => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    node.position = {
+      x: nodeWithPosition.x - COL_WIDTH / 2,
+      y: nodeWithPosition.y - nodeWithPosition.height / 2,
+    };
+  });
 
   const allSourceTables = [...new Set(result.flows.map(f => f.sourceTable))];
   const sourceColorMap: Record<string, string> = {};
@@ -105,12 +121,22 @@ export const buildLineageGraph = (procedureSql: string) => {
     const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
     const edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
 
+    // If a node is collapsed and the column is beyond MAX_COLS_VISIBLE, we route the edge to the header handle 'header'
+    const srcCols = getColumnsForTable(flow.sourceTable);
+    const tgtCols = getColumnsForTable(flow.targetTable);
+    
+    const srcColIdx = srcCols.findIndex(c => c.name === sourceCol);
+    const tgtColIdx = tgtCols.findIndex(c => c.name === targetCol);
+    
+    const isSrcCollapsed = collapsedNodes.has(flow.sourceTable) && srcColIdx >= MAX_COLS_VISIBLE;
+    const isTgtCollapsed = collapsedNodes.has(flow.targetTable) && tgtColIdx >= MAX_COLS_VISIBLE;
+
     newEdges.push({
       id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
       source: flow.sourceTable,
       target: flow.targetTable,
-      sourceHandle: `col-${sourceCol}`,
-      targetHandle: `col-${targetCol}`,
+      sourceHandle: isSrcCollapsed ? 'col-header' : `col-${sourceCol}`,
+      targetHandle: isTgtCollapsed ? 'col-header' : `col-${targetCol}`,
       type: 'smoothstep',
       style: { stroke: edgeColor, strokeWidth: 1.5, opacity: 0.8 },
       markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }

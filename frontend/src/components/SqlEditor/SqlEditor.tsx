@@ -100,6 +100,8 @@ export const SqlEditor: React.FC = () => {
     };
   }, [theme]);
 
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
   const handleUpdateEditor = (newSql: string) => {
     if (viewRef.current) {
       viewRef.current.dispatch({
@@ -109,10 +111,12 @@ export const SqlEditor: React.FC = () => {
   };
 
   return (
-    <div className="sql-editor-container glass-panel">
+    <div className={`sql-editor-container glass-panel ${isFullscreen ? 'fullscreen-editor' : ''}`}>
       <SqlEditorHeader 
         onUpdateEditor={handleUpdateEditor} 
         onParse={handleParse} 
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
       />
       <div className="editor-workspace" ref={editorRef}></div>
     </div>

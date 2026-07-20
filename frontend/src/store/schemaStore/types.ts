@@ -4,6 +4,7 @@ export interface Project {
   id: string;
   name: string;
   sql: string;
+  procedureSql?: string;
   dialect: string;
   outputDialect: string;
   schema: SchemaResponse | null;
@@ -32,6 +33,7 @@ export interface SchemaState {
   nodePositions: Record<string, { x: number; y: number }>;
   activeTab: 'erd' | 'dict' | 'metadata';
   sql: string;
+  procedureSql: string;
   dialect: string;
   loading: boolean;
   error: string | null;
@@ -62,6 +64,7 @@ export interface SchemaState {
   canRedo: () => boolean;
 
   setSql: (sql: string) => void;
+  setProcedureSql: (sql: string) => void;
   setDialect: (dialect: string) => void;
   setSchema: (schema: SchemaResponse | null) => void;
   setOriginalSchema: (schema: SchemaResponse | null) => void;

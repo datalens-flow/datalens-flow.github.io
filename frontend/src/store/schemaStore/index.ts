@@ -27,6 +27,7 @@ export const useSchemaStore = create<SchemaState>()(
         dataClassifications: state.dataClassifications,
         nodePositions: state.nodePositions,
         sql: state.sql,
+        procedureSql: state.procedureSql,
         dialect: state.dialect,
         theme: state.theme,
         layoutDir: state.layoutDir,

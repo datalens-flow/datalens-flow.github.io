@@ -4,10 +4,15 @@ import { tags as t } from '@lezer/highlight';
 export const DIALECTS = [
   { value: 'postgres', label: 'PostgreSQL' },
   { value: 'mysql', label: 'MySQL' },
+  { value: 'mariadb', label: 'MariaDB' },
   { value: 'oracle', label: 'Oracle' },
   { value: 'mssql', label: 'SQL Server' },
+  { value: 'redshift', label: 'Amazon Redshift' },
   { value: 'snowflake', label: 'Snowflake' },
   { value: 'bigquery', label: 'BigQuery' },
+  { value: 'databricks', label: 'Databricks' },
+  { value: 'clickhouse', label: 'ClickHouse' },
+  { value: 'teradata', label: 'Teradata' },
   { value: 'sqlite', label: 'SQLite' }
 ];
 

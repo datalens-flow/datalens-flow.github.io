@@ -39,10 +39,30 @@ JOIN orders o ON u.id = o.user_id;`);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAnalyze = () => {
-    const { newNodes, newEdges } = buildLineageGraph(procedureSql);
+  const [layoutDirection, setLayoutDirection] = useState<'LR' | 'TB'>('LR');
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
-    setNodes(newNodes);
+  const onToggleCollapse = (nodeId: string) => {
+    setCollapsedNodes(prev => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) next.delete(nodeId);
+      else next.add(nodeId);
+      return next;
+    });
+  };
+
+  const handleAnalyze = () => {
+    const { newNodes, newEdges } = buildLineageGraph(procedureSql, layoutDirection, collapsedNodes);
+
+    const nodesWithCallback = newNodes.map(n => ({
+      ...n,
+      data: {
+        ...n.data,
+        onToggleCollapse
+      }
+    }));
+
+    setNodes(nodesWithCallback);
     setEdges(newEdges);
     setSelectedNodeId(null);
 
@@ -84,7 +104,7 @@ JOIN orders o ON u.id = o.user_id;`);
 
   useEffect(() => {
     handleAnalyze();
-  }, []);
+  }, [layoutDirection, collapsedNodes]);
 
   useEffect(() => {
     setNodes((nds) => 
@@ -192,6 +212,20 @@ JOIN orders o ON u.id = o.user_id;`);
               📁 Import Procedure
             </button>
             <button 
+              className="btn btn-secondary" 
+              style={{ fontSize: '11px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              onClick={() => setLayoutDirection(prev => prev === 'LR' ? 'TB' : 'LR')}
+              title="Toggle Layout Direction"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {layoutDirection === 'LR' 
+                  ? <path d="M4 12h16M14 6l6 6-6 6" /> 
+                  : <path d="M12 4v16M6 14l6 6 6-6" />
+                }
+              </svg>
+              {layoutDirection === 'LR' ? 'Horizontal' : 'Vertical'}
+            </button>
+            <button 
               className="btn btn-primary" 
               onClick={handleAnalyze} 
               style={{ fontSize: '11px', padding: '6px 12px' }}
@@ -217,7 +251,7 @@ JOIN orders o ON u.id = o.user_id;`);
             
             <div>
               <strong style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Columns Involved:</strong>
-              <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: 'var(--color-text-primary)' }}>
+              <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: 'var(--color-text-primary)', maxHeight: '300px', overflowY: 'auto' }}>
                 {Array.from(columnsInvolved).map(col => (
                   <li key={col}>{col}</li>
                 ))}
