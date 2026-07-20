@@ -51,7 +51,8 @@ JOIN orders o ON u.id = o.user_id;`);
     setActiveLineageProcedureIndex,
     ignoredLineageTables,
     setIgnoredLineageTables,
-    showMiniMap
+    showMiniMap,
+    showGrid
   } = useSchemaStore();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
@@ -573,7 +574,7 @@ JOIN orders o ON u.id = o.user_id;`);
           maxZoom={2}
           fitView
         >
-          <Background color="rgba(255, 255, 255, 0.05)" gap={20} size={1} />
+          {showGrid && <Background color="rgba(255, 255, 255, 0.05)" gap={20} size={1} />}
           {showMiniMap && (
             <MiniMap 
               style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }}

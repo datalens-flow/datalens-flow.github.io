@@ -152,15 +152,16 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
           <IconLight /> Light
         </button>
 
+        <div className="toolbar-dropdown-divider" />
+        {/* Canvas Group */}
+        <div className="toolbar-dropdown-group-label"><IconWrench /> Canvas</div>
+        <label className="toolbar-dropdown-check">
+          <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
+          Show Background Grid
+        </label>
+        
         {mode === 'diagram' && (
           <>
-            <div className="toolbar-dropdown-divider" />
-            {/* Canvas Group */}
-            <div className="toolbar-dropdown-group-label"><IconWrench /> Canvas</div>
-            <label className="toolbar-dropdown-check">
-              <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
-              Show Background Grid
-            </label>
             <label className="toolbar-dropdown-check">
               <input type="checkbox" checked={inferRelationships} onChange={(e) => setInferRelationships(e.target.checked)} />
               Heuristic Relations
@@ -173,12 +174,14 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
               <input type="checkbox" checked={showSidebarExplorer} onChange={(e) => setShowSidebarExplorer(e.target.checked)} />
               SQL Input Panel
             </label>
-            <label className="toolbar-dropdown-check">
-              <input type="checkbox" checked={showMiniMap} onChange={(e) => setShowMiniMap(e.target.checked)} />
-              Show MiniMap
-            </label>
           </>
         )}
+        
+        <label className="toolbar-dropdown-check">
+          <input type="checkbox" checked={showMiniMap} onChange={(e) => setShowMiniMap(e.target.checked)} />
+          Show MiniMap
+        </label>
+
         {mode === 'lineage' && (
           <>
             <div className="toolbar-dropdown-divider" />
