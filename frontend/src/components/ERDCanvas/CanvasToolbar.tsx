@@ -39,6 +39,27 @@ const IconChevron = () => (
   </svg>
 );
 
+const IconLayoutGroup = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+    <path d="M1 3 L15 15 M3 1 L15 1 M15 1 L15 13" strokeLinecap="round" />
+  </svg>
+);
+
+const IconPalette = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+    <path d="M8 2c-4 0-6 2.5-6 6s2 6 6 6 6-2 6-6-2-6-6-6z" />
+    <circle cx="5.5" cy="7.5" r="1" fill="currentColor" stroke="none" />
+    <circle cx="8" cy="5" r="1" fill="currentColor" stroke="none" />
+    <circle cx="10.5" cy="7.5" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+const IconWrench = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+    <path d="M11 2a3 3 0 0 0-3.5 4.5L2 12a1.5 1.5 0 0 0 2 2l5.5-5.5A3 3 0 0 0 14 5l-1 1-2-2 1-1z" />
+  </svg>
+);
+
 /* ── Reusable Dropdown Wrapper ── */
 const ToolbarDropdown: React.FC<{
   label: React.ReactNode;
@@ -112,7 +133,7 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
       {/* Unified Settings Dropdown */}
       <ToolbarDropdown label={<><IconGear /> Settings</>}>
         {/* Layout Group */}
-        <div className="toolbar-dropdown-group-label">📐 Layout</div>
+        <div className="toolbar-dropdown-group-label"><IconLayoutGroup /> Layout</div>
         <button className={`toolbar-dropdown-item ${layoutDir === 'LR' ? 'selected' : ''}`} onClick={() => setLayoutDir('LR')}>
           <IconHorizontal /> Horizontal
         </button>
@@ -123,7 +144,7 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
         <div className="toolbar-dropdown-divider" />
 
         {/* Appearance Group */}
-        <div className="toolbar-dropdown-group-label">🎨 Appearance</div>
+        <div className="toolbar-dropdown-group-label"><IconPalette /> Appearance</div>
         <button className={`toolbar-dropdown-item ${theme === 'dark' ? 'selected' : ''}`} onClick={() => setTheme('dark')}>
           <IconDark /> Dark
         </button>
@@ -135,7 +156,7 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
           <>
             <div className="toolbar-dropdown-divider" />
             {/* Canvas Group */}
-            <div className="toolbar-dropdown-group-label">🔧 Canvas</div>
+            <div className="toolbar-dropdown-group-label"><IconWrench /> Canvas</div>
             <label className="toolbar-dropdown-check">
               <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
               Show Background Grid
