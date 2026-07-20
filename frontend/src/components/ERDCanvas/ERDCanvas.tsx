@@ -147,8 +147,8 @@ const ERDCanvasContent: React.FC = () => {
     const fromTable = params.source;
     const toTable = params.target;
     
-    const fromCol = params.sourceHandle?.replace('right_', '') || '';
-    const toCol = params.targetHandle?.replace('left_', '') || '';
+    const fromCol = params.sourceHandle?.replace(/^(left_|right_)/, '') || '';
+    const toCol = params.targetHandle?.replace(/^(left_|right_)/, '') || '';
     
     if (fromTable && toTable && fromCol && toCol) {
       addRelationship(fromTable, fromCol, toTable, toCol);

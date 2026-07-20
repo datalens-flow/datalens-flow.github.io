@@ -50,13 +50,15 @@
 }
 
 .column-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 8px 14px 1fr 85px 54px 14px 14px;
   align-items: center;
   padding: 6px 14px;
-  gap: 10px;
+  gap: 6px;
   font-size: 13px;
   transition: var(--transition-all);
   border-bottom: 1px dashed transparent;
+  position: relative;
 }
 
 .column-row:hover {

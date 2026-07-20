@@ -110,6 +110,12 @@ export const SqlEditor: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (viewRef.current && viewRef.current.state.doc.toString() !== sql) {
+      handleUpdateEditor(sql);
+    }
+  }, [sql]);
+
   return (
     <div className={`sql-editor-container glass-panel ${isFullscreen ? 'fullscreen-editor' : ''}`}>
       <SqlEditorHeader 
