@@ -7,136 +7,29 @@ import {
   useEdgesState,
   useReactFlow,
   ReactFlowProvider,
-  MarkerType,
-  Handle,
-  Position
+  MarkerType
 } from '@xyflow/react';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { defaultKeymap } from '@codemirror/commands';
 import { sql as sqlLang } from '@codemirror/lang-sql';
 import { basicSetup } from 'codemirror';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { tags as t } from '@lezer/highlight';
+import { syntaxHighlighting } from '@codemirror/language';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { parseLineage } from '../../utils/lineageParser';
+import { LineageNode, ColInfo } from './LineageNode';
+import { darkHighlightStyle, lightHighlightStyle } from './codeMirrorStyles';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
-
-// Column data for LineageNode
-interface ColInfo {
-  name: string;
-  hasLeft: boolean;   // incoming handle (target)
-  hasRight: boolean;  // outgoing handle (source)
-}
-
-// Custom Lineage Node with per-column handles (supports dual-role: both source + target)
-const LineageNode: React.FC<{ data: any }> = ({ data }) => {
-  const columns: ColInfo[] = data.columns || [];
-  const role: 'source' | 'target' | 'both' = data.role || 'source';
-  return (
-    <div style={{ position: 'relative', width: '200px' }}>
-      <div className="lineage-node">
-        <div className={`lineage-node-header ${role}`}>
-          {role === 'source' ? '◀ Source' : role === 'target' ? 'Target ▶' : '◀ ▶'}&nbsp;&nbsp;{data.tableName}
-        </div>
-        <div className="lineage-node-body">
-          {columns.map((col, i) => (
-            <div key={i} className="lineage-col-row">
-              {/* Left handle (incoming) */}
-              {col.hasLeft && (
-                <Handle
-                  type="target"
-                  position={Position.Left}
-                  id={`col-${col.name}`}
-                  style={{
-                    background: 'var(--color-emerald)',
-                    border: '2px solid var(--bg-primary)',
-                    width: '10px',
-                    height: '10px',
-                    left: '-17px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    position: 'absolute',
-                  }}
-                />
-              )}
-              <span className="lineage-col-flow">{col.name}</span>
-              {/* Right handle (outgoing) */}
-              {col.hasRight && (
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={`col-${col.name}`}
-                  style={{
-                    background: 'var(--color-indigo)',
-                    border: '2px solid var(--bg-primary)',
-                    width: '10px',
-                    height: '10px',
-                    right: '-17px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    position: 'absolute',
-                  }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const nodeTypes = {
   lineageNode: LineageNode
 };
 
-const darkHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, color: '#38bdf8', fontWeight: 'bold' },
-  { tag: t.operator, color: '#38bdf8' },
-  { tag: t.modifier, color: '#38bdf8' },
-  { tag: t.standard(t.name), color: '#38bdf8', fontWeight: 'bold' },
-  { tag: t.typeName, color: '#34d399' },
-  { tag: t.string, color: '#fda4af' },
-  { tag: t.special(t.string), color: '#fda4af' },
-  { tag: t.number, color: '#f59e0b' },
-  { tag: t.bool, color: '#f59e0b' },
-  { tag: t.null, color: '#94a3b8' },
-  { tag: t.name, color: '#f8fafc' },
-  { tag: t.special(t.name), color: '#67e8f9' },
-  { tag: t.comment, color: '#64748b', fontStyle: 'italic' },
-  { tag: t.lineComment, color: '#64748b', fontStyle: 'italic' },
-  { tag: t.blockComment, color: '#64748b', fontStyle: 'italic' },
-  { tag: t.variableName, color: '#f8fafc' },
-  { tag: t.punctuation, color: '#94a3b8' }
-]);
-
-const lightHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, color: '#1e40af', fontWeight: 'bold' },
-  { tag: t.operator, color: '#1e40af' },
-  { tag: t.modifier, color: '#1e40af' },
-  { tag: t.standard(t.name), color: '#1e40af', fontWeight: 'bold' },
-  { tag: t.typeName, color: '#059669' },
-  { tag: t.string, color: '#dc2626' },
-  { tag: t.special(t.string), color: '#dc2626' },
-  { tag: t.number, color: '#b45309' },
-  { tag: t.bool, color: '#b45309' },
-  { tag: t.null, color: '#64748b' },
-  { tag: t.name, color: '#1e293b' },
-  { tag: t.special(t.name), color: '#0891b2' },
-  { tag: t.comment, color: '#94a3b8', fontStyle: 'italic' },
-  { tag: t.lineComment, color: '#94a3b8', fontStyle: 'italic' },
-  { tag: t.blockComment, color: '#94a3b8', fontStyle: 'italic' },
-  { tag: t.variableName, color: '#1e293b' },
-  { tag: t.punctuation, color: '#64748b' }
-]);
-
 export interface DataLineageProps {
   onSwitchToDiagram?: () => void;
 }
 
-// Edge color palette for different source tables
 const EDGE_COLORS = [
   '#38bdf8', // sky blue
   '#34d399', // emerald
@@ -211,7 +104,6 @@ JOIN orders o ON u.id = o.user_id;`);
     const newNodes: any[] = [];
     const newEdges: any[] = [];
 
-    // --- Classify tables into 3 columns ---
     const sourceOnly: string[] = [];
     const targetOnly: string[] = [];
     const bothTables: string[] = [];
@@ -225,7 +117,6 @@ JOIN orders o ON u.id = o.user_id;`);
       else targetOnly.push(table);
     });
 
-    // --- Helper: get columns with handle directions for a table ---
     const getColumnsForTable = (table: string): ColInfo[] => {
       const incomingCols = new Set<string>();
       const outgoingCols = new Set<string>();
@@ -255,69 +146,33 @@ JOIN orders o ON u.id = o.user_id;`);
       return allCols;
     };
 
-    // --- Calculate actual node heights for dynamic spacing ---
-    // Header ~32px + each column row ~24px + padding ~16px
-    const NODE_HEADER_HEIGHT = 36;
-    const COL_ROW_HEIGHT = 24;
-    const NODE_PADDING = 16;
-    const NODE_GAP = 30; // gap between nodes in same column
-    const NODE_WIDTH = 200;
+    const COL_WIDTH = 250;
+    const ROW_HEIGHT = 45;
+    const COLUMN_GAP = 150;
 
-    const calcNodeHeight = (table: string): number => {
-      const cols = getColumnsForTable(table);
-      return NODE_HEADER_HEIGHT + cols.length * COL_ROW_HEIGHT + NODE_PADDING;
-    };
+    const COL_X_SOURCE = 50;
+    const COL_X_BOTH = COL_X_SOURCE + COL_WIDTH + COLUMN_GAP;
+    const COL_X_TARGET = COL_X_BOTH + COL_WIDTH + COLUMN_GAP;
 
-    // Calculate total height for each column
-    const calcColumnTotalHeight = (tables: string[]): number => {
-      if (tables.length === 0) return 0;
-      let total = 0;
-      tables.forEach((t, i) => {
-        total += calcNodeHeight(t);
-        if (i < tables.length - 1) total += NODE_GAP;
-      });
-      return total;
-    };
-
-    const srcTotalH = calcColumnTotalHeight(sourceOnly);
-    const bothTotalH = calcColumnTotalHeight(bothTables);
-    const tgtTotalH = calcColumnTotalHeight(targetOnly);
-    const maxTotalH = Math.max(srcTotalH, bothTotalH, tgtTotalH, 100);
-
-    // --- Layout X positions ---
-    const hasBothColumn = bothTables.length > 0;
-    const COL_X_SOURCE = 0;
-    const COL_X_BOTH = hasBothColumn ? 350 : 0;
-    const COL_X_TARGET = hasBothColumn ? 700 : 400;
-
-    // --- Create nodes for a column of tables (vertically centered) ---
-    const createColumnNodes = (tables: string[], xPos: number, role: 'source' | 'target' | 'both') => {
-      const colTotalH = calcColumnTotalHeight(tables);
-      let currentY = (maxTotalH - colTotalH) / 2; // center vertically
-
-      tables.forEach((table) => {
+    const createColumnNodes = (tablesList: string[], startX: number, role: 'source' | 'target' | 'both') => {
+      let currentY = 50;
+      tablesList.forEach(table => {
         const columns = getColumnsForTable(table);
+        const nodeHeight = 50 + columns.length * ROW_HEIGHT;
         newNodes.push({
           id: table,
           type: 'lineageNode',
-          position: { x: xPos, y: currentY },
-          data: {
-            tableName: table.toUpperCase(),
-            role,
-            columns,
-          },
+          position: { x: startX, y: currentY },
+          data: { tableName: table, columns, role },
           style: {
-            width: NODE_WIDTH,
+            width: COL_WIDTH,
             background: 'var(--bg-secondary)',
-            border: '1px solid var(--color-border)',
-            color: 'var(--color-text-primary)',
+            border: `1px solid var(--color-border)`,
             borderRadius: '6px',
-            padding: 0,
-            opacity: 1,
-            transition: 'opacity 0.2s ease'
+            color: 'var(--color-text-primary)',
           }
         });
-        currentY += calcNodeHeight(table) + NODE_GAP;
+        currentY += nodeHeight + 40;
       });
     };
 
@@ -325,14 +180,12 @@ JOIN orders o ON u.id = o.user_id;`);
     createColumnNodes(bothTables, COL_X_BOTH, 'both');
     createColumnNodes(targetOnly, COL_X_TARGET, 'target');
 
-    // --- Build color map: each source table gets a unique color ---
     const allSourceTables = [...new Set(result.flows.map(f => f.sourceTable))];
     const sourceColorMap: Record<string, string> = {};
     allSourceTables.forEach((src, idx) => {
       sourceColorMap[src] = EDGE_COLORS[idx % EDGE_COLORS.length];
     });
 
-    // --- Create per-flow edges: NO labels, color-coded by source, smoothstep routing ---
     result.flows.forEach((flow, idx) => {
       const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
       const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
@@ -354,7 +207,6 @@ JOIN orders o ON u.id = o.user_id;`);
     setEdges(newEdges);
     setSelectedNodeId(null);
 
-    // Auto-fit view after layout settles
     setTimeout(() => {
       fitView({ padding: 0.15, duration: 400 });
     }, 50);
@@ -363,7 +215,6 @@ JOIN orders o ON u.id = o.user_id;`);
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
     const fileList = Array.from(files);
 
     try {
@@ -377,9 +228,7 @@ JOIN orders o ON u.id = o.user_id;`);
           });
         })
       );
-
       const combinedContent = contents.join('\n\n-- ==========================================\n-- IMPORTED: LINEAGE PROCEDURE\n-- ==========================================\n\n');
-
       if (combinedContent) {
         setProcedureSql(combinedContent);
         if (viewRef.current) {
@@ -391,35 +240,27 @@ JOIN orders o ON u.id = o.user_id;`);
     } catch (err) {
       console.error(err);
     }
-    
     e.target.value = '';
   };
 
-  // Parse only on initial mount with sample SQL
   useEffect(() => {
     handleAnalyze();
   }, []);
 
-  // Update node opacities based on selection
   useEffect(() => {
     setNodes((nds) => 
       nds.map((node) => {
         if (!selectedNodeId) {
-          // No selection, full opacity for all
           return { ...node, style: { ...node.style, opacity: 1 } };
         }
-
-        // Check if this node is connected to the selected node
         const isConnected = edges.some(
           (edge) => 
             (edge.source === selectedNodeId && edge.target === node.id) ||
             (edge.target === selectedNodeId && edge.source === node.id)
         );
-
         if (node.id === selectedNodeId || isConnected) {
           return { ...node, style: { ...node.style, opacity: 1 } };
         }
-
         return { ...node, style: { ...node.style, opacity: 0.2 } };
       })
     );
@@ -439,10 +280,7 @@ JOIN orders o ON u.id = o.user_id;`);
     }
   };
 
-  // Get selected node details
   const selectedNodeData = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
-  
-  // Extract unique columns involved in flows for the selected node
   const columnsInvolved = new Set<string>();
   if (selectedNodeId) {
     const result = parseLineage(procedureSql);
@@ -456,7 +294,6 @@ JOIN orders o ON u.id = o.user_id;`);
     });
   }
 
-  // Execute filtering & centering when global lineageSearchQuery changes
   useEffect(() => {
     const q = lineageSearchQuery.trim();
     if (!q) {
@@ -526,7 +363,6 @@ JOIN orders o ON u.id = o.user_id;`);
         </div>
         <div className="lineage-textarea" ref={editorRef}></div>
         
-        {/* Inspection Panel */}
         {selectedNodeId && selectedNodeData && (
           <div className="lineage-inspection-panel" style={{
             padding: '16px',
@@ -579,7 +415,6 @@ JOIN orders o ON u.id = o.user_id;`);
   );
 };
 
-// Wrap with ReactFlowProvider so useReactFlow() works
 export const DataLineage: React.FC<DataLineageProps> = (props) => (
   <ReactFlowProvider>
     <DataLineageInner {...props} />
