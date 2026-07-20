@@ -32,6 +32,8 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setShowTableExplorer: (showTableExplorer) => set({ showTableExplorer }),
   showSidebarExplorer: true,
   setShowSidebarExplorer: (showSidebarExplorer) => set({ showSidebarExplorer }),
+  showMiniMap: true,
+  setShowMiniMap: (showMiniMap) => set({ showMiniMap }),
   outputDialect: 'postgres',
   searchQuery: '',
   setSearchQuery: (searchQuery) => set({ searchQuery }),

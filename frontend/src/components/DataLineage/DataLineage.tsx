@@ -50,7 +50,8 @@ JOIN orders o ON u.id = o.user_id;`);
     activeLineageProcedureIndex, 
     setActiveLineageProcedureIndex,
     ignoredLineageTables,
-    setIgnoredLineageTables
+    setIgnoredLineageTables,
+    showMiniMap
   } = useSchemaStore();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
@@ -572,18 +573,22 @@ JOIN orders o ON u.id = o.user_id;`);
           maxZoom={2}
           fitView
         >
-          <Background color="var(--color-grid)" gap={16} size={1} />
-          <Controls />
-          <MiniMap 
-            nodeColor={(n: any) => {
-              if (n.data?.isTemp) return 'var(--color-indigo)';
-              if (n.data?.role === 'source') return 'var(--color-emerald)';
-              if (n.data?.role === 'target') return 'var(--color-indigo)';
-              return 'var(--color-border)';
-            }}
-            maskColor="var(--bg-primary-transparent)"
-            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
-          />
+          <Background color="rgba(255, 255, 255, 0.05)" gap={20} size={1} />
+          {showMiniMap && (
+            <MiniMap 
+              style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
+              nodeColor={(n) => {
+                const nt = n.data?.nodeTypeOverride || n.data?.role;
+                if (nt === 'temp') return 'rgba(236, 72, 153, 0.5)';
+                if (nt === 'source') return 'rgba(16, 185, 129, 0.5)';
+                if (nt === 'target') return 'rgba(99, 102, 241, 0.5)';
+                if (nt === 'view') return 'rgba(168, 85, 247, 0.5)';
+                return 'var(--color-border)';
+              }}
+              maskColor="rgba(0, 0, 0, 0.4)"
+            />
+          )}
+          <Controls style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }} />
         </ReactFlow>
       </div>
     </div>

@@ -38,7 +38,8 @@ const ERDCanvasContent: React.FC = () => {
     searchQuery,
     showGrid,
     tableColors,
-    showSidebarExplorer
+    showSidebarExplorer,
+    showMiniMap
   } = useSchemaStore();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
@@ -198,12 +199,14 @@ const ERDCanvasContent: React.FC = () => {
           fitView
         >
           {showGrid && <Background color="var(--color-grid)" variant={BackgroundVariant.Lines} gap={24} size={1} />}
+          {showMiniMap && (
+            <MiniMap 
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)' }} 
+              nodeColor={(node) => tableColors[node.id] || "var(--bg-primary)"} 
+              maskColor="rgba(0, 0, 0, 0.4)" 
+            />
+          )}
           <Controls style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }} />
-          <MiniMap 
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--color-border)' }} 
-            nodeColor={(node) => tableColors[node.id] || "var(--bg-primary)"} 
-            maskColor="rgba(0, 0, 0, 0.4)" 
-          />
         </ReactFlow>
       </div>
 

@@ -91,6 +91,8 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
     setShowTableExplorer,
     showSidebarExplorer,
     setShowSidebarExplorer,
+    showMiniMap,
+    setShowMiniMap,
     theme,
     setTheme
   } = useSchemaStore();
@@ -144,11 +146,15 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
             </label>
             <label className="toolbar-dropdown-check">
               <input type="checkbox" checked={showTableExplorer} onChange={(e) => setShowTableExplorer(e.target.checked)} />
-              SQL Input Panel
+              Show Table List Panel
             </label>
             <label className="toolbar-dropdown-check">
               <input type="checkbox" checked={showSidebarExplorer} onChange={(e) => setShowSidebarExplorer(e.target.checked)} />
-              Table Explorer
+              SQL Input Panel
+            </label>
+            <label className="toolbar-dropdown-check">
+              <input type="checkbox" checked={showMiniMap} onChange={(e) => setShowMiniMap(e.target.checked)} />
+              Show MiniMap
             </label>
           </>
         )}

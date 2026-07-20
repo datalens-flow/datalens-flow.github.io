@@ -47,6 +47,8 @@ export interface SchemaState {
   setShowTableExplorer: (show: boolean) => void;
   showSidebarExplorer: boolean;
   setShowSidebarExplorer: (show: boolean) => void;
+  showMiniMap: boolean;
+  setShowMiniMap: (show: boolean) => void;
   tableColors: Record<string, string>;
   setTableColor: (tableId: string, color: string) => void;
   outputDialect: string;
