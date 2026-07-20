@@ -126,27 +126,29 @@ export const buildLineageGraph = (
   const activeProcedures = new Set<string>();
   allTables.forEach(table => {
     const procs = tableProcedures.get(table);
-    if (procs && procs.size === 1) {
+    if (procs && procs.size === 1 && procedures.length > 1) {
       activeProcedures.add(procs.values().next().value!);
     }
   });
 
   activeProcedures.forEach(procName => {
     if (procName === 'Global Script') return;
-    dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
-    newNodes.push({
-      id: `group-${procName}`,
-      type: 'group',
-      data: { label: procName },
-      style: {
-        backgroundColor: 'rgba(56, 189, 248, 0.05)',
-        border: '1px dashed var(--color-border)',
-        borderRadius: '8px',
-        width: 300,
-        height: 300,
-        zIndex: -1
-      }
-    });
+    if (procedures.length > 1 && activeProcedures.size > 1) {
+      dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
+      newNodes.push({
+        id: `group-${procName}`,
+        type: 'group',
+        data: { label: procName },
+        style: {
+          backgroundColor: 'rgba(56, 189, 248, 0.05)',
+          border: '1px dashed var(--color-border)',
+          borderRadius: '8px',
+          width: 300,
+          height: 300,
+          zIndex: -1
+        }
+      });
+    }
   });
 
   allTables.forEach(table => {
@@ -187,8 +189,8 @@ export const buildLineageGraph = (
 
     const procs = tableProcedures.get(table);
     let parentNodeId = undefined;
-    // Always group if a table belongs to exactly one procedure
-    if (procs && procs.size === 1) {
+    // Only group if MULTIPLE procedures are being viewed at the same time
+    if (procs && procs.size === 1 && procedures.length > 1 && activeProcedures.size > 1) {
       const pName = procs.values().next().value!;
       if (pName !== 'Global Script') {
         parentNodeId = `group-${pName}`;
@@ -221,7 +223,10 @@ export const buildLineageGraph = (
     }
   });
 
+  let dagreLayoutStart = performance.now();
   dagre.layout(dagreGraph);
+  let dagreLayoutEnd = performance.now();
+  console.log(`Dagre layout with ${dagreGraph.nodeCount()} nodes and ${dagreGraph.edgeCount()} edges took ${dagreLayoutEnd - dagreLayoutStart} ms`);
 
   newNodes.forEach(node => {
     if (node.type === 'group') {
