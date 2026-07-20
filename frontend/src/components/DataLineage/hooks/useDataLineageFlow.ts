@@ -4,6 +4,9 @@ import { useSchemaStore } from '../../../store/useSchemaStore';
 import { useToastStore } from '../../../store/useToastStore';
 import { splitProcedures } from '../../../utils/lineage/procedureSplitter';
 import { parseLineage } from '../../../utils/lineageParser';
+// @ts-ignore
+import LineageWorker from '../workers/lineageWorker?worker';
+
 export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchToDiagram?: () => void) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
@@ -63,14 +66,18 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
   const { lineageViewMode } = useSchemaStore();
 
   const handleAnalyze = useCallback(() => {
+    console.log('[Main] handleAnalyze called');
     try {
       const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
       
+      console.log('[Main] Terminating old worker (if any)...');
       workerRef.current?.terminate();
-      workerRef.current = new Worker(new URL('../workers/lineageWorker', import.meta.url), { type: 'module' });
+      console.log('[Main] Initializing new Worker...');
+      workerRef.current = new LineageWorker();
       setIsAnalyzing(true);
       
-      workerRef.current.postMessage({
+      console.log('[Main] Posting message to worker...', { activeProceduresLength: activeProcedures.length });
+      workerRef.current!.postMessage({
         procedures: activeProcedures,
         direction: layoutDir,
         expandedNodesArray: Array.from(expandedNodes),
@@ -78,12 +85,14 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
         viewMode: lineageViewMode
       });
       
-      workerRef.current.onmessage = (e: MessageEvent) => {
+      workerRef.current!.onmessage = (e: MessageEvent) => {
+        console.log('[Main] Received message from worker:', e.data.type);
         setIsAnalyzing(false);
         if (e.data.type === 'SUCCESS') {
           const { newNodes, newEdges } = e.data.payload;
           
           if (newNodes.length > 30 && lineageViewMode !== 'overview') {
+            console.log('[Main] Large graph detected. Switching to overview mode.');
             useToastStore.getState().addToast({ type: 'info', message: 'Large graph detected. Switched to Overview Mode for better performance.' });
             useSchemaStore.getState().setLineageViewMode('overview');
             return;
@@ -92,23 +101,28 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
           const nodesWithCallback = newNodes.map((n: any) => ({
             ...n, data: { ...n.data, onToggleCollapse }
           }));
+          console.log('[Main] Setting nodes and edges to state...');
           setNodes(nodesWithCallback);
           setEdges(newEdges);
           setSelectedNodeId(null);
-          setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 50);
+          setTimeout(() => {
+            console.log('[Main] Fitting view...');
+            fitView({ padding: 0.15, duration: 400 });
+          }, 50);
         } else {
-          console.error(e.data.error);
+          console.error('[Main] Worker returned ERROR:', e.data.error);
           useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + e.data.error });
         }
       };
 
-      workerRef.current.onerror = (err) => {
+      workerRef.current!.onerror = (err) => {
+        console.error('[Main] Worker initialization failed:', err);
         setIsAnalyzing(false);
         useToastStore.getState().addToast({ type: 'error', message: 'Worker initialization failed: ' + (err.message || 'Unknown error') });
       };
     } catch (err: any) {
+      console.error('[Main] Failed to start lineage worker catch block:', err);
       setIsAnalyzing(false);
-      console.error(err);
       useToastStore.getState().addToast({ type: 'error', message: 'Failed to start lineage worker: ' + (err.message || 'Unknown error') });
     }
   }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView, lineageViewMode]);
