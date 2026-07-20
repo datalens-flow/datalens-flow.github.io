@@ -7,8 +7,12 @@ from backend.exporters.xlsx_generator import generate_xlsx_bytes
 from backend.exporters.markdown_generator import generate_markdown_doc
 from backend.exporters.sql_generator import generate_sql_ddl
 from backend.exporters.migration_generator import generate_migration_script
+from backend.middleware.mesh_middleware import MeshMiddleware
 
 app = FastAPI(title="DataLens Backend API")
+
+# Add Service Mesh Middleware
+app.add_middleware(MeshMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

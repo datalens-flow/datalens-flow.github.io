@@ -7,40 +7,56 @@ import {
   generateSqlDdlLocal 
 } from '../utils/exporters';
 import { generateMigrationScriptLocal } from '../utils/migrationGenerator';
+import { ServiceMesh } from '../utils/serviceMesh';
 
 export async function parseSql(sql: string, dialect: string): Promise<SchemaResponse> {
-  // Execute parsing entirely inside client browser (No-Backend!)
-  try {
-    const result = parseSqlLocal(sql, dialect);
-    return result;
-  } catch (err: any) {
-    throw new Error(err.message || 'Failed to parse SQL locally');
-  }
+  return ServiceMesh.execute(
+    async () => parseSqlLocal(sql, dialect),
+    { name: 'parseSql', timeoutMs: 10000, retryCount: 0 }
+  );
 }
 
 export async function exportDrawio(schema: SchemaResponse): Promise<Blob> {
-  const xml = generateDrawioXml(schema);
-  return new Blob([xml], { type: 'application/xml' });
+  return ServiceMesh.execute(
+    async () => {
+      const xml = generateDrawioXml(schema);
+      return new Blob([xml], { type: 'application/xml' });
+    },
+    { name: 'exportDrawio', timeoutMs: 5000 }
+  );
 }
 
 export async function exportXlsx(
   schema: SchemaResponse,
   descriptions: Record<string, Record<string, string>>
 ): Promise<Blob> {
-  return generateXlsxDataDict(schema, descriptions);
+  return ServiceMesh.execute(
+    async () => generateXlsxDataDict(schema, descriptions),
+    { name: 'exportXlsx', timeoutMs: 10000 }
+  );
 }
 
 export async function exportMarkdown(
   schema: SchemaResponse,
   descriptions: Record<string, Record<string, string>>
 ): Promise<Blob> {
-  const md = generateMarkdownDataDict(schema, descriptions);
-  return new Blob([md], { type: 'text/markdown' });
+  return ServiceMesh.execute(
+    async () => {
+      const md = generateMarkdownDataDict(schema, descriptions);
+      return new Blob([md], { type: 'text/markdown' });
+    },
+    { name: 'exportMarkdown', timeoutMs: 5000 }
+  );
 }
 
 export async function exportSql(schema: SchemaResponse, targetDialect: string = 'postgres'): Promise<Blob> {
-  const sql = generateSqlDdlLocal(schema, targetDialect);
-  return new Blob([sql], { type: 'text/plain' });
+  return ServiceMesh.execute(
+    async () => {
+      const sql = generateSqlDdlLocal(schema, targetDialect);
+      return new Blob([sql], { type: 'text/plain' });
+    },
+    { name: 'exportSql', timeoutMs: 5000 }
+  );
 }
 
 export async function exportMigration(
@@ -48,11 +64,17 @@ export async function exportMigration(
   currentSchema: SchemaResponse,
   renameEvents: any
 ): Promise<Blob> {
-  const body = {
-    original_schema: originalSchema,
-    current_schema: currentSchema,
-    rename_events: renameEvents,
-  };
-  const sql = generateMigrationScriptLocal(body);
-  return new Blob([sql], { type: 'text/plain' });
+  return ServiceMesh.execute(
+    async () => {
+      const body = {
+        original_schema: originalSchema,
+        current_schema: currentSchema,
+        rename_events: renameEvents,
+      };
+      const sql = generateMigrationScriptLocal(body);
+      return new Blob([sql], { type: 'text/plain' });
+    },
+    { name: 'exportMigration', timeoutMs: 5000 }
+  );
 }
+

@@ -4,6 +4,7 @@ import { useSchemaStore } from '../../../store/useSchemaStore';
 import { useToastStore } from '../../../store/useToastStore';
 import { splitProcedures } from '../../../utils/lineage/procedureSplitter';
 import { parseLineage } from '../../../utils/lineageParser';
+import { ServiceMesh } from '../../../utils/serviceMesh';
 
 export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchToDiagram?: () => void) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -64,49 +65,55 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
   const { lineageViewMode } = useSchemaStore();
 
   const handleAnalyze = useCallback(() => {
-    try {
-      const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
-      
-      workerRef.current?.terminate();
-      workerRef.current = new Worker(new URL('../workers/lineageWorker', import.meta.url), { type: 'module' });
-      setIsAnalyzing(true);
-      
-      workerRef.current.postMessage({
-        procedures: activeProcedures,
-        direction: layoutDir,
-        expandedNodesArray: Array.from(expandedNodes),
-        ignoredTables: ignoredArr,
-        viewMode: lineageViewMode
-      });
-      
-      workerRef.current.onmessage = (e: MessageEvent) => {
-        setIsAnalyzing(false);
-        if (e.data.type === 'SUCCESS') {
-          const { newNodes, newEdges } = e.data.payload;
-          
-          if (newNodes.length > 30 && lineageViewMode !== 'overview') {
-            useToastStore.getState().addToast({ type: 'info', message: 'Large graph detected. Switched to Overview Mode for better performance.' });
-            useSchemaStore.getState().setLineageViewMode('overview');
-            return;
+    ServiceMesh.execute(async () => {
+      return new Promise<void>((resolve, reject) => {
+        const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        
+        workerRef.current?.terminate();
+        workerRef.current = new Worker(new URL('../workers/lineageWorker', import.meta.url), { type: 'module' });
+        setIsAnalyzing(true);
+        
+        workerRef.current.postMessage({
+          procedures: activeProcedures,
+          direction: layoutDir,
+          expandedNodesArray: Array.from(expandedNodes),
+          ignoredTables: ignoredArr,
+          viewMode: lineageViewMode
+        });
+        
+        workerRef.current.onmessage = (e: MessageEvent) => {
+          setIsAnalyzing(false);
+          if (e.data.type === 'SUCCESS') {
+            const { newNodes, newEdges } = e.data.payload;
+            
+            if (newNodes.length > 30 && lineageViewMode !== 'overview') {
+              useToastStore.getState().addToast({ type: 'info', message: 'Large graph detected. Switched to Overview Mode for better performance.' });
+              useSchemaStore.getState().setLineageViewMode('overview');
+              resolve();
+              return;
+            }
+            
+            const nodesWithCallback = newNodes.map((n: any) => ({
+              ...n, data: { ...n.data, onToggleCollapse }
+            }));
+            setNodes(nodesWithCallback);
+            setEdges(newEdges);
+            setSelectedNodeId(null);
+            setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 50);
+            resolve();
+          } else {
+            reject(new Error(e.data.error || 'Worker failed'));
           }
-          
-          const nodesWithCallback = newNodes.map((n: any) => ({
-            ...n, data: { ...n.data, onToggleCollapse }
-          }));
-          setNodes(nodesWithCallback);
-          setEdges(newEdges);
-          setSelectedNodeId(null);
-          setTimeout(() => fitView({ padding: 0.15, duration: 400 }), 50);
-        } else {
-          console.error(e.data.error);
-          useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + e.data.error });
-        }
-      };
-    } catch (err: any) {
+        };
+
+        workerRef.current.onerror = (err) => {
+          setIsAnalyzing(false);
+          reject(new Error(err.message || 'Worker initialization failed'));
+        };
+      });
+    }, { name: 'LineageWorkerAnalyze', timeoutMs: 30000 }).catch(() => {
       setIsAnalyzing(false);
-      console.error(err);
-      useToastStore.getState().addToast({ type: 'error', message: 'Failed to start lineage worker: ' + (err.message || 'Unknown error') });
-    }
+    });
   }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView, lineageViewMode]);
 
 
