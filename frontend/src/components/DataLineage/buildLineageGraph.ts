@@ -202,7 +202,18 @@ export const buildLineageGraph = (
       type: 'lineageNode',
       parentId: parentNodeId,
       position: { x: 0, y: 0 },
-      data: { tableName: table, columns, role, nodeTypeOverride, isCollapsed, isTemp, isView, viewMode },
+      data: { 
+        tableName: table, 
+        columns, 
+        role, 
+        nodeTypeOverride, 
+        isCollapsed, 
+        isTemp, 
+        isView, 
+        viewMode,
+        hasIncoming: isTgt,
+        hasOutgoing: isSrc
+      },
       style: {
         width: COL_WIDTH,
         background: 'var(--bg-secondary)',

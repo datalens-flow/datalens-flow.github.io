@@ -41,7 +41,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
     <div style={{ position: 'relative', width: '250px' }}>
       <div className="lineage-node" style={{ opacity: nodeType === 'temp' ? 0.9 : 1 }}>
         <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: theme.bg, color: theme.text, display: 'flex', alignItems: 'center' }}>
-          {role !== 'source' && (
+          {data.hasIncoming && (
              <Handle
                type="target"
                position={Position.Left}
@@ -60,7 +60,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--color-text-primary)' }} title={data.tableName}>
             {data.tableName}
           </span>
-          {role !== 'target' && (
+          {data.hasOutgoing && (
              <Handle
                type="source"
                position={Position.Right}
@@ -152,6 +152,8 @@ export const LineageNode = React.memo(LineageNodeComponent, (prevProps, nextProp
   if (prev.viewMode !== next.viewMode) return false;
   if (prev.nodeTypeOverride !== next.nodeTypeOverride) return false;
   if (prev.role !== next.role) return false;
+  if (prev.hasIncoming !== next.hasIncoming) return false;
+  if (prev.hasOutgoing !== next.hasOutgoing) return false;
   
   return true;
 });
