@@ -8,7 +8,7 @@ import { syntaxHighlighting } from '@codemirror/language';
 import { darkHighlightStyle, lightHighlightStyle } from './codeMirrorStyles';
 import { useSchemaStore } from '../../store/useSchemaStore';
 
-export const useSqlEditor = (defaultSql: string) => {
+export const useSqlEditor = (defaultSql: string, isVisible: boolean = true) => {
   const { theme, procedureSql, setProcedureSql } = useSchemaStore();
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -21,7 +21,7 @@ export const useSqlEditor = (defaultSql: string) => {
   }, []);
 
   useEffect(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || !isVisible) return;
 
     const selection = viewRef.current?.state.selection;
     const currentDoc = procedureSql || defaultSql;
@@ -59,7 +59,7 @@ export const useSqlEditor = (defaultSql: string) => {
     return () => {
       view.destroy();
     };
-  }, [theme]); // Do NOT put procedureSql in dependency array or it recreates editor every keystroke
+  }, [theme, isVisible]); // Do NOT put procedureSql in dependency array or it recreates editor every keystroke
 
   // Sync external changes (e.g. loading a project) into the editor
   useEffect(() => {

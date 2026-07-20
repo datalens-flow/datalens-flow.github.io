@@ -23,14 +23,14 @@ export interface DataLineageProps {
 }
 
 const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer } = useSchemaStore();
+
   const { procedureSql, setProcedureSql, editorRef, viewRef } = useSqlEditor(`-- Sample ETL Stored Procedure
 INSERT INTO sales_summary (customer_name, revenue)
 SELECT u.name, o.amount
 FROM users u
-JOIN orders o ON u.id = o.user_id;`);
-
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const { showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer } = useSchemaStore();
+JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
 
   const {
     nodes, edges, onNodesChange, onEdgesChange, onNodeClick,
