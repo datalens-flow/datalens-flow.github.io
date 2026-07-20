@@ -6,7 +6,8 @@ export const handleUpdate = (
   targetTable: string,
   aliasMap: Record<string, string>,
   sourceTables: string[],
-  allFlows: LineageFlow[]
+  allFlows: LineageFlow[],
+  action: LineageFlow['action'] = 'update'
 ) => {
   const setMatch = cleanStmt.match(/\bset\s+([\s\S]+?)(?:\bfrom\b|\bwhere\b|$)/i);
   if (setMatch) {
@@ -29,6 +30,7 @@ export const handleUpdate = (
         sourceCol: resolved.col,
         targetTable,
         targetCol,
+        action,
       });
     });
   }
@@ -37,9 +39,11 @@ export const handleUpdate = (
 export const handleMerge = (
   targetTable: string,
   sourceTables: string[],
-  allFlows: LineageFlow[]
+  allFlows: LineageFlow[],
+  action: LineageFlow['action'] = 'merge'
 ) => {
   sourceTables.forEach(srcTable => {
-    allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
+    allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*', action });
   });
 };
+

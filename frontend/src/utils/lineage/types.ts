@@ -3,6 +3,7 @@ export interface LineageFlow {
   sourceCol: string;
   targetTable: string;
   targetCol: string;
+  action?: 'insert' | 'update' | 'delete' | 'merge' | 'ctas' | 'create_temp';
 }
 
 export interface LineageResult {

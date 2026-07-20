@@ -121,7 +121,11 @@ export const buildLineageGraph = (
   result.flows.forEach((flow, idx) => {
     const sourceCol = flow.sourceCol === '*' ? 'All Columns' : flow.sourceCol;
     const targetCol = flow.targetCol === '*' ? 'All Columns' : flow.targetCol;
-    const edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
+    
+    let edgeColor = sourceColorMap[flow.sourceTable] || '#38bdf8';
+    if (flow.action === 'delete') edgeColor = '#ef4444'; // red-500
+    else if (flow.action === 'update') edgeColor = '#f97316'; // orange-500
+    else if (flow.action === 'merge') edgeColor = '#eab308'; // yellow-500
 
     // If a node is collapsed and the column is beyond MAX_COLS_VISIBLE, we route the edge to the header handle 'header'
     const srcCols = getColumnsForTable(flow.sourceTable);
@@ -133,6 +137,8 @@ export const buildLineageGraph = (
     const isSrcCollapsed = (!expandedNodes.has(flow.sourceTable) && srcCols.length > MAX_COLS_VISIBLE) && srcColIdx >= MAX_COLS_VISIBLE;
     const isTgtCollapsed = (!expandedNodes.has(flow.targetTable) && tgtCols.length > MAX_COLS_VISIBLE) && tgtColIdx >= MAX_COLS_VISIBLE;
 
+    const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
+
     newEdges.push({
       id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
       source: flow.sourceTable,
@@ -140,7 +146,12 @@ export const buildLineageGraph = (
       sourceHandle: isSrcCollapsed ? 'col-header' : `col-${sourceCol}`,
       targetHandle: isTgtCollapsed ? 'col-header' : `col-${targetCol}`,
       type: 'smoothstep',
-      style: { stroke: edgeColor, strokeWidth: 1.5, opacity: 0.8 },
+      label: actionLabel,
+      labelStyle: { fill: edgeColor, fontWeight: 700, fontSize: 10 },
+      labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.8 },
+      labelBgPadding: [4, 2],
+      labelBgBorderRadius: 4,
+      style: { stroke: edgeColor, strokeWidth: flow.action === 'delete' ? 2 : 1.5, opacity: 0.8, strokeDasharray: flow.action === 'delete' ? '4 4' : undefined },
       markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor, width: 12, height: 12 }
     });
   });

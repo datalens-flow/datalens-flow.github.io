@@ -10,7 +10,8 @@ export const handleInsert = (
   sourceTables: string[],
   cteNames: Set<string>,
   resolveCteSourcesFunc: (name: string) => string[],
-  allFlows: LineageFlow[]
+  allFlows: LineageFlow[],
+  action: LineageFlow['action'] = 'insert'
 ) => {
   const subQueries = cleanStmt.split(/\b(?:union\s+all|union|intersect|except)\b/i);
   
@@ -81,7 +82,7 @@ export const handleInsert = (
     if (selectText) {
       if (isCtas || selectText === '*') {
         activeSources.forEach(srcTable => {
-          allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
+          allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*', action: isCtas ? 'ctas' : action });
         });
         return;
       }
@@ -130,11 +131,12 @@ export const handleInsert = (
           sourceCol: resolved.col,
           targetTable,
           targetCol,
+          action: isCtas ? 'ctas' : action,
         });
       });
     } else if (activeSources.length > 0) {
       activeSources.forEach(srcTable => {
-        allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*' });
+        allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*', action: isCtas ? 'ctas' : action });
       });
     }
   });

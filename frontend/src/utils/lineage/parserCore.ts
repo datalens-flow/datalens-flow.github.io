@@ -54,10 +54,13 @@ export const parseLineage = (sql: string): LineageResult => {
     let isMerge = false;
     let isCtas = false;
 
+    let isDelete = false;
+
     const insertMatch = cleanStmt.match(/insert\s+into\s+([\w.]+)\s*(?:\(([^)]+)\))?/i);
     const createMatch = cleanStmt.match(/create\s+(?:table|view)\s+([\w.]+)\s+as\s/i);
     const updateMatch = cleanStmt.match(/update\s+([\w.]+)(?:\s+(\w+))?\s+set\s/i);
     const mergeMatch = cleanStmt.match(/merge\s+into\s+([\w.]+)\s+/i);
+    const deleteMatch = cleanStmt.match(/delete\s+from\s+([\w.]+)(?:\s+(\w+))?/i);
 
     if (insertMatch) {
       targetTable = extractTableName(insertMatch[1]);
@@ -75,6 +78,9 @@ export const parseLineage = (sql: string): LineageResult => {
     } else if (mergeMatch) {
       targetTable = extractTableName(mergeMatch[1]);
       isMerge = true;
+    } else if (deleteMatch) {
+      targetTable = extractTableName(deleteMatch[1]);
+      isDelete = true;
     } else {
       return;
     }
@@ -101,6 +107,13 @@ export const parseLineage = (sql: string): LineageResult => {
     if (isUpdate && updateMatch && updateMatch[2]) {
       const possibleAlias = updateMatch[2].toLowerCase();
       if (!SQL_KEYWORDS.has(possibleAlias)) {
+        aliasMap[possibleAlias] = targetTable;
+      }
+    }
+    
+    if (isDelete && deleteMatch && deleteMatch[2]) {
+      const possibleAlias = deleteMatch[2].toLowerCase();
+      if (!SQL_KEYWORDS.has(possibleAlias) && possibleAlias !== 'using' && possibleAlias !== 'where') {
         aliasMap[possibleAlias] = targetTable;
       }
     }
@@ -171,6 +184,17 @@ export const parseLineage = (sql: string): LineageResult => {
 
     if (isMerge) {
       handleMerge(targetTable, sourceTables, allFlows);
+    }
+
+    if (isDelete) {
+      if (sourceTables.length > 0) {
+        sourceTables.forEach(srcTable => {
+          allFlows.push({ sourceTable: srcTable, sourceCol: '*', targetTable, targetCol: '*', action: 'delete' });
+        });
+      } else {
+        // Self-loop for delete with no external source
+        allFlows.push({ sourceTable: targetTable, sourceCol: '*', targetTable, targetCol: '*', action: 'delete' });
+      }
     }
   });
 
