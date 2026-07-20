@@ -43,6 +43,7 @@ JOIN orders o ON u.id = o.user_id;`);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'sql' | 'explorer'>('sql');
+  const [isDragging, setIsDragging] = useState(false);
 
   const { 
     layoutDir, 
@@ -150,6 +151,59 @@ JOIN orders o ON u.id = o.user_id;`);
       console.error(err);
     }
     e.target.value = '';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files);
+      const validFiles = files.filter(f => f.name.toLowerCase().endsWith('.sql') || f.name.toLowerCase().endsWith('.txt'));
+      
+      if (validFiles.length === 0) {
+        useToastStore.getState().addToast({ type: 'error', message: 'Failed to parse file. Only .sql and .txt files are supported.' });
+        return;
+      }
+
+      if (validFiles.length < files.length) {
+        useToastStore.getState().addToast({ type: 'warning', message: 'Some files were skipped. Only .sql and .txt files are supported.' });
+      }
+
+      try {
+        const contents = await Promise.all(
+          validFiles.map((file) => {
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (event) => resolve(event.target?.result as string || '');
+              reader.onerror = () => reject(new Error(`Failed to read file ${file.name}`));
+              reader.readAsText(file);
+            });
+          })
+        );
+        const combinedContent = contents.join('\n\n-- ==========================================\n-- IMPORTED: LINEAGE PROCEDURE\n-- ==========================================\n\n');
+        if (combinedContent) {
+          setProcedureSql(combinedContent);
+          if (viewRef.current) {
+            viewRef.current.dispatch({
+              changes: { from: 0, to: viewRef.current.state.doc.length, insert: combinedContent }
+            });
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
 
   useEffect(() => {
@@ -459,7 +513,20 @@ JOIN orders o ON u.id = o.user_id;`);
         </div>
         
         {activeSidebarTab === 'sql' ? (
-          <div className="lineage-textarea" ref={editorRef}></div>
+          <div 
+            className="lineage-textarea" 
+            ref={editorRef}
+            style={{ position: 'relative' }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {isDragging && (
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(56, 189, 248, 0.15)', border: '2px dashed var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, pointerEvents: 'none' }}>
+                <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>Drop .sql or .txt files here</span>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="lineage-textarea" style={{ padding: '12px', paddingBottom: '30px' }}>
             {renderTableExplorer()}
