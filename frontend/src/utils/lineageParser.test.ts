@@ -297,7 +297,8 @@ const testCases: TestCase[] = [
     expectedSources: ['source'],
     expectedTargets: ['target'],
     expectedFlows: [
-      // Functions wrapping columns - parser may not extract inner column
+      { src: 'source', srcCol: 'name', tgt: 'target', tgtCol: 'name' },
+      { src: 'source', srcCol: 'code', tgt: 'target', tgtCol: 'code' },
     ],
   },
 
@@ -498,7 +499,8 @@ WHERE s.sales_date = p_batch_date;
     expectedSources: ['source'],
     expectedTargets: ['target'],
     expectedFlows: [
-      // Functions wrapping columns are complex expressions, should be filtered
+      { src: 'source', srcCol: 'name', tgt: 'target', tgtCol: 'name' },
+      { src: 'source', srcCol: 'code', tgt: 'target', tgtCol: 'code' },
     ],
   },
 ];
