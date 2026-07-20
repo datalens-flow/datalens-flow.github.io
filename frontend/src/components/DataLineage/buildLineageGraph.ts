@@ -17,7 +17,7 @@ const EDGE_COLORS = [
 export const buildLineageGraph = (
   procedureSql: string, 
   direction: 'LR' | 'TB' = 'LR',
-  collapsedNodes: Set<string> = new Set()
+  expandedNodes: Set<string> = new Set()
 ) => {
   const result = parseLineage(procedureSql);
   const newNodes: any[] = [];
@@ -56,7 +56,8 @@ export const buildLineageGraph = (
 
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction, nodesep: 50, ranksep: 150 });
+  // Increased spacing for complex/dense graphs
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 100, ranksep: 200 });
 
   const COL_WIDTH = 250;
   const ROW_HEIGHT = 45;
@@ -66,9 +67,10 @@ export const buildLineageGraph = (
     const isSrc = result.sources.includes(table);
     const isTgt = result.targets.includes(table);
     const role = isSrc && isTgt ? 'both' : (isSrc ? 'source' : 'target');
+    const isTemp = table.toLowerCase().startsWith('tmp_') || table.toLowerCase().startsWith('temp_') || table.startsWith('#');
     
     const columns = getColumnsForTable(table);
-    const isCollapsed = collapsedNodes.has(table);
+    const isCollapsed = !expandedNodes.has(table) && columns.length > MAX_COLS_VISIBLE;
     const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
     const hasMoreButton = isCollapsed && columns.length > MAX_COLS_VISIBLE;
     
@@ -80,11 +82,11 @@ export const buildLineageGraph = (
       id: table,
       type: 'lineageNode',
       position: { x: 0, y: 0 },
-      data: { tableName: table, columns, role, isCollapsed },
+      data: { tableName: table, columns, role, isCollapsed, isTemp },
       style: {
         width: COL_WIDTH,
         background: 'var(--bg-secondary)',
-        border: `1px solid var(--color-border)`,
+        border: isTemp ? '2px dashed var(--color-indigo)' : '1px solid var(--color-border)',
         borderRadius: '6px',
         color: 'var(--color-text-primary)',
       }
@@ -128,8 +130,8 @@ export const buildLineageGraph = (
     const srcColIdx = srcCols.findIndex(c => c.name === sourceCol);
     const tgtColIdx = tgtCols.findIndex(c => c.name === targetCol);
     
-    const isSrcCollapsed = collapsedNodes.has(flow.sourceTable) && srcColIdx >= MAX_COLS_VISIBLE;
-    const isTgtCollapsed = collapsedNodes.has(flow.targetTable) && tgtColIdx >= MAX_COLS_VISIBLE;
+    const isSrcCollapsed = (!expandedNodes.has(flow.sourceTable) && srcCols.length > MAX_COLS_VISIBLE) && srcColIdx >= MAX_COLS_VISIBLE;
+    const isTgtCollapsed = (!expandedNodes.has(flow.targetTable) && tgtCols.length > MAX_COLS_VISIBLE) && tgtColIdx >= MAX_COLS_VISIBLE;
 
     newEdges.push({
       id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,

@@ -78,7 +78,7 @@ const ToolbarDropdown: React.FC<{
   );
 };
 
-export const CanvasToolbar: React.FC = () => {
+export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode = 'diagram' }) => {
   const {
     addTable,
     layoutDir,
@@ -97,12 +97,15 @@ export const CanvasToolbar: React.FC = () => {
 
   return (
     <div className="canvas-toolbar">
-      {/* Add Table */}
-      <button className="toolbar-btn add-btn" onClick={addTable}>
-        <IconPlus /> Add Table
-      </button>
-
-      <div className="toolbar-divider" />
+      {/* Add Table - Only in ERD mode */}
+      {mode === 'diagram' && (
+        <>
+          <button className="toolbar-btn add-btn" onClick={addTable}>
+            <IconPlus /> Add Table
+          </button>
+          <div className="toolbar-divider" />
+        </>
+      )}
 
       {/* Unified Settings Dropdown */}
       <ToolbarDropdown label={<><IconGear /> Settings</>}>
@@ -126,26 +129,29 @@ export const CanvasToolbar: React.FC = () => {
           <IconLight /> Light
         </button>
 
-        <div className="toolbar-dropdown-divider" />
-
-        {/* Canvas Group */}
-        <div className="toolbar-dropdown-group-label">🔧 Canvas</div>
-        <label className="toolbar-dropdown-check">
-          <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
-          Show Background Grid
-        </label>
-        <label className="toolbar-dropdown-check">
-          <input type="checkbox" checked={inferRelationships} onChange={(e) => setInferRelationships(e.target.checked)} />
-          Heuristic Relations
-        </label>
-        <label className="toolbar-dropdown-check">
-          <input type="checkbox" checked={showTableExplorer} onChange={(e) => setShowTableExplorer(e.target.checked)} />
-          SQL Input Panel
-        </label>
-        <label className="toolbar-dropdown-check">
-          <input type="checkbox" checked={showSidebarExplorer} onChange={(e) => setShowSidebarExplorer(e.target.checked)} />
-          Table Explorer
-        </label>
+        {mode === 'diagram' && (
+          <>
+            <div className="toolbar-dropdown-divider" />
+            {/* Canvas Group */}
+            <div className="toolbar-dropdown-group-label">🔧 Canvas</div>
+            <label className="toolbar-dropdown-check">
+              <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} />
+              Show Background Grid
+            </label>
+            <label className="toolbar-dropdown-check">
+              <input type="checkbox" checked={inferRelationships} onChange={(e) => setInferRelationships(e.target.checked)} />
+              Heuristic Relations
+            </label>
+            <label className="toolbar-dropdown-check">
+              <input type="checkbox" checked={showTableExplorer} onChange={(e) => setShowTableExplorer(e.target.checked)} />
+              SQL Input Panel
+            </label>
+            <label className="toolbar-dropdown-check">
+              <input type="checkbox" checked={showSidebarExplorer} onChange={(e) => setShowSidebarExplorer(e.target.checked)} />
+              Table Explorer
+            </label>
+          </>
+        )}
       </ToolbarDropdown>
     </div>
   );

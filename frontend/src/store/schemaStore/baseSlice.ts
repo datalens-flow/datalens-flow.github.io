@@ -37,6 +37,8 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   lineageSearchQuery: '',
   setLineageSearchQuery: (lineageSearchQuery) => set({ lineageSearchQuery }),
+  activeLineageProcedureIndex: 0,
+  setActiveLineageProcedureIndex: (index) => set({ activeLineageProcedureIndex: index }),
 
   // Undo/Redo state
   _history: [],

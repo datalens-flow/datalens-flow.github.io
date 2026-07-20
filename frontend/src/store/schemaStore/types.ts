@@ -54,6 +54,8 @@ export interface SchemaState {
   setSearchQuery: (query: string) => void;
   lineageSearchQuery: string;
   setLineageSearchQuery: (query: string) => void;
+  activeLineageProcedureIndex: number;
+  setActiveLineageProcedureIndex: (index: number) => void;
   
   _history: SchemaResponse[];
   _historyIndex: number;

@@ -168,7 +168,7 @@ function App() {
         
         {/* Right Side: Toolbar Settings & Export options */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-          {isDiagram && activeTab === 'erd' && <CanvasToolbar />}
+          {((isDiagram && activeTab === 'erd') || currentMode === 'lineage') && <CanvasToolbar mode={currentMode} />}
           <ExportPanel mode={currentMode} />
         </div>
       </header>

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ReactFlow, 
   Background, 
-  Controls, 
+  Controls,
+  MiniMap,
   useNodesState, 
   useEdgesState,
   useReactFlow,
@@ -13,6 +14,7 @@ import { parseLineage } from '../../utils/lineageParser';
 import { LineageNode } from './LineageNode';
 import { buildLineageGraph } from './buildLineageGraph';
 import { useSqlEditor } from './useSqlEditor';
+import { splitProcedures } from '../../utils/lineage/procedureSplitter';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -39,11 +41,26 @@ JOIN orders o ON u.id = o.user_id;`);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [layoutDirection, setLayoutDirection] = useState<'LR' | 'TB'>('LR');
-  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+  const { layoutDir, activeLineageProcedureIndex, setActiveLineageProcedureIndex } = useSchemaStore();
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+
+  // Split procedures whenever SQL changes
+  const parsedProcedures = React.useMemo(() => splitProcedures(procedureSql), [procedureSql]);
+
+  // Determine the active SQL to analyze
+  const activeSql = React.useMemo(() => {
+    if (activeLineageProcedureIndex === 0 || parsedProcedures.length === 0) {
+      return procedureSql; // All combined
+    }
+    const idx = activeLineageProcedureIndex - 1;
+    if (idx >= 0 && idx < parsedProcedures.length) {
+      return parsedProcedures[idx].sql;
+    }
+    return procedureSql;
+  }, [procedureSql, parsedProcedures, activeLineageProcedureIndex]);
 
   const onToggleCollapse = (nodeId: string) => {
-    setCollapsedNodes(prev => {
+    setExpandedNodes(prev => {
       const next = new Set(prev);
       if (next.has(nodeId)) next.delete(nodeId);
       else next.add(nodeId);
@@ -51,8 +68,17 @@ JOIN orders o ON u.id = o.user_id;`);
     });
   };
 
+  const handleExpandAll = () => {
+    const allIds = nodes.map(n => n.id);
+    setExpandedNodes(new Set(allIds));
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedNodes(new Set());
+  };
+
   const handleAnalyze = () => {
-    const { newNodes, newEdges } = buildLineageGraph(procedureSql, layoutDirection, collapsedNodes);
+    const { newNodes, newEdges } = buildLineageGraph(activeSql, layoutDir, expandedNodes);
 
     const nodesWithCallback = newNodes.map(n => ({
       ...n,
@@ -104,7 +130,7 @@ JOIN orders o ON u.id = o.user_id;`);
 
   useEffect(() => {
     handleAnalyze();
-  }, [layoutDirection, collapsedNodes]);
+  }, [layoutDir, expandedNodes, activeSql]);
 
   useEffect(() => {
     setNodes((nds) => 
@@ -142,7 +168,7 @@ JOIN orders o ON u.id = o.user_id;`);
   const selectedNodeData = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
   const columnsInvolved = new Set<string>();
   if (selectedNodeId) {
-    const result = parseLineage(procedureSql);
+    const result = parseLineage(activeSql);
     result.flows.forEach(f => {
       if (f.sourceTable === selectedNodeId) {
         columnsInvolved.add(f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
@@ -195,7 +221,7 @@ JOIN orders o ON u.id = o.user_id;`);
       <div className="lineage-sidebar">
         <div className="lineage-sidebar-header">
           <span className="lineage-title">Stored Procedure Input</span>
-          <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -209,21 +235,21 @@ JOIN orders o ON u.id = o.user_id;`);
               style={{ fontSize: '11px', padding: '6px 12px' }}
               onClick={() => fileInputRef.current?.click()}
             >
-              📁 Import Procedure
+              📁 Import
             </button>
             <button 
               className="btn btn-secondary" 
-              style={{ fontSize: '11px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              onClick={() => setLayoutDirection(prev => prev === 'LR' ? 'TB' : 'LR')}
-              title="Toggle Layout Direction"
+              style={{ fontSize: '11px', padding: '6px 12px' }}
+              onClick={handleExpandAll}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                {layoutDirection === 'LR' 
-                  ? <path d="M4 12h16M14 6l6 6-6 6" /> 
-                  : <path d="M12 4v16M6 14l6 6 6-6" />
-                }
-              </svg>
-              {layoutDirection === 'LR' ? 'Horizontal' : 'Vertical'}
+              Expand All
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              style={{ fontSize: '11px', padding: '6px 12px' }}
+              onClick={handleCollapseAll}
+            >
+              Collapse All
             </button>
             <button 
               className="btn btn-primary" 
@@ -233,6 +259,31 @@ JOIN orders o ON u.id = o.user_id;`);
               Analyze
             </button>
           </div>
+          {parsedProcedures.length > 1 && (
+            <div style={{ marginTop: '12px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
+                Select Procedure:
+              </label>
+              <select
+                value={activeLineageProcedureIndex}
+                onChange={(e) => setActiveLineageProcedureIndex(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  borderRadius: '4px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--color-text-primary)',
+                  fontSize: '11px'
+                }}
+              >
+                <option value={0}>All Procedures (Combined)</option>
+                {parsedProcedures.map((p, i) => (
+                  <option key={i} value={i + 1}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <div className="lineage-textarea" ref={editorRef}></div>
         
@@ -282,6 +333,16 @@ JOIN orders o ON u.id = o.user_id;`);
         >
           <Background color="var(--color-grid)" gap={16} size={1} />
           <Controls />
+          <MiniMap 
+            nodeColor={(n: any) => {
+              if (n.data?.isTemp) return 'var(--color-indigo)';
+              if (n.data?.role === 'source') return 'var(--color-emerald)';
+              if (n.data?.role === 'target') return 'var(--color-indigo)';
+              return 'var(--color-border)';
+            }}
+            maskColor="var(--bg-primary-transparent)"
+            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }}
+          />
         </ReactFlow>
       </div>
     </div>

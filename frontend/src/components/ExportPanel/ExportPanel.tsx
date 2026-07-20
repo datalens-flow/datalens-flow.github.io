@@ -9,6 +9,8 @@ import {
   exportMigration
 } from '../../api/client';
 import { generateHtmlReport } from '../../utils/exporters';
+import { generateLineageReportHtml } from '../../utils/exporters/lineageHtml';
+import { splitProcedures } from '../../utils/lineage/procedureSplitter';
 import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import './ExportPanel.css';
 
@@ -22,7 +24,7 @@ interface ExportPanelProps {
 export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const { schema, originalSchema, renameEvents, descriptions, theme, tableColors } = useSchemaStore();
+  const { schema, originalSchema, renameEvents, descriptions, theme, tableColors, procedureSql, activeLineageProcedureIndex } = useSchemaStore();
   const { getNodes } = useReactFlow();
   const [prefix, setPrefix] = useState('datalens-flow');
   const panelRef = useRef<HTMLDivElement>(null);
@@ -48,6 +50,15 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
     a.click();
     window.URL.revokeObjectURL(url);
     a.remove();
+  };
+
+  const getActiveProcedureName = () => {
+    if (mode === 'diagram') return 'erd';
+    if (activeLineageProcedureIndex === 0) return 'lineage-combined';
+    const parsed = splitProcedures(procedureSql || '');
+    const idx = activeLineageProcedureIndex - 1;
+    if (parsed[idx]) return `lineage-${parsed[idx].name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    return 'lineage';
   };
 
   const handleExportJson = () => {
@@ -84,7 +95,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `${prefix}-${mode === 'lineage' ? 'lineage' : 'erd'}.png`;
+      a.download = `${prefix}-${getActiveProcedureName()}.png`;
       a.click();
     } catch (err) {
       console.error('Failed to export PNG', err);
@@ -121,7 +132,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
       });
       const a = document.createElement('a');
       a.href = dataUrl;
-      a.download = `${prefix}-${mode === 'lineage' ? 'lineage' : 'erd'}.svg`;
+      a.download = `${prefix}-${getActiveProcedureName()}.svg`;
       a.click();
     } catch (err) {
       console.error('Failed to export SVG', err);
@@ -174,10 +185,17 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
   };
 
   const handleExportHtmlReport = () => {
-    if (!schema) return;
-    const htmlContent = generateHtmlReport(schema, descriptions, tableColors);
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    triggerDownload(blob, `${prefix}-report.html`);
+    if (mode === 'diagram') {
+      if (!schema) return;
+      const htmlContent = generateHtmlReport(schema, descriptions, tableColors);
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      triggerDownload(blob, `${prefix}-report.html`);
+    } else {
+      if (!procedureSql) return;
+      const htmlContent = generateLineageReportHtml(procedureSql);
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      triggerDownload(blob, `${prefix}-lineage-report.html`);
+    }
     setIsOpen(false);
   };
 
@@ -269,6 +287,14 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
           <button onClick={handleExportPng} className="dropdown-item">🖼️ Export PNG Image</button>
           <button onClick={handleExportSvg} className="dropdown-item">📐 Export SVG Vector</button>
           
+          {mode === 'lineage' && (
+            <>
+              <div className="dropdown-divider"></div>
+              <div className="dropdown-section-title">Reports</div>
+              <button onClick={handleExportHtmlReport} className="dropdown-item">📄 Export HTML Summary</button>
+            </>
+          )}
+
           {mode === 'diagram' && (
             <>
               <button onClick={handleExportDrawio} className="dropdown-item">🔗 Export Draw.io XML</button>
