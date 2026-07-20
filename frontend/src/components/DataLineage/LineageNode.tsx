@@ -21,7 +21,7 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
   return (
     <div style={{ position: 'relative', width: '250px' }}>
       <div className="lineage-node" style={{ opacity: data.isTemp ? 0.9 : 1 }}>
-        <div className={`lineage-node-header ${role}`} style={{ position: 'relative', backgroundColor: data.isTemp ? 'var(--bg-tertiary)' : undefined, color: data.isTemp ? 'var(--color-text-primary)' : undefined }}>
+        <div className={`lineage-node-header ${role}`} style={{ position: 'relative', backgroundColor: data.isTemp ? 'var(--bg-tertiary)' : undefined, color: data.isTemp ? 'var(--color-text-primary)' : undefined, display: 'flex', alignItems: 'center' }}>
           {isCollapsed && role !== 'source' && (
              <Handle
                type="target"
@@ -30,8 +30,13 @@ export const LineageNode: React.FC<{ data: any }> = ({ data }) => {
                style={{ background: 'var(--color-emerald)', width: '10px', height: '10px', left: '-17px' }}
              />
           )}
-          {data.isTemp && <span style={{ fontSize: '9px', background: 'var(--color-indigo)', color: '#fff', padding: '2px 4px', borderRadius: '4px', marginRight: '6px' }}>TEMP</span>}
-          {role === 'source' ? '◀ Source' : role === 'target' ? 'Target ▶' : '◀ ▶'}&nbsp;&nbsp;{data.tableName}
+          {data.isTemp && <span style={{ fontSize: '9px', background: 'var(--color-indigo)', color: '#fff', padding: '2px 4px', borderRadius: '4px', marginRight: '6px', flexShrink: 0 }}>TEMP</span>}
+          <span style={{ flexShrink: 0, marginRight: '8px' }}>
+            {role === 'source' ? '◀ Source' : role === 'target' ? 'Target ▶' : '◀ ▶'}
+          </span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }} title={data.tableName}>
+            {data.tableName}
+          </span>
           {isCollapsed && role !== 'target' && (
              <Handle
                type="source"

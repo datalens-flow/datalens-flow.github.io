@@ -10,6 +10,7 @@ import {
   ReactFlowProvider,
 } from '@xyflow/react';
 import { useSchemaStore } from '../../store/useSchemaStore';
+import { useToastStore } from '../../store/useToastStore';
 import { parseLineage } from '../../utils/lineageParser';
 import { LineageNode } from './LineageNode';
 import { buildLineageGraph } from './buildLineageGraph';
@@ -88,23 +89,28 @@ JOIN orders o ON u.id = o.user_id;`);
   }, [handleExpandAll, handleCollapseAll]);
 
   const handleAnalyze = () => {
-    const { newNodes, newEdges } = buildLineageGraph(activeSql, layoutDir, expandedNodes);
+    try {
+      const { newNodes, newEdges } = buildLineageGraph(activeSql, layoutDir, expandedNodes);
 
-    const nodesWithCallback = newNodes.map(n => ({
-      ...n,
-      data: {
-        ...n.data,
-        onToggleCollapse
-      }
-    }));
+      const nodesWithCallback = newNodes.map(n => ({
+        ...n,
+        data: {
+          ...n.data,
+          onToggleCollapse
+        }
+      }));
 
-    setNodes(nodesWithCallback);
-    setEdges(newEdges);
-    setSelectedNodeId(null);
+      setNodes(nodesWithCallback);
+      setEdges(newEdges);
+      setSelectedNodeId(null);
 
-    setTimeout(() => {
-      fitView({ padding: 0.15, duration: 400 });
-    }, 50);
+      setTimeout(() => {
+        fitView({ padding: 0.15, duration: 400 });
+      }, 50);
+    } catch (err: any) {
+      console.error(err);
+      useToastStore.getState().addToast({ type: 'error', message: 'Failed to analyze lineage: ' + (err.message || 'Unknown error') });
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
