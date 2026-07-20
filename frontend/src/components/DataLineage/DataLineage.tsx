@@ -30,7 +30,7 @@ FROM users u
 JOIN orders o ON u.id = o.user_id;`);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, ignoredLineageTables, setIgnoredLineageTables } = useSchemaStore();
+  const { showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer } = useSchemaStore();
 
   const {
     nodes, edges, onNodesChange, onEdgesChange, onNodeClick,
@@ -40,26 +40,28 @@ JOIN orders o ON u.id = o.user_id;`);
 
   return (
     <div className="lineage-container">
-      <DataLineageSidebar 
-        isFullscreen={isFullscreen}
-        setIsFullscreen={setIsFullscreen}
-        parsedProcedures={parsedProcedures}
-        activeLineageProcedureIndex={activeLineageProcedureIndex}
-        setActiveLineageProcedureIndex={setActiveLineageProcedureIndex}
-        ignoredLineageTables={ignoredLineageTables}
-        setIgnoredLineageTables={setIgnoredLineageTables}
-        handleAnalyze={handleAnalyze}
-        editorRef={editorRef}
-        viewRef={viewRef}
-        setProcedureSql={setProcedureSql}
-        nodes={nodes}
-        selectedNodeId={selectedNodeId}
-        setSelectedNodeId={setSelectedNodeId}
-        setCenter={setCenter}
-        getZoom={getZoom}
-        columnsInvolved={columnsInvolved}
-        handleInspectInDiagram={handleInspectInDiagram}
-      />
+      {showSidebarExplorer && (
+        <DataLineageSidebar 
+          isFullscreen={isFullscreen}
+          setIsFullscreen={setIsFullscreen}
+          parsedProcedures={parsedProcedures}
+          activeLineageProcedureIndex={activeLineageProcedureIndex}
+          setActiveLineageProcedureIndex={setActiveLineageProcedureIndex}
+          ignoredLineageTables={ignoredLineageTables}
+          setIgnoredLineageTables={setIgnoredLineageTables}
+          handleAnalyze={handleAnalyze}
+          editorRef={editorRef}
+          viewRef={viewRef}
+          setProcedureSql={setProcedureSql}
+          nodes={nodes}
+          selectedNodeId={selectedNodeId}
+          setSelectedNodeId={setSelectedNodeId}
+          setCenter={setCenter}
+          getZoom={getZoom}
+          columnsInvolved={columnsInvolved}
+          handleInspectInDiagram={handleInspectInDiagram}
+        />
+      )}
       <div className="lineage-canvas">
         <ReactFlow
           nodes={nodes}

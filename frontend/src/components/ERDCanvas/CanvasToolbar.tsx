@@ -170,12 +170,13 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
               <input type="checkbox" checked={showTableExplorer} onChange={(e) => setShowTableExplorer(e.target.checked)} />
               Show Table List Panel
             </label>
-            <label className="toolbar-dropdown-check">
-              <input type="checkbox" checked={showSidebarExplorer} onChange={(e) => setShowSidebarExplorer(e.target.checked)} />
-              SQL Input Panel
-            </label>
           </>
         )}
+        
+        <label className="toolbar-dropdown-check">
+          <input type="checkbox" checked={showSidebarExplorer} onChange={(e) => setShowSidebarExplorer(e.target.checked)} />
+          SQL Input Panel
+        </label>
         
         <label className="toolbar-dropdown-check">
           <input type="checkbox" checked={showMiniMap} onChange={(e) => setShowMiniMap(e.target.checked)} />
