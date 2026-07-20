@@ -43,22 +43,28 @@ JOIN orders o ON u.id = o.user_id;`);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const { layoutDir, activeLineageProcedureIndex, setActiveLineageProcedureIndex } = useSchemaStore();
+  const { 
+    layoutDir, 
+    activeLineageProcedureIndex, 
+    setActiveLineageProcedureIndex,
+    ignoredLineageTables,
+    setIgnoredLineageTables
+  } = useSchemaStore();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   // Split procedures whenever SQL changes
   const parsedProcedures = React.useMemo(() => splitProcedures(procedureSql), [procedureSql]);
 
-  // Determine the active SQL to analyze
-  const activeSql = React.useMemo(() => {
+  // Determine the active procedures to analyze
+  const activeProcedures = React.useMemo(() => {
     if (activeLineageProcedureIndex === 0 || parsedProcedures.length === 0) {
-      return procedureSql; // All combined
+      return parsedProcedures.length > 0 ? parsedProcedures : [{ name: 'Global Script', sql: procedureSql }];
     }
     const idx = activeLineageProcedureIndex - 1;
     if (idx >= 0 && idx < parsedProcedures.length) {
-      return parsedProcedures[idx].sql;
+      return [parsedProcedures[idx]];
     }
-    return procedureSql;
+    return [{ name: 'Global Script', sql: procedureSql }];
   }, [procedureSql, parsedProcedures, activeLineageProcedureIndex]);
 
   const onToggleCollapse = (nodeId: string) => {
@@ -90,7 +96,8 @@ JOIN orders o ON u.id = o.user_id;`);
 
   const handleAnalyze = () => {
     try {
-      const { newNodes, newEdges } = buildLineageGraph(activeSql, layoutDir, expandedNodes);
+      const ignoredArr = ignoredLineageTables.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      const { newNodes, newEdges } = buildLineageGraph(activeProcedures, layoutDir, expandedNodes, ignoredArr);
 
       const nodesWithCallback = newNodes.map(n => ({
         ...n,
@@ -146,7 +153,7 @@ JOIN orders o ON u.id = o.user_id;`);
 
   useEffect(() => {
     handleAnalyze();
-  }, [layoutDir, expandedNodes, activeSql]);
+  }, [layoutDir, expandedNodes, activeProcedures, ignoredLineageTables]);
 
   useEffect(() => {
     setNodes((nds) => 
@@ -168,7 +175,27 @@ JOIN orders o ON u.id = o.user_id;`);
   }, [selectedNodeId, edges, setNodes]);
 
   const onNodeClick = (_: React.MouseEvent, node: any) => {
+    if (node.type === 'group') return;
     setSelectedNodeId((prev: string | null) => (prev === node.id ? null : node.id));
+    
+    // Search the document for the table name to scroll to it
+    if (viewRef.current) {
+      const docStr = viewRef.current.state.doc.toString().toLowerCase();
+      const searchStr = node.id.toLowerCase();
+      // Try to find exact table name match
+      const regex = new RegExp(`\\b${searchStr.replace(/\\./g, '\\\\.')}\\b`);
+      const match = docStr.match(regex);
+      if (match && match.index !== undefined) {
+        const pos = match.index;
+        viewRef.current.dispatch({
+          selection: { anchor: pos, head: pos + searchStr.length },
+          scrollIntoView: true
+        });
+        
+        // EditorView.scrollIntoView requires the actual import, but we can do a simple DOM scroll if we focus
+        viewRef.current.focus();
+      }
+    }
   };
 
   const handleInspectInDiagram = () => {
@@ -184,8 +211,12 @@ JOIN orders o ON u.id = o.user_id;`);
   const selectedNodeData = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
   const columnsInvolved = new Set<string>();
   if (selectedNodeId) {
-    const result = parseLineage(activeSql);
-    result.flows.forEach(f => {
+    let allFlows: any[] = [];
+    activeProcedures.forEach(p => {
+      allFlows.push(...parseLineage(p.sql).flows);
+    });
+    
+    allFlows.forEach(f => {
       if (f.sourceTable === selectedNodeId) {
         columnsInvolved.add(f.sourceCol === '*' ? 'All Columns' : f.sourceCol);
       }
@@ -311,6 +342,29 @@ JOIN orders o ON u.id = o.user_id;`);
               </select>
             </div>
           )}
+          
+          <div style={{ marginTop: '12px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--color-text-muted)', display: 'block', marginBottom: '4px' }}>
+              Ignored Tables (comma separated):
+            </label>
+            <input 
+              type="text" 
+              placeholder="e.g. log_table, audit_trail"
+              value={ignoredLineageTables}
+              onChange={(e) => setIgnoredLineageTables(e.target.value)}
+              onBlur={handleAnalyze}
+              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+              style={{
+                width: '100%',
+                padding: '6px',
+                borderRadius: '4px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--color-text-primary)',
+                fontSize: '11px'
+              }}
+            />
+          </div>
         </div>
         <div className="lineage-textarea" ref={editorRef}></div>
         

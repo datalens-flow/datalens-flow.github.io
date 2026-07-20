@@ -56,6 +56,8 @@ export interface SchemaState {
   setLineageSearchQuery: (query: string) => void;
   activeLineageProcedureIndex: number;
   setActiveLineageProcedureIndex: (index: number) => void;
+  ignoredLineageTables: string;
+  setIgnoredLineageTables: (tables: string) => void;
   
   _history: SchemaResponse[];
   _historyIndex: number;
