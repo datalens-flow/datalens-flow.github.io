@@ -21,7 +21,15 @@ export const parseLineage = (sql: string): LineageResult => {
     return resolveCteSourcesImpl(cteName, cteToRealSources, cteOrder, visited);
   };
 
-  const statements = cleanSql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+  const rawStatements = cleanSql.split(';');
+  const statements: string[] = [];
+  rawStatements.forEach(raw => {
+    const parts = raw.split(/(?=\b(?:INSERT\s+INTO|CREATE\s+(?:(?:TEMP|TEMPORARY)\s+)?TABLE|CREATE\s+(?:MATERIALIZED\s+)?VIEW|UPDATE\s+[\w.]+(?:\s+\w+)?\s+SET|DELETE\s+FROM|MERGE\s+INTO|TRUNCATE\s+(?:TABLE\s+)?|DROP\s+(?:TABLE|VIEW))\b)/i);
+    parts.forEach(p => {
+      const t = p.trim();
+      if (t.length > 0) statements.push(t);
+    });
+  });
 
   statements.forEach((stmt) => {
     let cleanStmt = stmt;
