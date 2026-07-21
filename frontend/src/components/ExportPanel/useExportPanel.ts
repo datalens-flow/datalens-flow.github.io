@@ -12,6 +12,7 @@ import { generateHtmlReport } from '../../utils/exporters';
 import { generateLineageReportHtml } from '../../utils/exporters/lineageHtml';
 import { splitProcedures } from '../../utils/lineage/procedureSplitter';
 import { useReactFlow, getNodesBounds } from '@xyflow/react';
+import { generateLineagePdfReport } from '../../utils/exporters/pdfExporter';
 import { useToastStore } from '../../store/useToastStore';
 
 export const useExportPanel = (mode: 'diagram' | 'lineage') => {
@@ -139,6 +140,46 @@ export const useExportPanel = (mode: 'diagram' | 'lineage') => {
     finally { setExporting(false); setIsOpen(false); }
   };
 
+  const handleExportPdfReport = async () => {
+    if (!procedureSql) return;
+    setExporting(true);
+    try {
+      let imageDataUrl: string | undefined;
+      const nodes = getNodes();
+      if (nodes.length > 0) {
+        const bounds = getNodesBounds(nodes);
+        const padding = 40;
+        const width = bounds.width + padding * 2;
+        const height = bounds.height + padding * 2;
+        const erdElement = document.querySelector('.react-flow__viewport') as HTMLElement;
+        if (erdElement) {
+          const bgColor = theme === 'light' ? '#f5f7fb' : '#090b11';
+          imageDataUrl = await toPng(erdElement, {
+            backgroundColor: bgColor,
+            width: width,
+            height: height,
+            style: { width: `${width}px`, height: `${height}px`, transform: `translate(${-bounds.x + padding}px, ${-bounds.y + padding}px) scale(1)` }
+          });
+        }
+      }
+
+      const { catalogAnnotations } = useSchemaStore.getState();
+      const pdfBlob = generateLineagePdfReport({
+        imageDataUrl,
+        procedureSql,
+        catalogAnnotations,
+        prefix
+      });
+
+      triggerDownload(pdfBlob, `${prefix}-${getActiveProcedureName()}.pdf`);
+    } catch (err) {
+      console.error('Failed to export PDF:', err);
+    } finally {
+      setExporting(false);
+      setIsOpen(false);
+    }
+  };
+
   const handleExportHtmlReport = () => {
     if (mode === 'diagram') {
       if (!schema) return;
@@ -194,6 +235,6 @@ export const useExportPanel = (mode: 'diagram' | 'lineage') => {
   return {
     isOpen, exporting, prefix, setPrefix, panelRef, toggleDropdown, schema,
     handleExportJson, handleExportPng, handleExportSvg, handleExportDrawio, handleExportXlsx,
-    handleExportMarkdown, handleExportHtmlReport, handleExportSql, handleExportMigration, handleCopyDrawio
+    handleExportMarkdown, handleExportHtmlReport, handleExportPdfReport, handleExportSql, handleExportMigration, handleCopyDrawio
   };
 };
