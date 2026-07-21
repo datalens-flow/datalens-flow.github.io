@@ -37,6 +37,15 @@ export const useSqlEditor = (defaultSql: string, isVisible: boolean = true) => {
           if (update.docChanged) {
             setProcedureSql(update.state.doc.toString());
           }
+          if (update.selectionSet) {
+            const pos = update.state.selection.main.head;
+            const line = update.state.doc.lineAt(pos);
+            const lineText = line.text;
+            const words = lineText.match(/\b([a-zA-Z_]\w*)\b/g);
+            if (words && words.length > 0) {
+              window.dispatchEvent(new CustomEvent('sql-cursor-word', { detail: { words } }));
+            }
+          }
         }),
         EditorView.theme({
           '&': { height: '100%', minHeight: '300px', flex: 1, backgroundColor: 'var(--bg-secondary)', color: 'var(--color-text-primary)' },

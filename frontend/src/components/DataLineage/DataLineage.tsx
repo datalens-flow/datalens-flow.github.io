@@ -18,6 +18,9 @@ import { EtlHealthModal } from './EtlHealthModal';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
+import { FormulaInspectorDrawer } from './FormulaInspectorDrawer';
+import { RepoImportModal } from './RepoImportModal';
+
 const nodeTypes = {
   lineageNode: LineageNode,
   group: ProcedureGroupNode
@@ -29,6 +32,7 @@ export interface DataLineageProps {
 
 const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
   const { showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer } = useSchemaStore();
 
   const { procedureSql, setProcedureSql, editorRef, viewRef } = useSqlEditor(`-- Sample ETL Stored Procedure
@@ -38,9 +42,10 @@ FROM users u
 JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
 
   const {
-    nodes, edges, onNodesChange, onEdgesChange, onNodeClick,
+    nodes, edges, onNodesChange, onEdgesChange, onNodeClick, onEdgeClick,
     selectedNodeId, setSelectedNodeId, columnsInvolved, handleInspectInDiagram,
-    handleAnalyze, parsedProcedures, setCenter, getZoom, isAnalyzing
+    handleAnalyze, parsedProcedures, setCenter, getZoom, isAnalyzing,
+    inspectorData, setInspectorData
   } = useDataLineageFlow(procedureSql, viewRef, onSwitchToDiagram);
 
   return (
@@ -65,6 +70,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           getZoom={getZoom}
           columnsInvolved={columnsInvolved}
           handleInspectInDiagram={handleInspectInDiagram}
+          onOpenRepoModal={() => setIsRepoModalOpen(true)}
         />
       )}
       <div className="lineage-canvas" style={{ position: 'relative' }}>
@@ -86,6 +92,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
+          onEdgeClick={onEdgeClick}
           nodeTypes={nodeTypes}
           minZoom={0.1}
           maxZoom={2}
@@ -111,6 +118,8 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
       </div>
       <MappingMatrixModal />
       <EtlHealthModal />
+      <FormulaInspectorDrawer data={inspectorData} onClose={() => setInspectorData(null)} />
+      <RepoImportModal isOpen={isRepoModalOpen} onClose={() => setIsRepoModalOpen(false)} />
     </div>
   );
 };

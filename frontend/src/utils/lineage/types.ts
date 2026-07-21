@@ -4,6 +4,8 @@ export interface LineageFlow {
   targetTable: string;
   targetCol: string;
   action?: 'insert' | 'update' | 'delete' | 'merge' | 'ctas' | 'create_temp' | 'truncate' | 'drop';
+  rawExpr?: string;
+  fileOrigin?: string;
 }
 
 export interface LineageResult {

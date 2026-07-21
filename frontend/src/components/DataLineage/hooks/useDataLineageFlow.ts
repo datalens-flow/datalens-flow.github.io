@@ -5,6 +5,7 @@ import { useToastStore } from '../../../store/useToastStore';
 import { splitProcedures } from '../../../utils/lineage/procedureSplitter';
 import { parseLineage } from '../../../utils/lineageParser';
 import { buildLineageGraph } from '../buildLineageGraph';
+import { FormulaInspectorData } from '../FormulaInspectorDrawer';
 // @ts-ignore
 import LineageWorker from '../workers/lineageWorker?worker';
 
@@ -360,6 +361,51 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     }
   }, [lineageSearchQuery, nodes, setNodes, setEdges, setCenter, getZoom]);
 
+  const [inspectorData, setInspectorData] = useState<FormulaInspectorData | null>(null);
+
+  useEffect(() => {
+    const handleCursorWord = (e: any) => {
+      const words = e.detail?.words as string[];
+      if (!words || words.length === 0) return;
+      const nodeIds = new Set(nodes.map(n => n.id.toLowerCase()));
+      for (const w of words) {
+        if (nodeIds.has(w.toLowerCase())) {
+          const matched = nodes.find(n => n.id.toLowerCase() === w.toLowerCase());
+          if (matched && matched.id !== selectedNodeId) {
+            setSelectedNodeId(matched.id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('sql-cursor-word', handleCursorWord);
+    return () => window.removeEventListener('sql-cursor-word', handleCursorWord);
+  }, [nodes, selectedNodeId]);
+
+  const onEdgeClick = (_: React.MouseEvent, edge: any) => {
+    let allFlows: any[] = [];
+    activeProcedures.forEach(p => {
+      allFlows.push(...parseLineage(p.sql).flows);
+    });
+
+    const matchedFlow = allFlows.find(f => 
+      edge.id.includes(f.sourceTable) && edge.id.includes(f.targetTable)
+    );
+
+    if (matchedFlow) {
+      setInspectorData({
+        sourceTable: matchedFlow.sourceTable,
+        sourceCol: matchedFlow.sourceCol,
+        targetTable: matchedFlow.targetTable,
+        targetCol: matchedFlow.targetCol,
+        action: matchedFlow.action || 'insert',
+        rawExpr: matchedFlow.rawExpr || `${matchedFlow.sourceCol}`,
+        fileOrigin: matchedFlow.fileOrigin
+      });
+    }
+  };
+
   const onNodeClick = (_: React.MouseEvent, node: any) => {
     if (node.type === 'group') return;
     setSelectedNodeId(prev => prev === node.id ? null : node.id);
@@ -398,8 +444,9 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
   const selectedNodeData = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
 
   return {
-    nodes, edges, onNodesChange, onEdgesChange, onNodeClick,
+    nodes, edges, onNodesChange, onEdgesChange, onNodeClick, onEdgeClick,
     selectedNodeId, setSelectedNodeId, selectedNodeData, columnsInvolved, handleInspectInDiagram,
-    handleAnalyze, parsedProcedures, activeProcedures, setCenter, getZoom, isAnalyzing
+    handleAnalyze, parsedProcedures, activeProcedures, setCenter, getZoom, isAnalyzing,
+    inspectorData, setInspectorData
   };
 };

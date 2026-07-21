@@ -132,6 +132,7 @@ export const handleInsert = (
           targetTable,
           targetCol,
           action: isCtas ? 'ctas' : action,
+          rawExpr: expr
         });
       });
     } else if (activeSources.length > 0) {

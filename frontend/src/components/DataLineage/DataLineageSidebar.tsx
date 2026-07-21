@@ -20,12 +20,13 @@ interface DataLineageSidebarProps {
   getZoom: any;
   columnsInvolved: Set<string>;
   handleInspectInDiagram: () => void;
+  onOpenRepoModal?: () => void;
 }
 
 export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
   isFullscreen, setIsFullscreen, parsedProcedures, activeLineageProcedureIndex, setActiveLineageProcedureIndex,
   ignoredLineageTables, setIgnoredLineageTables, handleAnalyze, editorRef, viewRef, setProcedureSql,
-  nodes, selectedNodeId, setSelectedNodeId, setCenter, getZoom, columnsInvolved, handleInspectInDiagram
+  nodes, selectedNodeId, setSelectedNodeId, setCenter, getZoom, columnsInvolved, handleInspectInDiagram, onOpenRepoModal
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'sql' | 'explorer'>('sql');
@@ -124,9 +125,10 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
             <button 
               className="btn btn-secondary" 
               style={{ padding: '4px 10px', fontSize: '11px' }} 
-              onClick={() => fileInputRef.current?.click()}
+              onClick={onOpenRepoModal || (() => fileInputRef.current?.click())}
+              title="Import Repository Folder / dbt Models / Airflow DAGs"
             >
-              📁 Import SQL
+              📁 Import Repo
             </button>
             <button 
               className="btn btn-primary" 
