@@ -14,7 +14,8 @@ export const isNonColumnExpr = (expr: string): boolean => {
 
 /** Extract table name from possibly schema-qualified identifier (schema.table → table) */
 export const extractTableName = (name: string): string => {
-  const parts = name.split('.');
+  const unquoted = name.replace(/['"`[\]]/g, '').trim();
+  const parts = unquoted.split('.');
   return parts[parts.length - 1].toLowerCase();
 };
 
@@ -27,7 +28,7 @@ export const resolveColumn = (
 ): { table: string; col: string } | null => {
   if (isNonColumnExpr(expr)) return null;
 
-  let cleanExpr = expr.trim();
+  let cleanExpr = expr.replace(/['"`[\]]/g, '').trim();
   
   // Strip JSON operators (->, ->>) to avoid interference with column name matching
   if (cleanExpr.includes('->')) {

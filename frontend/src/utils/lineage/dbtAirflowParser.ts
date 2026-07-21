@@ -20,10 +20,10 @@ export const preprocessDbtSql = (rawSql: string): string => {
   cleaned = cleaned.replace(/\{\{\s*config\([\s\S]*?\)\s*\}\}/gi, '');
 
   // Replace {{ ref('model_name') }} or {{ ref("model_name") }} with model_name
-  cleaned = cleaned.replace(/\{\{\s*ref\s*\(\s*['"](\w+)['"]\s*\)\s*\}\}/gi, '$1');
+  cleaned = cleaned.replace(/\{\{\s*ref\s*\(\s*['"]([\w.-]+)['"]\s*\)\s*\}\}/gi, '$1');
 
   // Replace {{ source('schema_name', 'table_name') }} with schema_name.table_name
-  cleaned = cleaned.replace(/\{\{\s*source\s*\(\s*['"](\w+)['"]\s*,\s*['"](\w+)['"]\s*\)\s*\}\}/gi, '$1.$2');
+  cleaned = cleaned.replace(/\{\{\s*source\s*\(\s*['"]([\w.-]+)['"]\s*,\s*['"]([\w.-]+)['"]\s*\)\s*\}\}/gi, '$1.$2');
 
   // Replace generic {{ ... }} Jinja expressions with 1 or empty string to keep SQL parseable
   cleaned = cleaned.replace(/\{\{[\s\S]*?\}\}/g, '');
