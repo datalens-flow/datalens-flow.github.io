@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 interface ModeDropdownProps {
-  currentMode: 'diagram' | 'lineage';
-  setCurrentMode: (mode: 'diagram' | 'lineage') => void;
+  currentMode: 'diagram' | 'lineage' | 'transpiler';
+  setCurrentMode: (mode: 'diagram' | 'lineage' | 'transpiler') => void;
 }
 
 export const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurrentMode }) => {
@@ -26,15 +26,22 @@ export const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurr
         onClick={() => setOpen(!open)}
         style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}
       >
-        {currentMode === 'diagram' ? (
+        {currentMode === 'diagram' && (
           <>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M7 4h2M4 7v2M12 7v2"/></svg>
             <span>Database Diagram</span>
           </>
-        ) : (
+        )}
+        {currentMode === 'lineage' && (
           <>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="3" cy="8" r="2"/><circle cx="13" cy="4" r="2"/><circle cx="13" cy="12" r="2"/><path d="M5 8h3l2-4M8 8l2 4"/></svg>
             <span>Data Lineage</span>
+          </>
+        )}
+        {currentMode === 'transpiler' && (
+          <>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>SQL Transpiler</span>
           </>
         )}
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -63,6 +70,16 @@ export const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurr
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="3" cy="8" r="2"/><circle cx="13" cy="4" r="2"/><circle cx="13" cy="12" r="2"/><path d="M5 8h3l2-4M8 8l2 4"/></svg>
             Data Lineage
+          </button>
+          <button
+            className={`toolbar-dropdown-item ${currentMode === 'transpiler' ? 'selected' : ''}`}
+            onClick={() => {
+              setCurrentMode('transpiler');
+              setOpen(false);
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            SQL Transpiler
           </button>
         </div>
       )}

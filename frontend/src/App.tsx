@@ -14,33 +14,36 @@ import { useRef } from 'react';
 import { ProjectManager } from './components/ProjectManager/ProjectManager';
 
 import { ModeDropdown } from './components/ModeDropdown/ModeDropdown';
+import { SqlTranspilerView } from './components/SqlTranspiler/SqlTranspilerView';
+
 function App() {
   const [showLanding, setShowLanding] = useState(() => {
-    // Show landing page if user hasn't dismissed it before in this session
     return !sessionStorage.getItem('datalens-launched');
   });
 
-  // Simple routing logic based on pathname
-  const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage'>(() => {
+  const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage' | 'transpiler'>(() => {
     const path = window.location.pathname;
     if (path.includes('/data_lineage')) return 'lineage';
-    return 'diagram'; // Default to diagram for '/' or '/database_diagram'
+    if (path.includes('/sql_transpiler')) return 'transpiler';
+    return 'diagram';
   });
 
-  // Sync mode to URL
   useEffect(() => {
-    const targetPath = currentMode === 'lineage' ? '/data_lineage' : '/database_diagram';
+    let targetPath = '/database_diagram';
+    if (currentMode === 'lineage') targetPath = '/data_lineage';
+    if (currentMode === 'transpiler') targetPath = '/sql_transpiler';
     if (window.location.pathname !== targetPath) {
       window.history.pushState(null, '', targetPath);
     }
   }, [currentMode]);
 
-  // Handle browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
       if (path.includes('/data_lineage')) {
         setCurrentMode('lineage');
+      } else if (path.includes('/sql_transpiler')) {
+        setCurrentMode('transpiler');
       } else {
         setCurrentMode('diagram');
       }
@@ -261,9 +264,13 @@ function App() {
             </div>
           </section>
         </main>
-      ) : (
+      ) : currentMode === 'lineage' ? (
         <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
           <DataLineage onSwitchToDiagram={() => setCurrentMode('diagram')} />
+        </main>
+      ) : (
+        <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+          <SqlTranspilerView />
         </main>
       )}
       <ToastContainer />
