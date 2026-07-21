@@ -17,7 +17,7 @@ export const ProcedureGroupNode: React.FC<{ data: any }> = ({ data }) => {
       <div 
         style={{
           position: 'absolute',
-          top: '-14px',
+          top: '12px',
           left: '16px',
           backgroundColor: 'var(--bg-tertiary, #1e293b)',
           color: '#38bdf8',
