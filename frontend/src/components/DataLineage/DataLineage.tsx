@@ -9,6 +9,7 @@ import {
 } from '@xyflow/react';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { LineageNode } from './LineageNode';
+import { ProcedureGroupNode } from './ProcedureGroupNode';
 import { useSqlEditor } from './useSqlEditor';
 import { useDataLineageFlow } from './hooks/useDataLineageFlow';
 import { DataLineageSidebar } from './DataLineageSidebar';
@@ -16,7 +17,8 @@ import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
 const nodeTypes = {
-  lineageNode: LineageNode
+  lineageNode: LineageNode,
+  group: ProcedureGroupNode
 };
 
 export interface DataLineageProps {

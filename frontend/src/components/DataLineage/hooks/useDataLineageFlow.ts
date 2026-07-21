@@ -21,7 +21,8 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     layoutDir, 
     activeLineageProcedureIndex, 
     ignoredLineageTables,
-    lineageSearchQuery
+    lineageSearchQuery,
+    showProcedureGroups
   } = useSchemaStore();
 
   const parsedProcedures = useMemo(() => splitProcedures(procedureSql), [procedureSql]);
@@ -79,7 +80,8 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
           layoutDir,
           expandedNodes,
           ignoredArr,
-          lineageViewMode
+          lineageViewMode,
+          showProcedureGroups
         );
         const t1 = performance.now();
         console.log(`[Main] Synced Graph built in ${t1 - t0}ms. Nodes: ${newNodes.length}, Edges: ${newEdges.length}`);
@@ -179,19 +181,20 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
         direction: layoutDir,
         expandedNodesArray: Array.from(expandedNodes),
         ignoredTables: ignoredArr,
-        viewMode: lineageViewMode
+        viewMode: lineageViewMode,
+        showProcedureGroups
       });
       
     } catch (err: any) {
       console.error('[Main] Failed to start lineage worker (catch block):', err);
       runSynchronousFallback(`Worker instantiation failed: ${err.message || 'Unknown error'}`);
     }
-  }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView, lineageViewMode]);
+  }, [activeProcedures, layoutDir, expandedNodes, ignoredLineageTables, onToggleCollapse, setNodes, setEdges, fitView, lineageViewMode, showProcedureGroups]);
 
 
   useEffect(() => {
     handleAnalyze();
-  }, [layoutDir, expandedNodes, activeProcedures, ignoredLineageTables, lineageViewMode]);
+  }, [layoutDir, expandedNodes, activeProcedures, ignoredLineageTables, lineageViewMode, showProcedureGroups]);
 
   useEffect(() => {
     setNodes((nds) => 

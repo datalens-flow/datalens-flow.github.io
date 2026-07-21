@@ -45,6 +45,8 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setActiveLineageProcedureIndex: (index) => set({ activeLineageProcedureIndex: index }),
   ignoredLineageTables: 'risk_log_detail, error_log',
   setIgnoredLineageTables: (tables) => set({ ignoredLineageTables: tables }),
+  showProcedureGroups: true,
+  setShowProcedureGroups: (showProcedureGroups) => set({ showProcedureGroups }),
 
   // Undo/Redo state
   _history: [],

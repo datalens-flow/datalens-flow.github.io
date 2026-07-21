@@ -10,13 +10,13 @@ self.onmessage = (e: MessageEvent) => {
     return;
   }
 
-  const { procedures, direction, expandedNodesArray, ignoredTables, viewMode } = e.data;
+  const { procedures, direction, expandedNodesArray, ignoredTables, viewMode, showProcedureGroups } = e.data;
   
   try {
     const t0 = performance.now();
     const expandedNodes = new Set<string>(expandedNodesArray || []);
     console.log('[Worker] Starting buildLineageGraph...');
-    const { newNodes, newEdges } = buildLineageGraph(procedures, direction, expandedNodes, ignoredTables, viewMode);
+    const { newNodes, newEdges } = buildLineageGraph(procedures, direction, expandedNodes, ignoredTables, viewMode, showProcedureGroups);
     const t1 = performance.now();
     console.log(`[Worker] Graph built in ${t1 - t0}ms. Nodes: ${newNodes.length}, Edges: ${newEdges.length}`);
     

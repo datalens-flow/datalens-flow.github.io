@@ -62,6 +62,8 @@ export interface SchemaState {
   setActiveLineageProcedureIndex: (index: number) => void;
   ignoredLineageTables: string;
   setIgnoredLineageTables: (tables: string) => void;
+  showProcedureGroups: boolean;
+  setShowProcedureGroups: (show: boolean) => void;
   
   _history: SchemaResponse[];
   _historyIndex: number;

@@ -117,7 +117,9 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
     theme,
     setTheme,
     lineageViewMode,
-    setLineageViewMode
+    setLineageViewMode,
+    showProcedureGroups,
+    setShowProcedureGroups
   } = useSchemaStore();
 
   return (
@@ -217,6 +219,14 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
           <>
             <div className="toolbar-dropdown-divider" />
             <div className="toolbar-dropdown-group-label">🌳 Lineage Graph</div>
+            <label className="toolbar-dropdown-check">
+              <input 
+                type="checkbox" 
+                checked={showProcedureGroups} 
+                onChange={(e) => setShowProcedureGroups(e.target.checked)} 
+              />
+              Show Procedure Group Boxes
+            </label>
             <button className="toolbar-dropdown-item" onClick={() => window.dispatchEvent(new CustomEvent('lineage-expand-all'))}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 2v12M2 8h12M4 4l8 8M4 12l8-8"/></svg>
               Expand All

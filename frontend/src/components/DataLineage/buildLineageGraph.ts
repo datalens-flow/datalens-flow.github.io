@@ -18,7 +18,8 @@ export const buildLineageGraph = (
   direction: 'LR' | 'TB' = 'LR',
   expandedNodes: Set<string> = new Set(),
   ignoredTables: string[] = [],
-  viewMode: 'overview' | 'detailed' = 'detailed'
+  viewMode: 'overview' | 'detailed' = 'detailed',
+  showProcedureGroups: boolean = true
 ) => {
   const newNodes: any[] = [];
   const newEdges: any[] = [];
@@ -123,32 +124,34 @@ export const buildLineageGraph = (
 
   // Add group nodes for procedures
   const activeProcedures = new Set<string>();
-  allTables.forEach(table => {
-    const procs = tableProcedures.get(table);
-    if (procs && procs.size === 1 && procedures.length > 1) {
-      activeProcedures.add(procs.values().next().value!);
-    }
-  });
+  if (showProcedureGroups) {
+    allTables.forEach(table => {
+      const procs = tableProcedures.get(table);
+      if (procs && procs.size === 1 && procedures.length > 1) {
+        activeProcedures.add(procs.values().next().value!);
+      }
+    });
 
-  activeProcedures.forEach(procName => {
-    if (procName === 'Global Script') return;
-    if (procedures.length > 1 && activeProcedures.size > 1) {
-      dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
-      newNodes.push({
-        id: `group-${procName}`,
-        type: 'group',
-        data: { label: procName },
-        style: {
-          backgroundColor: 'rgba(56, 189, 248, 0.05)',
-          border: '1px dashed var(--color-border)',
-          borderRadius: '8px',
-          width: 300,
-          height: 300,
-          zIndex: -1
-        }
-      });
-    }
-  });
+    activeProcedures.forEach(procName => {
+      if (procName === 'Global Script') return;
+      if (procedures.length > 1 && activeProcedures.size > 1) {
+        dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
+        newNodes.push({
+          id: `group-${procName}`,
+          type: 'group',
+          data: { label: procName },
+          style: {
+            backgroundColor: 'rgba(56, 189, 248, 0.05)',
+            border: '1px dashed var(--color-border)',
+            borderRadius: '8px',
+            width: 300,
+            height: 300,
+            zIndex: -1
+          }
+        });
+      }
+    });
+  }
 
   allTables.forEach(table => {
     const roleObj = tableRoles[table];
@@ -188,8 +191,8 @@ export const buildLineageGraph = (
 
     const procs = tableProcedures.get(table);
     let parentNodeId = undefined;
-    // Only group if MULTIPLE procedures are being viewed at the same time
-    if (procs && procs.size === 1 && procedures.length > 1 && activeProcedures.size > 1) {
+    // Only group if MULTIPLE procedures are being viewed at the same time and showProcedureGroups is enabled
+    if (showProcedureGroups && procs && procs.size === 1 && procedures.length > 1 && activeProcedures.size > 1) {
       const pName = procs.values().next().value!;
       if (pName !== 'Global Script') {
         parentNodeId = `group-${pName}`;
