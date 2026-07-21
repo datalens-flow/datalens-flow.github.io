@@ -152,8 +152,19 @@ export const LineageNode = React.memo(LineageNodeComponent, (prevProps, nextProp
   if (prev.viewMode !== next.viewMode) return false;
   if (prev.nodeTypeOverride !== next.nodeTypeOverride) return false;
   if (prev.role !== next.role) return false;
+  if (prev.isTemp !== next.isTemp) return false;
+  if (prev.isView !== next.isView) return false;
   if (prev.hasIncoming !== next.hasIncoming) return false;
   if (prev.hasOutgoing !== next.hasOutgoing) return false;
+  
+  const prevCols = prev.columns || [];
+  const nextCols = next.columns || [];
+  if (prevCols.length !== nextCols.length) return false;
+  for (let i = 0; i < prevCols.length; i++) {
+    if (prevCols[i].name !== nextCols[i].name) return false;
+    if (prevCols[i].hasLeft !== nextCols[i].hasLeft) return false;
+    if (prevCols[i].hasRight !== nextCols[i].hasRight) return false;
+  }
   
   return true;
 });
