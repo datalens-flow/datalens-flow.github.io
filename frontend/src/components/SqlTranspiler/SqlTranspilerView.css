@@ -1,12 +1,14 @@
 .transpiler-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 56px);
+  width: 100%;
   padding: 16px;
   gap: 16px;
   background-color: var(--bg-primary, #090b11);
   box-sizing: border-box;
   overflow: hidden;
+  flex: 1;
 }
 
 .transpiler-toolbar {

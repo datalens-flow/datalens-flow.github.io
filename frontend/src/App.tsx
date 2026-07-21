@@ -269,7 +269,7 @@ function App() {
           <DataLineage onSwitchToDiagram={() => setCurrentMode('diagram')} />
         </main>
       ) : (
-        <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+        <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden', width: '100%' }}>
           <SqlTranspilerView />
         </main>
       )}

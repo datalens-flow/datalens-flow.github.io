@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { sql as sqlLang } from '@codemirror/lang-sql';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
@@ -67,6 +67,7 @@ export const SqlTranspilerView: React.FC = () => {
     const startState = EditorState.create({
       doc: sourceSql,
       extensions: [
+        lineNumbers(),
         sqlLang(),
         syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
         history(),
@@ -97,6 +98,7 @@ export const SqlTranspilerView: React.FC = () => {
     const startState = EditorState.create({
       doc: targetSql,
       extensions: [
+        lineNumbers(),
         sqlLang(),
         syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
         history(),
