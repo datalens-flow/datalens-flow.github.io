@@ -47,6 +47,12 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setIgnoredLineageTables: (tables) => set({ ignoredLineageTables: tables }),
   showProcedureGroups: true,
   setShowProcedureGroups: (showProcedureGroups) => set({ showProcedureGroups }),
+  traceMode: 'both',
+  setTraceMode: (traceMode) => set({ traceMode }),
+  showMappingMatrixModal: false,
+  setShowMappingMatrixModal: (showMappingMatrixModal) => set({ showMappingMatrixModal }),
+  showEtlHealthModal: false,
+  setShowEtlHealthModal: (showEtlHealthModal) => set({ showEtlHealthModal }),
 
   // Undo/Redo state
   _history: [],

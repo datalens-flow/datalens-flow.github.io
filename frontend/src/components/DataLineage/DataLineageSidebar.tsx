@@ -30,7 +30,7 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'sql' | 'explorer'>('sql');
   const [isDragging, setIsDragging] = useState(false);
-  const { lineageSearchQuery } = useSchemaStore();
+  const { lineageSearchQuery, traceMode, setTraceMode } = useSchemaStore();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -212,8 +212,37 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
             </button>
           </div>
           <div>
+            <strong style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>Path Tracing & Impact:</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '8px' }}>
+              <button 
+                className={`btn ${traceMode === 'upstream' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 6px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                onClick={() => setTraceMode('upstream')}
+                title="Highlight Upstream Source Chain (Emerald Glow)"
+              >
+                ⬆️ Upstream
+              </button>
+              <button 
+                className={`btn ${traceMode === 'downstream' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 6px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                onClick={() => setTraceMode('downstream')}
+                title="Highlight Downstream Target Chain (Indigo Glow)"
+              >
+                ⬇️ Downstream
+              </button>
+            </div>
+            <button 
+              className={`btn ${traceMode === 'both' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ width: '100%', padding: '4px 6px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+              onClick={() => setTraceMode('both')}
+              title="Highlight Both Upstream & Downstream Paths"
+            >
+              🔄 Full Path (Both)
+            </button>
+          </div>
+          <div>
             <strong style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Columns Involved:</strong>
-            <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: 'var(--color-text-primary)', maxHeight: '300px', overflowY: 'auto' }}>
+            <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: 'var(--color-text-primary)', maxHeight: '200px', overflowY: 'auto' }}>
               {Array.from(columnsInvolved).map(col => <li key={col}>{col}</li>)}
             </ul>
           </div>

@@ -13,6 +13,8 @@ import { ProcedureGroupNode } from './ProcedureGroupNode';
 import { useSqlEditor } from './useSqlEditor';
 import { useDataLineageFlow } from './hooks/useDataLineageFlow';
 import { DataLineageSidebar } from './DataLineageSidebar';
+import { MappingMatrixModal } from './MappingMatrixModal';
+import { EtlHealthModal } from './EtlHealthModal';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -107,6 +109,8 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           <Controls style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }} />
         </ReactFlow>
       </div>
+      <MappingMatrixModal />
+      <EtlHealthModal />
     </div>
   );
 };

@@ -64,6 +64,12 @@ export interface SchemaState {
   setIgnoredLineageTables: (tables: string) => void;
   showProcedureGroups: boolean;
   setShowProcedureGroups: (show: boolean) => void;
+  traceMode: 'both' | 'upstream' | 'downstream' | 'all';
+  setTraceMode: (mode: 'both' | 'upstream' | 'downstream' | 'all') => void;
+  showMappingMatrixModal: boolean;
+  setShowMappingMatrixModal: (show: boolean) => void;
+  showEtlHealthModal: boolean;
+  setShowEtlHealthModal: (show: boolean) => void;
   
   _history: SchemaResponse[];
   _historyIndex: number;

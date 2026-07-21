@@ -196,19 +196,142 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     handleAnalyze();
   }, [layoutDir, expandedNodes, activeProcedures, ignoredLineageTables, lineageViewMode, showProcedureGroups]);
 
+  const { traceMode } = useSchemaStore();
+
+  const pathTracingData = useMemo(() => {
+    const upNodes = new Set<string>();
+    const downNodes = new Set<string>();
+    const upEdges = new Set<string>();
+    const downEdges = new Set<string>();
+
+    if (!selectedNodeId) {
+      return { upNodes, downNodes, upEdges, downEdges };
+    }
+
+    // Traverse Upstream (Sources feeding into selectedNodeId)
+    const queueUp = [selectedNodeId];
+    while (queueUp.length > 0) {
+      const curr = queueUp.shift()!;
+      edges.forEach(e => {
+        if (e.target === curr && !upNodes.has(e.source)) {
+          upNodes.add(e.source);
+          upEdges.add(e.id);
+          queueUp.push(e.source);
+        }
+      });
+    }
+
+    // Traverse Downstream (Targets fed by selectedNodeId)
+    const queueDown = [selectedNodeId];
+    while (queueDown.length > 0) {
+      const curr = queueDown.shift()!;
+      edges.forEach(e => {
+        if (e.source === curr && !downNodes.has(e.target)) {
+          downNodes.add(e.target);
+          downEdges.add(e.id);
+          queueDown.push(e.target);
+        }
+      });
+    }
+
+    return { upNodes, downNodes, upEdges, downEdges };
+  }, [selectedNodeId, edges]);
+
   useEffect(() => {
-    setNodes((nds) => 
-      nds.map((node) => {
-        if (!selectedNodeId) return { ...node, style: { ...node.style, opacity: 1 } };
-        const isConnected = edges.some(edge => 
-          (edge.source === selectedNodeId && edge.target === node.id) ||
-          (edge.target === selectedNodeId && edge.source === node.id)
-        );
-        if (node.id === selectedNodeId || isConnected) return { ...node, style: { ...node.style, opacity: 1 } };
-        return { ...node, style: { ...node.style, opacity: 0.2 } };
-      })
-    );
-  }, [selectedNodeId, edges, setNodes]);
+    if (!selectedNodeId) {
+      setNodes(nds => nds.map(n => ({
+        ...n,
+        style: {
+          ...n.style,
+          opacity: 1,
+          boxShadow: undefined,
+          borderColor: n.data?.isTemp ? 'var(--color-indigo)' : (n.data?.isView ? 'var(--color-purple)' : 'var(--color-border)')
+        }
+      })));
+      setEdges(eds => eds.map(e => ({
+        ...e,
+        style: { ...e.style, opacity: 0.8, strokeWidth: 1.5 }
+      })));
+      return;
+    }
+
+    const { upNodes, downNodes, upEdges, downEdges } = pathTracingData;
+
+    const showUpstream = traceMode === 'both' || traceMode === 'upstream' || traceMode === 'all';
+    const showDownstream = traceMode === 'both' || traceMode === 'downstream' || traceMode === 'all';
+
+    setNodes(nds => nds.map(node => {
+      if (node.id === selectedNodeId) {
+        return {
+          ...node,
+          style: {
+            ...node.style,
+            opacity: 1,
+            boxShadow: '0 0 20px #38bdf8, 0 0 40px rgba(56, 189, 248, 0.4)',
+            borderColor: '#38bdf8'
+          }
+        };
+      }
+
+      const isUp = showUpstream && upNodes.has(node.id);
+      const isDown = showDownstream && downNodes.has(node.id);
+
+      if (isUp) {
+        return {
+          ...node,
+          style: {
+            ...node.style,
+            opacity: 1,
+            boxShadow: '0 0 16px rgba(16, 185, 129, 0.6)',
+            borderColor: '#10b981'
+          }
+        };
+      }
+
+      if (isDown) {
+        return {
+          ...node,
+          style: {
+            ...node.style,
+            opacity: 1,
+            boxShadow: '0 0 16px rgba(99, 102, 241, 0.6)',
+            borderColor: '#6366f1'
+          }
+        };
+      }
+
+      return {
+        ...node,
+        style: {
+          ...node.style,
+          opacity: 0.15,
+          boxShadow: undefined
+        }
+      };
+    }));
+
+    setEdges(eds => eds.map(edge => {
+      const isUp = showUpstream && upEdges.has(edge.id);
+      const isDown = showDownstream && downEdges.has(edge.id);
+
+      if (isUp) {
+        return {
+          ...edge,
+          style: { ...edge.style, opacity: 1, stroke: '#10b981', strokeWidth: 2.5 }
+        };
+      }
+      if (isDown) {
+        return {
+          ...edge,
+          style: { ...edge.style, opacity: 1, stroke: '#6366f1', strokeWidth: 2.5 }
+        };
+      }
+      return {
+        ...edge,
+        style: { ...edge.style, opacity: 0.08, strokeWidth: 1 }
+      };
+    }));
+  }, [selectedNodeId, pathTracingData, traceMode, setNodes, setEdges]);
 
   useEffect(() => {
     const q = lineageSearchQuery.trim();
