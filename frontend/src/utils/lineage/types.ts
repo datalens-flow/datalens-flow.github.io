@@ -6,6 +6,7 @@ export interface LineageFlow {
   action?: 'insert' | 'update' | 'delete' | 'merge' | 'ctas' | 'create_temp' | 'truncate' | 'drop';
   rawExpr?: string;
   fileOrigin?: string;
+  queryStep?: string;
 }
 
 export interface LineageResult {

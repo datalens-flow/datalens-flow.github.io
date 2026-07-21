@@ -10,28 +10,32 @@ export const parseLineage = (sql: string): LineageResult => {
   const allFlows: LineageFlow[] = [];
   const tableRoles: Record<string, { isSource: boolean; isTarget: boolean }> = {};
 
-  // Remove comments
-  const cleanSql = sql
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/--.*$/gm, '');
+  // Split raw statements before stripping comments to capture comment step headers
+  const rawStatements = sql.split(';');
+  const statements: { raw: string; clean: string }[] = [];
 
-  const { cteNames, cteToRealSources, cteOrder } = extractCTEs(cleanSql);
+  rawStatements.forEach(raw => {
+    const cleanRaw = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/--.*$/gm, '');
+    const parts = cleanRaw.split(/(?=\b(?:INSERT\s+INTO|CREATE\s+(?:(?:TEMP|TEMPORARY)\s+)?TABLE|CREATE\s+(?:MATERIALIZED\s+)?VIEW|UPDATE\s+[\w.]+(?:\s+\w+)?\s+SET|DELETE\s+FROM|MERGE\s+INTO|TRUNCATE\s+(?:TABLE\s+)?|DROP\s+(?:TABLE|VIEW))\b)/i);
+    parts.forEach(p => {
+      const t = p.trim();
+      if (t.length > 0) statements.push({ raw, clean: t });
+    });
+  });
+
+  const { cteNames, cteToRealSources, cteOrder } = extractCTEs(sql);
 
   const resolveCteSources = (cteName: string, visited = new Set<string>()): string[] => {
     return resolveCteSourcesImpl(cteName, cteToRealSources, cteOrder, visited);
   };
 
-  const rawStatements = cleanSql.split(';');
-  const statements: string[] = [];
-  rawStatements.forEach(raw => {
-    const parts = raw.split(/(?=\b(?:INSERT\s+INTO|CREATE\s+(?:(?:TEMP|TEMPORARY)\s+)?TABLE|CREATE\s+(?:MATERIALIZED\s+)?VIEW|UPDATE\s+[\w.]+(?:\s+\w+)?\s+SET|DELETE\s+FROM|MERGE\s+INTO|TRUNCATE\s+(?:TABLE\s+)?|DROP\s+(?:TABLE|VIEW))\b)/i);
-    parts.forEach(p => {
-      const t = p.trim();
-      if (t.length > 0) statements.push(t);
-    });
-  });
+  statements.forEach(({ raw, clean: stmt }, stmtIdx) => {
+    const startFlowIdx = allFlows.length;
 
-  statements.forEach((stmt) => {
+    // Detect step header from comments or assign Query #Index
+    const commentMatch = raw.match(/(?:STEP\s*\d+[\s\S]*?)(?=\r|\n|\*\/)/i);
+    let stepTitle = commentMatch ? commentMatch[0].replace(/[*=]/g, '').trim() : `Query #${stmtIdx + 1}`;
+
     let cleanStmt = stmt;
     const stmtLower = stmt.toLowerCase();
     const withIdx = stmtLower.match(/\bwith\b/);
@@ -211,7 +215,11 @@ export const parseLineage = (sql: string): LineageResult => {
       handleMerge(targetTable, sourceTables, allFlows);
     }
 
-    // Removed DELETE, TRUNCATE, DROP flow generation to match test expectations of pure data movement
+    for (let i = startFlowIdx; i < allFlows.length; i++) {
+      if (!allFlows[i].queryStep) {
+        allFlows[i].queryStep = stepTitle;
+      }
+    }
   });
 
   const globalResolvedCteBases = new Set<string>();
