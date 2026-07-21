@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { splitProcedures } from '../../utils/lineage/procedureSplitter';
 import { parseLineage } from '../../utils/lineageParser';
-import * as XLSX from 'xlsx';
 
 export const MappingMatrixModal: React.FC = () => {
   const { 
@@ -127,7 +126,8 @@ export const MappingMatrixModal: React.FC = () => {
     a.remove();
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    const XLSX = await import('xlsx');
     const excelData = filteredRows.map(r => ({
       'Source Table': r.sourceTable,
       'Source Column': r.sourceCol,

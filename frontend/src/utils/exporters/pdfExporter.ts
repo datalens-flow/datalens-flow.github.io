@@ -1,5 +1,3 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { splitProcedures } from '../lineage/procedureSplitter';
 import { parseLineage } from '../lineageParser';
 
@@ -10,8 +8,11 @@ export interface PdfExportOptions {
   prefix?: string;
 }
 
-export const generateLineagePdfReport = (options: PdfExportOptions): Blob => {
+export const generateLineagePdfReport = async (options: PdfExportOptions): Promise<Blob> => {
   const { imageDataUrl, procedureSql, catalogAnnotations } = options;
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
 
   const pageWidth = doc.internal.pageSize.getWidth();

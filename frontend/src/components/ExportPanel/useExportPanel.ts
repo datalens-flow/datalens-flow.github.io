@@ -164,7 +164,7 @@ export const useExportPanel = (mode: 'diagram' | 'lineage') => {
       }
 
       const { catalogAnnotations } = useSchemaStore.getState();
-      const pdfBlob = generateLineagePdfReport({
+      const pdfBlob = await generateLineagePdfReport({
         imageDataUrl,
         procedureSql,
         catalogAnnotations,

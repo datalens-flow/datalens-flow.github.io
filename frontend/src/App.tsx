@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { SqlEditor } from './components/SqlEditor/SqlEditor';
 import { ERDCanvas } from './components/ERDCanvas/ERDCanvas';
 import { DataDictionary } from './components/DataDictionary/DataDictionary';
@@ -12,9 +12,9 @@ import { ToastContainer } from './components/Toast/ToastContainer';
 import { useSchemaStore } from './store/useSchemaStore';
 import { useRef } from 'react';
 import { ProjectManager } from './components/ProjectManager/ProjectManager';
-
 import { ModeDropdown } from './components/ModeDropdown/ModeDropdown';
-import { SqlTranspilerView } from './components/SqlTranspiler/SqlTranspilerView';
+
+const SqlTranspilerView = lazy(() => import('./components/SqlTranspiler/SqlTranspilerView').then(m => ({ default: m.SqlTranspilerView })));
 
 function App() {
   const [showLanding, setShowLanding] = useState(() => {
@@ -270,7 +270,9 @@ function App() {
         </main>
       ) : (
         <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden', width: '100%' }}>
-          <SqlTranspilerView />
+          <Suspense fallback={<div style={{ padding: '24px', color: 'var(--color-text-muted)', fontSize: '13px' }}>Loading SQL Transpiler...</div>}>
+            <SqlTranspilerView />
+          </Suspense>
         </main>
       )}
       <ToastContainer />
