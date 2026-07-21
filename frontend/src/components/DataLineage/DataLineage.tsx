@@ -14,7 +14,6 @@ import { useSqlEditor } from './useSqlEditor';
 import { useDataLineageFlow } from './hooks/useDataLineageFlow';
 import { DataLineageSidebar } from './DataLineageSidebar';
 import { MappingMatrixModal } from './MappingMatrixModal';
-import { EtlHealthModal } from './EtlHealthModal';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -117,7 +116,6 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
         </ReactFlow>
       </div>
       <MappingMatrixModal />
-      <EtlHealthModal />
       <FormulaInspectorDrawer data={inspectorData} onClose={() => setInspectorData(null)} />
       <RepoImportModal isOpen={isRepoModalOpen} onClose={() => setIsRepoModalOpen(false)} />
     </div>

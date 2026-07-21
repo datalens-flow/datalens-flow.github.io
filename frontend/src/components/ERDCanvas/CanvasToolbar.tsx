@@ -120,8 +120,7 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
     setLineageViewMode,
     showProcedureGroups,
     setShowProcedureGroups,
-    setShowMappingMatrixModal,
-    setShowEtlHealthModal
+    setShowMappingMatrixModal
   } = useSchemaStore();
 
   return (
@@ -172,14 +171,6 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
               title="View Data Mapping Matrix Table"
             >
               <span>📊</span> Mapping Matrix
-            </button>
-            <button 
-              className="toolbar-btn"
-              style={{ fontSize: '12px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b' }}
-              onClick={() => setShowEtlHealthModal(true)}
-              title="Run ETL Code Smells & Health Audit"
-            >
-              <span>⚠️</span> ETL Health
             </button>
           </div>
         </>
