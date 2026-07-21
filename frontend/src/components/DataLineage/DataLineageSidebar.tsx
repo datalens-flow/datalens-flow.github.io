@@ -21,12 +21,14 @@ interface DataLineageSidebarProps {
   columnsInvolved: Set<string>;
   handleInspectInDiagram: () => void;
   onOpenRepoModal?: () => void;
+  onOpenAnnotationModal?: (key: string) => void;
 }
 
 export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
   isFullscreen, setIsFullscreen, parsedProcedures, activeLineageProcedureIndex, setActiveLineageProcedureIndex,
   ignoredLineageTables, setIgnoredLineageTables, handleAnalyze, editorRef, viewRef, setProcedureSql,
-  nodes, selectedNodeId, setSelectedNodeId, setCenter, getZoom, columnsInvolved, handleInspectInDiagram, onOpenRepoModal
+  nodes, selectedNodeId, setSelectedNodeId, setCenter, getZoom, columnsInvolved, handleInspectInDiagram,
+  onOpenRepoModal, onOpenAnnotationModal
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'sql' | 'explorer'>('sql');
@@ -248,6 +250,14 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
               {Array.from(columnsInvolved).map(col => <li key={col}>{col}</li>)}
             </ul>
           </div>
+          <button 
+            className="btn btn-secondary" 
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '11px' }} 
+            onClick={() => selectedNodeId && onOpenAnnotationModal && onOpenAnnotationModal(selectedNodeId)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Edit Catalog Tag / Description
+          </button>
           <button className="btn btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }} onClick={handleInspectInDiagram}>
             🔍 Inspect in Diagram
           </button>

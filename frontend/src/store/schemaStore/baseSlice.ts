@@ -53,6 +53,17 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setShowMappingMatrixModal: (showMappingMatrixModal) => set({ showMappingMatrixModal }),
   showEtlHealthModal: false,
   setShowEtlHealthModal: (showEtlHealthModal) => set({ showEtlHealthModal }),
+  showDiffModal: false,
+  setShowDiffModal: (showDiffModal) => set({ showDiffModal }),
+  showGlobalSearchModal: false,
+  setShowGlobalSearchModal: (showGlobalSearchModal) => set({ showGlobalSearchModal }),
+  catalogAnnotations: {},
+  setCatalogAnnotation: (key, data) => set(state => ({
+    catalogAnnotations: {
+      ...state.catalogAnnotations,
+      [key.toLowerCase()]: data
+    }
+  })),
 
   // Undo/Redo state
   _history: [],

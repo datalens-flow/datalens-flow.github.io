@@ -224,7 +224,7 @@ export const parseLineage = (sql: string): LineageResult => {
 
   const globalResolvedCteBases = new Set<string>();
 
-  statements.forEach((stmt) => {
+  statements.forEach(({ clean: stmt }) => {
     const aliasMap: Record<string, string> = {};
     const aliasMatches = [...stmt.matchAll(/(?:from|join|using)\s+([\w.]+)(?:\s+(?:as\s+)?(\w+))?/gi)];
     aliasMatches.forEach(m => {

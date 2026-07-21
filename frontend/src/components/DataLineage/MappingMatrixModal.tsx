@@ -29,6 +29,8 @@ export const MappingMatrixModal: React.FC = () => {
       activeProcs = [allProcs[activeLineageProcedureIndex - 1]];
     }
 
+    const { catalogAnnotations } = useSchemaStore.getState();
+
     const rows: {
       sourceTable: string;
       sourceCol: string;
@@ -37,6 +39,8 @@ export const MappingMatrixModal: React.FC = () => {
       targetCol: string;
       procedureName: string;
       queryStep: string;
+      tags: string;
+      description: string;
     }[] = [];
 
     activeProcs.forEach(proc => {
@@ -47,6 +51,9 @@ export const MappingMatrixModal: React.FC = () => {
       );
 
       flows.forEach(f => {
+        const key = `${f.targetTable.toLowerCase()}.${f.targetCol.toLowerCase()}`;
+        const ann = catalogAnnotations[key] || catalogAnnotations[f.targetTable.toLowerCase()];
+
         rows.push({
           sourceTable: f.sourceTable,
           sourceCol: f.sourceCol === '*' ? 'All Columns (*)' : f.sourceCol,
@@ -54,7 +61,9 @@ export const MappingMatrixModal: React.FC = () => {
           targetTable: f.targetTable,
           targetCol: f.targetCol === '*' ? 'All Columns (*)' : f.targetCol,
           procedureName: proc.name,
-          queryStep: f.queryStep || 'Query #1'
+          queryStep: f.queryStep || 'Query #1',
+          tags: ann?.tags ? ann.tags.join(', ') : '',
+          description: ann?.description || ''
         });
       });
     });

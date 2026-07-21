@@ -120,7 +120,9 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
     setLineageViewMode,
     showProcedureGroups,
     setShowProcedureGroups,
-    setShowMappingMatrixModal
+    setShowMappingMatrixModal,
+    setShowDiffModal,
+    setShowGlobalSearchModal
   } = useSchemaStore();
 
   return (
@@ -170,7 +172,23 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
               onClick={() => setShowMappingMatrixModal(true)}
               title="View Data Mapping Matrix Table"
             >
-              <span>📊</span> Mapping Matrix
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> Mapping Matrix
+            </button>
+            <button 
+              className="toolbar-btn"
+              style={{ fontSize: '12px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              onClick={() => setShowDiffModal(true)}
+              title="Compare Lineage Versions (Version Diff)"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg> Lineage Diff
+            </button>
+            <button 
+              className="toolbar-btn"
+              style={{ fontSize: '12px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              onClick={() => setShowGlobalSearchModal(true)}
+              title="Global Table & Dependency Search (Cmd+K)"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Global Search
             </button>
           </div>
         </>

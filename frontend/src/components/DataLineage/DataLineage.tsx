@@ -14,11 +14,13 @@ import { useSqlEditor } from './useSqlEditor';
 import { useDataLineageFlow } from './hooks/useDataLineageFlow';
 import { DataLineageSidebar } from './DataLineageSidebar';
 import { MappingMatrixModal } from './MappingMatrixModal';
-import '@xyflow/react/dist/style.css';
-import './DataLineage.css';
-
 import { FormulaInspectorDrawer } from './FormulaInspectorDrawer';
 import { RepoImportModal } from './RepoImportModal';
+import { LineageDiffModal } from './LineageDiffModal';
+import { AnnotationModal } from './AnnotationModal';
+import { GlobalSearchModal } from './GlobalSearchModal';
+import '@xyflow/react/dist/style.css';
+import './DataLineage.css';
 
 const nodeTypes = {
   lineageNode: LineageNode,
@@ -32,7 +34,13 @@ export interface DataLineageProps {
 const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
-  const { showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer } = useSchemaStore();
+  const [annotationTargetKey, setAnnotationTargetKey] = useState<string | null>(null);
+
+  const { 
+    showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, 
+    ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer,
+    showGlobalSearchModal, setShowGlobalSearchModal
+  } = useSchemaStore();
 
   const { procedureSql, setProcedureSql, editorRef, viewRef } = useSqlEditor(`-- Sample ETL Stored Procedure
 INSERT INTO sales_summary (customer_name, revenue)
@@ -70,6 +78,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           columnsInvolved={columnsInvolved}
           handleInspectInDiagram={handleInspectInDiagram}
           onOpenRepoModal={() => setIsRepoModalOpen(true)}
+          onOpenAnnotationModal={(key) => setAnnotationTargetKey(key)}
         />
       )}
       <div className="lineage-canvas" style={{ position: 'relative' }}>
@@ -118,6 +127,9 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
       <MappingMatrixModal />
       <FormulaInspectorDrawer data={inspectorData} onClose={() => setInspectorData(null)} />
       <RepoImportModal isOpen={isRepoModalOpen} onClose={() => setIsRepoModalOpen(false)} />
+      <LineageDiffModal />
+      <AnnotationModal isOpen={!!annotationTargetKey} targetKey={annotationTargetKey} onClose={() => setAnnotationTargetKey(null)} />
+      <GlobalSearchModal isOpen={showGlobalSearchModal} onClose={() => setShowGlobalSearchModal(false)} onSelectNode={(id) => setSelectedNodeId(id)} />
     </div>
   );
 };

@@ -70,6 +70,12 @@ export interface SchemaState {
   setShowMappingMatrixModal: (show: boolean) => void;
   showEtlHealthModal: boolean;
   setShowEtlHealthModal: (show: boolean) => void;
+  showDiffModal: boolean;
+  setShowDiffModal: (show: boolean) => void;
+  showGlobalSearchModal: boolean;
+  setShowGlobalSearchModal: (show: boolean) => void;
+  catalogAnnotations: Record<string, { tags: string[]; description: string }>;
+  setCatalogAnnotation: (key: string, data: { tags: string[]; description: string }) => void;
   
   _history: SchemaResponse[];
   _historyIndex: number;
