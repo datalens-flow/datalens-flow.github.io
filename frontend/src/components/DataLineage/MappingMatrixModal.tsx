@@ -10,7 +10,8 @@ export const MappingMatrixModal: React.FC = () => {
     setShowMappingMatrixModal, 
     procedureSql, 
     ignoredLineageTables,
-    activeLineageProcedureIndex 
+    activeLineageProcedureIndex,
+    catalogAnnotations
   } = useSchemaStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,8 +29,6 @@ export const MappingMatrixModal: React.FC = () => {
     if (activeLineageProcedureIndex > 0 && allProcs[activeLineageProcedureIndex - 1]) {
       activeProcs = [allProcs[activeLineageProcedureIndex - 1]];
     }
-
-    const { catalogAnnotations } = useSchemaStore.getState();
 
     const rows: {
       sourceTable: string;
@@ -69,7 +68,7 @@ export const MappingMatrixModal: React.FC = () => {
     });
 
     return rows;
-  }, [procedureSql, ignoredLineageTables, activeLineageProcedureIndex]);
+  }, [procedureSql, ignoredLineageTables, activeLineageProcedureIndex, catalogAnnotations]);
 
   const uniqueProcedures = useMemo(() => {
     return Array.from(new Set(matrixData.map(r => r.procedureName)));

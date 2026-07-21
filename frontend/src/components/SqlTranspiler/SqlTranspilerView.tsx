@@ -144,10 +144,15 @@ export const SqlTranspilerView: React.FC = () => {
     }
   };
 
-  // Run initial transpilation on mount
+  // Run transpilation when sourceDialect or targetDialect changes
   useEffect(() => {
-    handleTranspile();
-  }, []);
+    if (sourceSql.trim()) {
+      const res: TranspileResult = transpileSql(sourceSql, sourceDialect, targetDialect);
+      setRightEditorDoc(res.convertedSql);
+      setTranspileLog(res.transformationLog);
+      setChangesCount(res.changesCount);
+    }
+  }, [sourceDialect, targetDialect]);
 
   const handleCopyConverted = () => {
     if (!targetSql.trim()) return;
