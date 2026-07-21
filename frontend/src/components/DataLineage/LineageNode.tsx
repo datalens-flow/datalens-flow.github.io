@@ -41,18 +41,16 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
     <div style={{ position: 'relative', width: '250px' }}>
       <div className="lineage-node" style={{ opacity: nodeType === 'temp' ? 0.9 : 1 }}>
         <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: theme.bg, color: theme.text, display: 'flex', alignItems: 'center' }}>
-          {data.hasIncoming && (
-             <Handle
-               type="target"
-               position={Position.Left}
-               id="col-header"
-               style={{ 
-                 background: 'var(--color-emerald)', width: '10px', height: '10px', left: '-17px',
-                 opacity: (isCollapsed || data.viewMode === 'overview') ? 1 : 0,
-                 pointerEvents: (isCollapsed || data.viewMode === 'overview') ? 'all' : 'none'
-               }}
-             />
-          )}
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="col-header"
+            style={{ 
+              background: 'var(--color-emerald)', width: '10px', height: '10px', left: '-17px',
+              opacity: (isCollapsed || data.viewMode === 'overview' || !data.hasIncoming) ? 0.3 : 1,
+              pointerEvents: 'all'
+            }}
+          />
           <span style={{ fontSize: '10px', fontWeight: 'bold', background: theme.text, color: '#fff', padding: '2px 6px', borderRadius: '4px', marginRight: '6px', flexShrink: 0, display: 'flex', gap: '4px', alignItems: 'center' }}>
             <span>{getBadgeIcon(nodeType)}</span>
             <span>{nodeType.toUpperCase()}</span>
@@ -60,18 +58,16 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--color-text-primary)' }} title={data.tableName}>
             {data.tableName}
           </span>
-          {data.hasOutgoing && (
-             <Handle
-               type="source"
-               position={Position.Right}
-               id="col-header"
-               style={{ 
-                 background: 'var(--color-indigo)', width: '10px', height: '10px', right: '-17px',
-                 opacity: (isCollapsed || data.viewMode === 'overview') ? 1 : 0,
-                 pointerEvents: (isCollapsed || data.viewMode === 'overview') ? 'all' : 'none'
-               }}
-             />
-          )}
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="col-header"
+            style={{ 
+              background: 'var(--color-indigo)', width: '10px', height: '10px', right: '-17px',
+              opacity: (isCollapsed || data.viewMode === 'overview' || !data.hasOutgoing) ? 0.3 : 1,
+              pointerEvents: 'all'
+            }}
+          />
         </div>
         {data.viewMode !== 'overview' && (
           <div className="lineage-node-body">
@@ -147,6 +143,7 @@ export const LineageNode = React.memo(LineageNodeComponent, (prevProps, nextProp
   const prev = prevProps.data;
   const next = nextProps.data;
   
+  if (prev.procKey !== next.procKey) return false;
   if (prev.tableName !== next.tableName) return false;
   if (prev.isCollapsed !== next.isCollapsed) return false;
   if (prev.viewMode !== next.viewMode) return false;

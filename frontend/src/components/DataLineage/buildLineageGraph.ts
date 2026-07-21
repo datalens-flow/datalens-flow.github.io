@@ -215,7 +215,8 @@ export const buildLineageGraph = (
         isView, 
         viewMode,
         hasIncoming: isTgt,
-        hasOutgoing: isSrc
+        hasOutgoing: isSrc,
+        procKey: procedures.map(p => p.name).join('_')
       },
       style: {
         width: COL_WIDTH,
@@ -334,18 +335,24 @@ export const buildLineageGraph = (
       const srcColIdx = srcCols.findIndex(c => c.name === sourceCol);
       const tgtColIdx = tgtCols.findIndex(c => c.name === targetCol);
       
+      const hasSrcHandle = srcColIdx !== -1 && srcCols[srcColIdx].hasRight;
+      const hasTgtHandle = tgtColIdx !== -1 && tgtCols[tgtColIdx].hasLeft;
+
       const isSrcCollapsed = (!expandedNodes.has(flow.sourceTable) && srcCols.length > MAX_COLS_VISIBLE) && srcColIdx >= MAX_COLS_VISIBLE;
       const isTgtCollapsed = (!expandedNodes.has(flow.targetTable) && tgtCols.length > MAX_COLS_VISIBLE) && tgtColIdx >= MAX_COLS_VISIBLE;
 
       const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
       const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
 
+      const sourceHandleId = (isSrcCollapsed || !hasSrcHandle) ? 'col-header' : `col-${sourceCol}`;
+      const targetHandleId = (isTgtCollapsed || !hasTgtHandle) ? 'col-header' : `col-${targetCol}`;
+
       newEdges.push({
         id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,
         source: flow.sourceTable,
         target: flow.targetTable,
-        sourceHandle: isSrcCollapsed ? 'col-header' : `col-${sourceCol}`,
-        targetHandle: isTgtCollapsed ? 'col-header' : `col-${targetCol}`,
+        sourceHandle: sourceHandleId,
+        targetHandle: targetHandleId,
         type: 'smoothstep',
         label: actionLabel,
         labelStyle: { fill: edgeColor, fontWeight: 700, fontSize: 10 },
