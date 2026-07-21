@@ -78,7 +78,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
                 <Handle
                   type="target"
                   position={Position.Left}
-                  id={`col-${col.name}`}
+                  id={`col-${col.name.replace(/[^a-zA-Z0-9_-]/g, '_')}`}
                   style={{
                     background: 'var(--color-emerald)',
                     border: '2px solid var(--bg-primary)',
@@ -97,7 +97,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
                 <Handle
                   type="source"
                   position={Position.Right}
-                  id={`col-${col.name}`}
+                  id={`col-${col.name.replace(/[^a-zA-Z0-9_-]/g, '_')}`}
                   style={{
                     background: 'var(--color-indigo)',
                     border: '2px solid var(--bg-primary)',

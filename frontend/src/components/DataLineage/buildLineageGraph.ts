@@ -344,8 +344,8 @@ export const buildLineageGraph = (
       const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
       const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
 
-      const sourceHandleId = (isSrcCollapsed || !hasSrcHandle) ? 'col-header' : `col-${sourceCol}`;
-      const targetHandleId = (isTgtCollapsed || !hasTgtHandle) ? 'col-header' : `col-${targetCol}`;
+      const sourceHandleId = (isSrcCollapsed || !hasSrcHandle) ? 'col-header' : `col-${sourceCol.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+      const targetHandleId = (isTgtCollapsed || !hasTgtHandle) ? 'col-header' : `col-${targetCol.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 
       newEdges.push({
         id: `e-${flow.sourceTable}-${flow.targetTable}-${sourceCol}-${targetCol}-${idx}`,

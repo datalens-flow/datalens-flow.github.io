@@ -140,6 +140,7 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
 
         console.log('[Main] Received message from worker:', e.data.type);
         setIsAnalyzing(false);
+        worker.terminate();
         if (e.data.type === 'SUCCESS') {
           const { newNodes, newEdges } = e.data.payload;
           
