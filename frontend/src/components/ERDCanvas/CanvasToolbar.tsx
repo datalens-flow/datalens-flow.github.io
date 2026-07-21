@@ -137,65 +137,58 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
         </>
       )}
 
-      {/* Lineage View Mode Toggle & Tools */}
+      {/* Lineage Tools Dropdown */}
       {mode === 'lineage' && (
-        <>
-          <div style={{ display: 'flex', backgroundColor: 'var(--bg-tertiary)', borderRadius: '6px', padding: '2px', marginRight: '8px' }}>
+        <div style={{ marginRight: '8px' }}>
+          <ToolbarDropdown label={<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Lineage Tools</>}>
+            <div className="toolbar-dropdown-group-label">Analytics & Inspection</div>
             <button 
-              className={`toolbar-btn ${lineageViewMode === 'detailed' ? 'active' : ''}`}
-              style={{ 
-                backgroundColor: lineageViewMode === 'detailed' ? 'var(--bg-primary)' : 'transparent',
-                color: lineageViewMode === 'detailed' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-                border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '12px'
-              }}
-              onClick={() => setLineageViewMode('detailed')}
-            >
-              Detailed
-            </button>
-            <button 
-              className={`toolbar-btn ${lineageViewMode === 'overview' ? 'active' : ''}`}
-              style={{ 
-                backgroundColor: lineageViewMode === 'overview' ? 'var(--bg-primary)' : 'transparent',
-                color: lineageViewMode === 'overview' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-                border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '12px'
-              }}
-              onClick={() => setLineageViewMode('overview')}
-            >
-              Overview
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', gap: '6px', marginRight: '8px' }}>
-            <button 
-              className="toolbar-btn"
-              style={{ fontSize: '12px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              className="toolbar-dropdown-item"
               onClick={() => setShowMappingMatrixModal(true)}
-              title="View Data Mapping Matrix Table"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> Mapping Matrix
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              Data Mapping Matrix
             </button>
             <button 
-              className="toolbar-btn"
-              style={{ fontSize: '12px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              className="toolbar-dropdown-item"
               onClick={() => setShowDiffModal(true)}
-              title="Compare Lineage Versions (Version Diff)"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg> Lineage Diff
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" style={{ marginRight: '6px' }}><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+              Lineage Version Diff
             </button>
             <button 
-              className="toolbar-btn"
-              style={{ fontSize: '12px', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+              className="toolbar-dropdown-item"
               onClick={() => setShowGlobalSearchModal(true)}
-              title="Global Table & Dependency Search (Cmd+K)"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Global Search
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" style={{ marginRight: '6px' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Global Search (Cmd+K)
             </button>
-          </div>
-        </>
+          </ToolbarDropdown>
+        </div>
       )}
 
       {/* Unified Settings Dropdown */}
       <ToolbarDropdown label={<><IconGear /> Settings</>}>
+        {/* Lineage View Detail Mode */}
+        {mode === 'lineage' && (
+          <>
+            <div className="toolbar-dropdown-group-label">View Detail Mode</div>
+            <button 
+              className={`toolbar-dropdown-item ${lineageViewMode === 'detailed' ? 'selected' : ''}`}
+              onClick={() => setLineageViewMode('detailed')}
+            >
+              Detailed (Column-Level)
+            </button>
+            <button 
+              className={`toolbar-dropdown-item ${lineageViewMode === 'overview' ? 'selected' : ''}`}
+              onClick={() => setLineageViewMode('overview')}
+            >
+              Overview (Table-Level)
+            </button>
+            <div className="toolbar-dropdown-divider" />
+          </>
+        )}
+
         {/* Layout Group */}
         <div className="toolbar-dropdown-group-label"><IconLayoutGroup /> Layout</div>
         <button className={`toolbar-dropdown-item ${layoutDir === 'LR' ? 'selected' : ''}`} onClick={() => setLayoutDir('LR')}>
@@ -250,7 +243,7 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
         {mode === 'lineage' && (
           <>
             <div className="toolbar-dropdown-divider" />
-            <div className="toolbar-dropdown-group-label">🌳 Lineage Graph</div>
+            <div className="toolbar-dropdown-group-label">Lineage Graph</div>
             <label className="toolbar-dropdown-check">
               <input 
                 type="checkbox" 
@@ -260,12 +253,12 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
               Show Procedure Group Boxes
             </label>
             <button className="toolbar-dropdown-item" onClick={() => window.dispatchEvent(new CustomEvent('lineage-expand-all'))}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 2v12M2 8h12M4 4l8 8M4 12l8-8"/></svg>
-              Expand All
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ marginRight: '6px' }}><path d="M8 2v12M2 8h12M4 4l8 8M4 12l8-8"/></svg>
+              Expand All Nodes
             </button>
             <button className="toolbar-dropdown-item" onClick={() => window.dispatchEvent(new CustomEvent('lineage-collapse-all'))}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 8h12M4 4l4 4 4-4M4 12l4-4 4 4"/></svg>
-              Collapse All
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ marginRight: '6px' }}><path d="M2 8h12M4 4l4 4 4-4M4 12l4-4 4 4"/></svg>
+              Collapse All Nodes
             </button>
           </>
         )}
