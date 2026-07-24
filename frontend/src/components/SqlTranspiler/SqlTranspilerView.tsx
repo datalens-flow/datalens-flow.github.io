@@ -56,7 +56,7 @@ export const SqlTranspilerView: React.FC = () => {
   const [targetSql, setTargetSql] = useState<string>('');
   const [transpileLog, setTranspileLog] = useState<string[]>([]);
   const [changesCount, setChangesCount] = useState<number>(0);
-  const [viewMode, setViewMode] = useState<'split' | 'diff'>('split');
+  const [showDiff, setShowDiff] = useState<boolean>(false);
 
   const leftEditorRef = useRef<HTMLDivElement>(null);
   const rightEditorRef = useRef<HTMLDivElement>(null);
@@ -92,7 +92,7 @@ export const SqlTranspilerView: React.FC = () => {
 
     leftViewRef.current = view;
     return () => view.destroy();
-  }, [theme, viewMode]);
+  }, [theme, showDiff]);
 
   // Initialize Right Editor (Target Transpiled SQL)
   useEffect(() => {
@@ -123,7 +123,7 @@ export const SqlTranspilerView: React.FC = () => {
 
     rightViewRef.current = view;
     return () => view.destroy();
-  }, [theme, viewMode]);
+  }, [theme, showDiff]);
 
   // Update Right Editor doc when targetSql changes programmatically
   const setRightEditorDoc = (newDoc: string) => {
@@ -253,65 +253,71 @@ export const SqlTranspilerView: React.FC = () => {
         </div>
 
         <div className="transpiler-actions">
-          {/* View Mode Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-primary)', padding: '2px', borderRadius: '6px', border: '1px solid var(--color-border)', height: '32px', boxSizing: 'border-box' }}>
-            <button 
-              className={`btn ${viewMode === 'split' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setViewMode('split')}
-              style={{ height: '26px', padding: '0 10px', fontSize: '11px', border: 'none' }}
+          {/* Group 1: Tools & Presets */}
+          <div className="toolbar-group">
+            {/* Migration Presets Dropdown */}
+            <select 
+              onChange={e => handleSelectTemplate(e.target.value)}
+              className="transpiler-select"
+              defaultValue=""
+              style={{ borderColor: 'var(--color-indigo, #6366f1)', minWidth: '170px' }}
             >
-              Side-by-Side
+              <option value="" disabled>📚 Migration Presets...</option>
+              {MIGRATION_TEMPLATES.map(t => (
+                <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+            </select>
+
+            <button className="btn btn-secondary" onClick={handleFormatSource} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ✨ Format
             </button>
+
+            {/* Simple Show Diff Toggle Button */}
             <button 
-              className={`btn ${viewMode === 'diff' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setViewMode('diff')}
-              style={{ height: '26px', padding: '0 10px', fontSize: '11px', border: 'none' }}
+              className={`btn ${showDiff ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setShowDiff(!showDiff)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: showDiff ? 'var(--color-indigo, #6366f1)' : 'transparent',
+                borderColor: showDiff ? 'transparent' : 'var(--color-border)',
+                color: showDiff ? '#ffffff' : 'var(--color-text-primary)'
+              }}
             >
-              🔍 Visual Diff
+              🔍 Show Diff {changesCount > 0 ? `(${changesCount})` : ''}
             </button>
           </div>
 
-          {/* Migration Presets Dropdown */}
-          <select 
-            onChange={e => handleSelectTemplate(e.target.value)}
-            className="transpiler-select"
-            defaultValue=""
-            style={{ borderColor: 'var(--color-indigo, #6366f1)', minWidth: '170px' }}
-          >
-            <option value="" disabled>📚 Migration Presets...</option>
-            {MIGRATION_TEMPLATES.map(t => (
-              <option key={t.id} value={t.id}>{t.title}</option>
-            ))}
-          </select>
+          <div className="toolbar-divider" />
 
-          <button className="btn btn-secondary" onClick={handleFormatSource} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            ✨ Format
-          </button>
+          {/* Group 2: Action Buttons */}
+          <div className="toolbar-group">
+            <button className="btn btn-secondary" onClick={handleLoadSample} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Sample
+            </button>
 
-          <button className="btn btn-secondary" onClick={handleLoadSample} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Sample
-          </button>
+            <button className="btn btn-primary" onClick={handleTranspile} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Transpile
+            </button>
 
-          <button className="btn btn-primary" onClick={handleTranspile} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Transpile
-          </button>
+            <button className="btn btn-secondary" onClick={handleCopyConverted} disabled={!targetSql.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
 
-          <button className="btn btn-secondary" onClick={handleCopyConverted} disabled={!targetSql.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy
-          </button>
-
-          <button className="btn btn-secondary" onClick={handleDownloadConverted} disabled={!targetSql.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            .sql
-          </button>
+            <button className="btn btn-secondary" onClick={handleDownloadConverted} disabled={!targetSql.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              .sql
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Main Workspace Display */}
-      {viewMode === 'split' ? (
+      {!showDiff ? (
         <div className="transpiler-editors-grid">
           {/* Left Editor */}
           <div className="transpiler-editor-panel glass-panel">

@@ -69,7 +69,20 @@
 .transpiler-actions {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--color-border, #334155);
+  margin: 0 4px;
 }
 
 .transpiler-actions .btn {
