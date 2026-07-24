@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { KNOWLEDGE_GROUPS, KNOWLEDGE_TOPICS } from './knowledgeData';
 import { KnowledgeModal } from './KnowledgeModal';
+import { RenderKnowledgeIcon } from './KnowledgeIcons';
 
 export const KnowledgeDropdown: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -64,9 +65,13 @@ export const KnowledgeDropdown: React.FC = () => {
                     color: '#38bdf8',
                     padding: '4px 8px',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.04em'
+                    letterSpacing: '0.04em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
                   }}>
-                    {group.icon} {group.title}
+                    <RenderKnowledgeIcon iconKey={group.iconKey} size={13} color="#38bdf8" />
+                    <span>{group.title}</span>
                   </div>
                   {groupTopics.map(topic => (
                     <button
@@ -84,7 +89,7 @@ export const KnowledgeDropdown: React.FC = () => {
                       }}
                     >
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>{topic.icon}</span>
+                        <RenderKnowledgeIcon iconKey={topic.iconKey} size={13} color="var(--color-indigo)" />
                         <span>{topic.title}</span>
                       </span>
                     </button>

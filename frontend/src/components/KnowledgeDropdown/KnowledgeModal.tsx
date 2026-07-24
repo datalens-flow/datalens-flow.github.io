@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { KNOWLEDGE_GROUPS, KNOWLEDGE_TOPICS } from './knowledgeData';
+import { RenderKnowledgeIcon } from './KnowledgeIcons';
 import './KnowledgeModal.css';
 
 interface KnowledgeModalProps {
@@ -51,8 +52,10 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                   key={g.id}
                   className={`filter-tab ${selectedGroupFilter === g.id ? 'active' : ''}`}
                   onClick={() => setSelectedGroupFilter(g.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  {g.icon} {g.title.split('(')[0]}
+                  <RenderKnowledgeIcon iconKey={g.iconKey} size={13} color="currentColor" />
+                  <span>{g.title.split('(')[0]}</span>
                 </button>
               ))}
             </div>
@@ -64,7 +67,9 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                   className={`topic-card ${selectedTopicId === t.id ? 'selected' : ''}`}
                   onClick={() => setSelectedTopicId(t.id)}
                 >
-                  <span className="topic-card-icon">{t.icon}</span>
+                  <span className="topic-card-icon">
+                    <RenderKnowledgeIcon iconKey={t.iconKey} size={18} color="var(--color-indigo)" />
+                  </span>
                   <div className="topic-card-info">
                     <span className="topic-card-title">{t.title}</span>
                     <span className="topic-card-tag">{t.tag}</span>
@@ -79,22 +84,25 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
             <div className="content-header">
               <span className="content-group-badge">{currentTopic.groupTitle}</span>
               <h1 className="content-title">
-                {currentTopic.icon} {currentTopic.title}
+                <RenderKnowledgeIcon iconKey={currentTopic.iconKey} size={22} color="#38bdf8" />
+                <span>{currentTopic.title}</span>
               </h1>
             </div>
 
             {/* Deep Dive Section */}
             <div className="knowledge-section">
-              <h3 className="section-title">
-                💡 การเจาะลึก (Deep Dive Concept)
+              <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <RenderKnowledgeIcon iconKey="lightbulb" size={16} color="#facc15" />
+                <span>การเจาะลึก (Deep Dive Concept)</span>
               </h3>
               <p className="section-text">{currentTopic.deepDive}</p>
             </div>
 
             {/* Real World Scenario Example */}
             <div className="knowledge-section example-box">
-              <h3 className="section-title text-emerald">
-                📌 ตัวอย่างการทำงานจริงในองค์กร (Enterprise Scenario)
+              <h3 className="section-title text-emerald" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <RenderKnowledgeIcon iconKey="pin" size={16} color="#10b981" />
+                <span>ตัวอย่างการทำงานจริงในองค์กร (Enterprise Scenario)</span>
               </h3>
               <p className="section-text">{currentTopic.example}</p>
             </div>
@@ -102,8 +110,9 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
             {/* Enterprise Use Case Box */}
             {currentTopic.useCase && (
               <div className="knowledge-section use-case-box">
-                <h3 className="section-title text-cyan">
-                  🚀 กรณีการใช้งานในธุรกิจ (Enterprise Use Case)
+                <h3 className="section-title text-cyan" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RenderKnowledgeIcon iconKey="rocket" size={16} color="#38bdf8" />
+                  <span>กรณีการใช้งานในธุรกิจ (Enterprise Use Case)</span>
                 </h3>
                 <p className="section-text" style={{ whiteSpace: 'pre-line' }}>{currentTopic.useCase}</p>
               </div>
@@ -112,8 +121,9 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
             {/* Extra Details (6 Quality Dimensions List OR Architecture Comparison Table) */}
             {currentTopic.extraDetails && currentTopic.extraDetails.type === 'list' && currentTopic.extraDetails.items && (
               <div className="knowledge-section">
-                <h3 className="section-title text-indigo">
-                  🎯 6 มิติหลักวัดคุณภาพข้อมูล (Data Quality Dimensions)
+                <h3 className="section-title text-indigo" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RenderKnowledgeIcon iconKey="data-quality" size={16} color="#818cf8" />
+                  <span>6 มิติหลักวัดคุณภาพข้อมูล (Data Quality Dimensions)</span>
                 </h3>
                 <div className="dimensions-grid">
                   {currentTopic.extraDetails.items.map((item, i) => (
@@ -128,8 +138,9 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
 
             {currentTopic.extraDetails && currentTopic.extraDetails.type === 'comparison' && currentTopic.extraDetails.table && (
               <div className="knowledge-section">
-                <h3 className="section-title text-cyan">
-                  📊 ตารางเปรียบเทียบเชิงลึก (Comparison Matrix)
+                <h3 className="section-title text-cyan" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <RenderKnowledgeIcon iconKey="mesh-vs-fabric" size={16} color="#22d3ee" />
+                  <span>ตารางเปรียบเทียบเชิงลึก (Comparison Matrix)</span>
                 </h3>
                 <table className="knowledge-comparison-table">
                   <thead>
