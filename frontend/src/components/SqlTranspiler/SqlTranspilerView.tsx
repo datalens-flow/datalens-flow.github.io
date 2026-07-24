@@ -8,7 +8,6 @@ import { tags as t } from '@lezer/highlight';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { useToastStore } from '../../store/useToastStore';
 import { transpileSql, SqlDialect, DIALECT_LABELS, TranspileResult } from '../../utils/transpiler/sqlTranspilerEngine';
-import { MIGRATION_TEMPLATES } from '../../utils/transpiler/transpilerTemplates';
 import { lintSqlCompatibility, LinterResult } from '../../utils/transpiler/sqlLinterEngine';
 import { formatSql } from '../../utils/sqlFormatter';
 import './SqlTranspilerView.css';
@@ -199,19 +198,6 @@ export const SqlTranspilerView: React.FC = () => {
     setTargetDialect('postgres');
   };
 
-  const handleSelectTemplate = (tplId: string) => {
-    const tpl = MIGRATION_TEMPLATES.find(t => t.id === tplId);
-    if (!tpl) return;
-    setSourceSql(tpl.sql);
-    if (leftViewRef.current) {
-      leftViewRef.current.dispatch({
-        changes: { from: 0, to: leftViewRef.current.state.doc.length, insert: tpl.sql }
-      });
-    }
-    setSourceDialect(tpl.sourceDialect);
-    setTargetDialect(tpl.targetDialect);
-  };
-
   const linterResult: LinterResult = lintSqlCompatibility(sourceSql, sourceDialect, targetDialect);
 
   return (
@@ -253,21 +239,8 @@ export const SqlTranspilerView: React.FC = () => {
         </div>
 
         <div className="transpiler-actions">
-          {/* Group 1: Tools & Presets */}
+          {/* Group 1: Tools & Options */}
           <div className="toolbar-group">
-            {/* Migration Presets Dropdown */}
-            <select 
-              onChange={e => handleSelectTemplate(e.target.value)}
-              className="transpiler-select"
-              defaultValue=""
-              style={{ borderColor: 'var(--color-indigo, #6366f1)', minWidth: '170px' }}
-            >
-              <option value="" disabled>📚 Migration Presets...</option>
-              {MIGRATION_TEMPLATES.map(t => (
-                <option key={t.id} value={t.id}>{t.title}</option>
-              ))}
-            </select>
-
             <button className="btn btn-secondary" onClick={handleFormatSource} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               ✨ Format
             </button>
