@@ -10,7 +10,8 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
   const {
     isOpen, exporting, prefix, setPrefix, panelRef, toggleDropdown, schema,
     handleExportJson, handleExportPng, handleExportSvg, handleExportDrawio, handleExportXlsx,
-    handleExportMarkdown, handleExportHtmlReport, handleExportPdfReport, handleExportSql, handleExportMigration, handleCopyDrawio
+    handleExportMarkdown, handleExportHtmlReport, handleExportPdfReport, handleExportSql, handleExportMigration, handleCopyDrawio,
+    handleExportMermaid, handleExportPlantUml
   } = useExportPanel(mode);
 
   return (
@@ -52,9 +53,17 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ mode = 'diagram' }) =>
           <div className="dropdown-section-title">{mode === 'lineage' ? 'Lineage Canvas' : 'Diagram (ERD)'}</div>
           <button onClick={handleExportPng} className="dropdown-item">Export PNG Image</button>
           <button onClick={handleExportSvg} className="dropdown-item">Export SVG Vector</button>
+          <button onClick={handleExportMermaid} className="dropdown-item" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"/><path d="M18 8l4 4-4 4"/></svg>
+            Export Mermaid.js (.md)
+          </button>
           
           {mode === 'lineage' && (
             <>
+              <button onClick={handleExportPlantUml} className="dropdown-item" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Export PlantUML (.puml)
+              </button>
               <div className="dropdown-divider"></div>
               <div className="dropdown-section-title">Reports</div>
               <button onClick={handleExportPdfReport} className="dropdown-item" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

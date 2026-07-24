@@ -231,10 +231,49 @@ export const useExportPanel = (mode: 'diagram' | 'lineage') => {
       useToastStore.getState().addToast({ type: 'error', message: 'Failed to copy to clipboard' });
     } finally { setExporting(false); setIsOpen(false); }
   };
+  const handleExportMermaid = async () => {
+    setExporting(true);
+    try {
+      const { generateErdMermaid, generateLineageMermaid } = await import('../../utils/exporters/mermaidExporter');
+      let content = '';
+      let ext = 'md';
+      if (mode === 'diagram') {
+        if (!schema) return;
+        content = generateErdMermaid(schema);
+      } else {
+        if (!procedureSql) return;
+        content = generateLineageMermaid(procedureSql);
+      }
+      const blob = new Blob([content], { type: 'text/markdown' });
+      triggerDownload(blob, `${prefix}-${getActiveProcedureName()}-mermaid.${ext}`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setExporting(false);
+      setIsOpen(false);
+    }
+  };
+
+  const handleExportPlantUml = async () => {
+    if (!procedureSql) return;
+    setExporting(true);
+    try {
+      const { generateLineagePlantUml } = await import('../../utils/exporters/mermaidExporter');
+      const content = generateLineagePlantUml(procedureSql);
+      const blob = new Blob([content], { type: 'text/plain' });
+      triggerDownload(blob, `${prefix}-${getActiveProcedureName()}.puml`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setExporting(false);
+      setIsOpen(false);
+    }
+  };
 
   return {
     isOpen, exporting, prefix, setPrefix, panelRef, toggleDropdown, schema,
     handleExportJson, handleExportPng, handleExportSvg, handleExportDrawio, handleExportXlsx,
-    handleExportMarkdown, handleExportHtmlReport, handleExportPdfReport, handleExportSql, handleExportMigration, handleCopyDrawio
+    handleExportMarkdown, handleExportHtmlReport, handleExportPdfReport, handleExportSql, handleExportMigration, handleCopyDrawio,
+    handleExportMermaid, handleExportPlantUml
   };
 };

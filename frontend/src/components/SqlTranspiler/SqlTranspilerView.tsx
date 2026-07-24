@@ -8,6 +8,8 @@ import { tags as t } from '@lezer/highlight';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { useToastStore } from '../../store/useToastStore';
 import { transpileSql, SqlDialect, DIALECT_LABELS, TranspileResult } from '../../utils/transpiler/sqlTranspilerEngine';
+import { MIGRATION_TEMPLATES } from '../../utils/transpiler/transpilerTemplates';
+import { lintSqlCompatibility, LinterResult } from '../../utils/transpiler/sqlLinterEngine';
 import './SqlTranspilerView.css';
 
 const darkHighlightStyle = HighlightStyle.define([
@@ -183,6 +185,21 @@ export const SqlTranspilerView: React.FC = () => {
     setTargetDialect('postgres');
   };
 
+  const handleSelectTemplate = (tplId: string) => {
+    const tpl = MIGRATION_TEMPLATES.find(t => t.id === tplId);
+    if (!tpl) return;
+    setSourceSql(tpl.sql);
+    if (leftViewRef.current) {
+      leftViewRef.current.dispatch({
+        changes: { from: 0, to: leftViewRef.current.state.doc.length, insert: tpl.sql }
+      });
+    }
+    setSourceDialect(tpl.sourceDialect);
+    setTargetDialect(tpl.targetDialect);
+  };
+
+  const linterResult: LinterResult = lintSqlCompatibility(sourceSql, sourceDialect, targetDialect);
+
   return (
     <div className="transpiler-container">
       {/* Header Controls Bar */}
@@ -222,6 +239,19 @@ export const SqlTranspilerView: React.FC = () => {
         </div>
 
         <div className="transpiler-actions">
+          {/* Migration Presets Dropdown */}
+          <select 
+            onChange={e => handleSelectTemplate(e.target.value)}
+            className="transpiler-select"
+            defaultValue=""
+            style={{ borderColor: 'var(--color-indigo, #6366f1)', minWidth: '180px' }}
+          >
+            <option value="" disabled>📚 Migration Presets...</option>
+            {MIGRATION_TEMPLATES.map(t => (
+              <option key={t.id} value={t.id}>{t.title}</option>
+            ))}
+          </select>
+
           <button className="btn btn-secondary" onClick={handleLoadSample} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             Sample SQL
@@ -273,6 +303,31 @@ export const SqlTranspilerView: React.FC = () => {
         </div>
       </div>
 
+      {/* Syntax & Dialect Compatibility Linter Warning Banner */}
+      {linterResult.issues.length > 0 && (
+        <div style={{
+          backgroundColor: 'rgba(234, 179, 8, 0.08)',
+          border: '1px solid rgba(234, 179, 8, 0.3)',
+          borderRadius: '8px',
+          padding: '8px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '12px',
+          color: '#fef08a'
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style={{ fontWeight: 'bold' }}>Dialect Linter Score: {linterResult.compatibilityScore}%</span>
+          <div style={{ flex: 1, display: 'flex', gap: '8px', overflowX: 'auto' }}>
+            {linterResult.issues.map((issue, idx) => (
+              <span key={idx} style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', padding: '2px 8px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                Line {issue.line}: {issue.message}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Transformation Log Panel */}
       <div className="transpiler-log-panel glass-panel">
         <div className="log-panel-header">
@@ -299,3 +354,5 @@ export const SqlTranspilerView: React.FC = () => {
     </div>
   );
 };
+
+export default SqlTranspilerView;
