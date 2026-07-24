@@ -13,6 +13,7 @@ import { useSchemaStore } from './store/useSchemaStore';
 import { useRef } from 'react';
 import { ProjectManager } from './components/ProjectManager/ProjectManager';
 import { ModeDropdown } from './components/ModeDropdown/ModeDropdown';
+import { KnowledgeDropdown } from './components/KnowledgeDropdown/KnowledgeDropdown';
 
 const SqlTranspilerView = lazy(() => import('./components/SqlTranspiler/SqlTranspilerView').then(m => ({ default: m.SqlTranspilerView })));
 
@@ -152,6 +153,7 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexGrow: 1, marginLeft: '24px' }}>
           <ProjectManager />
           <ModeDropdown currentMode={currentMode} setCurrentMode={setCurrentMode} />
+          <KnowledgeDropdown />
           
           {/* Centered Search Bar matching both diagram & lineage */}
           {showSearch && (
