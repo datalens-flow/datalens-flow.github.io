@@ -256,7 +256,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
         rows: [
           ['Data Governance & Catalog', 'Collibra, Microsoft Purview, Alation', 'จัดการสารบบข้อมูล ค้นหา Owner และตรวจสอบ Lineage'],
           ['Data Integration & ETL', 'dbt, Talend, Informatica, Airflow', 'ดูด แปลง และโหลดข้อมูลจากหลายแหล่งมารวมกัน'],
-          ['Modern Data Storage', 'Snowflake, Google BigQuery, Amazon Redshift', 'จัดเก็บและประมวลผลข้อมูลประสิทธิภาพสูงบน Cloud'],
+          ['Modern Storage', 'Snowflake, Google BigQuery, Amazon Redshift', 'จัดเก็บและประมวลผลข้อมูลประสิทธิภาพสูงบน Cloud'],
           ['MDM System', 'Reltio, Informatica MDM, IBM MDM', 'รวบรวมและล้างข้อมูลหลักให้เป็น Golden Record Real-time']
         ]
       }
