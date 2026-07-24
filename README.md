@@ -1,6 +1,6 @@
 # 🔍 DataLens Flow: 100% Serverless Database Modeler, Transpiler & Lineage Engine
 
-DataLens Flow is a premium, high-performance web suite designed for developers, data engineers, and data architects. It parses SQL DDL/DML scripts (PostgreSQL, Microsoft SQL Server, MySQL, SQLite, Oracle, BigQuery, Snowflake), automatically generates interactive, editable Entity-Relationship Diagrams (ERD), translates schemas across multiple dialects in real-time, visualizes end-to-end Data Lineage, builds automatic Data Dictionaries, calculates schema diffs to produce `ALTER` database migrations, and features a complete DAMA-DMBOK Data Governance Knowledge Hub.
+DataLens Flow is a premium, high-performance web suite designed for developers, data engineers, and data architects. It parses SQL DDL/DML scripts (PostgreSQL, Microsoft SQL Server, MySQL, SQLite, Oracle, BigQuery, Snowflake), automatically generates interactive, editable Entity-Relationship Diagrams (ERD), translates schemas across multiple dialects in real-time, visualizes end-to-end Data Lineage, builds automatic Data Dictionaries, calculates schema diffs to produce `ALTER` database migrations, and features an exhaustive, enterprise-grade DAMA-DMBOK Data Governance & Architecture Knowledge Hub.
 
 The entire application runs **100% client-side in the browser** (no-backend architecture), making it 100% serverless, zero-cost to host, and lightning-fast with zero network latency.
 
@@ -23,14 +23,49 @@ The entire application runs **100% client-side in the browser** (no-backend arch
   - 💡 **Best Practice**: `ORDER BY` without row limiters (`LIMIT` / `TOP`).
 
 ### 3. 📚 Enterprise Data Governance & DAMA-DMBOK Knowledge Hub
-- **Header Bar Dropdown**: `📚 Knowledge Base` dropdown menu placed right next to the Mode Selector.
-- **Comprehensive DAMA-DMBOK Framework**:
-  - 🌐 **Data Ecosystem**: Harmony across Standards, Security, Management & Modern Tech.
-  - 👥 **People & Roles**: Chief Data Officer (CDO), Data Owner, Data Steward, Data Custodian.
-  - ⚙️ **Process & Framework**: Data Maturity Assessment (5 levels), Data Governance Board, Issue Resolution.
-  - 🛠️ **Technology Stack Matrix**: Catalog (Purview/Collibra), Integration (dbt/Talend), Modern Storage (Snowflake/BigQuery), MDM System.
-  - 🛡️ **Risk & Quality Control**: Data Lineage Tracking & Automated Quality Checks (<5% null alert rules).
-- **Dedicated Enterprise Use Cases**: Real-world business scenarios for all 12 topics (Banking Fraud Protection, Healthcare Prescription Validation, Telecom PDPA Privacy, Logistics Real-Time Fleet Tracking).
+The application integrates a comprehensive, interactive Knowledge Hub right in the top navigation bar (`📚 Knowledge Base`), detailing how the entire "Data Ecosystem" functions in enterprise environments across 5 core groups and 12 specialized topics:
+
+#### 📐 Group 1: Standards & Structure (กลุ่มมาตรฐานและโครงสร้าง)
+- **🌐 Data Ecosystem (ระบบนิเวศของข้อมูล)**: Overall architecture harmony connecting people, processes, and tech to transform raw data into business value. Includes real-time banking fraud prevention use cases.
+- **🏗️ Data Architecture (สถาปัตยกรรมข้อมูล)**: Blueprint for data flow from operational databases (PostgreSQL) via CDC to cloud data lakes (AWS S3) and warehouses (Snowflake).
+- **🎯 Data Quality (คุณภาพข้อมูล 6 มิติ)**: In-depth evaluation across 6 statistical & engineering dimensions:
+  1. *Accuracy (ความถูกต้อง)*: Data reflects ground truth without errors.
+  2. *Completeness (ความครบถ้วน)*: Mandatory fields are not missing.
+  3. *Consistency (ความสม่ำเสมอ)*: Cross-system alignment without contradictions.
+  4. *Timeliness (ความทันเวลา)*: Freshness required for real-time analytics.
+  5. *Validity (ความสมเหตุสมผล)*: Adherence to format and domain boundaries.
+  6. *Uniqueness (ความไม่ซ้ำซ้อน)*: Absence of duplicate records.
+- **📖 Data Catalog & Data Dictionary**: Column-level technical definitions vs. enterprise-wide metadata search engines with data lineage mapping.
+- **👤 Data Stewardship & Governance**: Policy formulation vs. operational execution by business data stewards.
+
+#### 🛡️ Group 2: Security & Privacy (กลุ่มความปลอดภัยและสิทธิส่วนบุคคล)
+- **🔒 Data Security**: Encryption (at rest/in transit), Data Masking (`****-****-****-1234`), and Role-Based Access Control (RBAC). Includes insurance PCI-DSS tokenization use cases.
+- **⚖️ Data Privacy (PDPA / GDPR)**: Law compliance, purpose limitation, consent tracking, and automated Right-to-be-Forgotten workflows.
+
+#### ⚙️ Group 3: Management & Integration (กลุ่มการจัดการและการนำไปใช้)
+- **👑 Master Data Management (MDM)**: Resolution of conflicting records across legacy systems into a Single Source of Truth (Golden Record / `CUST-001`).
+- **🔄 Data Integration & ETL / ELT**: Data extraction, transformation, and loading using Airflow, dbt, Talend, and BigQuery.
+- **⏳ Data Lifecycle Management (DLM)**: Storage tiering from High-Performance SSD ➔ Cold Glacier Archiving ➔ Automated 10-Year Regulatory Purge.
+
+#### 🚀 Group 4: Modern Concepts (กลุ่มเทคโนโลยีและแนวคิดยุคใหม่)
+- **🏛️ Data Warehouse vs. Data Lake**: Comparative matrix for Structured (BI/Dashboards) vs. Unstructured (AI/ML) data storage.
+- **🕸️ Data Mesh vs. Data Fabric**: Comparative matrix for Organizational Decentralization (Domain-driven Data as a Product) vs. Technological AI Smart Metadata Fabric Layer.
+
+#### 🏛️ Group 5: DAMA-DMBOK Practical Framework (กรอบ DAMA-DMBOK ทางปฏิบัติ)
+- **👥 People & Roles (4 Core Roles)**:
+  - *Chief Data Officer (CDO)*: Executive alignment of data strategy with business goals.
+  - *Data Owner*: High-level decision maker approving data access and assuming data risk.
+  - *Data Steward*: Operational business expert managing Data Quality and Data Dictionaries.
+  - *Data Custodian*: IT / Data Engineer managing server infrastructure, backups, and security rules.
+- **⚙️ Process & Framework**: Data Maturity Assessment (5 maturity stages), Data Governance Board (Cross-functional policy committee), and Single Source of Truth Issue Resolution.
+- **🛠️ Technology Stack Matrix**:
+  - *Governance & Catalog*: Collibra, Microsoft Purview, Alation.
+  - *Integration & ETL*: dbt, Talend, Informatica, Airflow.
+  - *Modern Storage*: Snowflake, Google BigQuery, Amazon Redshift.
+  - *MDM Systems*: Reltio, Informatica MDM, IBM MDM.
+- **🛡️ Risk & Quality Control**: Data Lineage Tracking for root-cause analysis & Automated Quality Checks with alert thresholds (<5% null policy).
+
+---
 
 ### 4. 🔄 Real-Time SQL Transpiler & Type Converter
 - **Cross-Dialect Translation**: Translates schemas and queries across 7 database dialects (Oracle, T-SQL, Postgres, MySQL, BigQuery, Snowflake, SQLite).
