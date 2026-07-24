@@ -30,6 +30,39 @@ export const KNOWLEDGE_GROUPS = [
 export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
   // 1. กลุ่มมาตรฐานและโครงสร้าง
   {
+    id: 'enterprise-blueprint',
+    groupId: 'standards',
+    groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
+    title: 'คู่มือสถาปัตยกรรมข้อมูลองค์กรเชิงลึก (Enterprise Data Blueprint)',
+    iconKey: 'standards',
+    tag: 'Chief Architect & DAMA Board Reference Manual',
+    imageUrl: '/images/knowledge/data-ecosystem.jpg',
+    useCaseImageUrl: '/images/knowledge/dmbok-framework-roles.jpg',
+    deepDive: `🏛️ [เอกสารคู่มือสถาปัตยกรรมข้อมูลองค์กรเชิงลึก - Enterprise Data Architecture Guide v4.2.0]
+การวางสถาปัตยกรรมข้อมูลระดับองค์กรอ้างอิงกรอบ DAMA-DMBOK และนโยบายบริหารความเสี่ยงธุรกิจประกันภัยและธนาคารพาณิชย์:
+
+ส่วนที่ 1: ภาพรวมสถาปัตยกรรมระบบนิเวศข้อมูลองค์กร (Enterprise Data Ecosystem Architecture)
+- ปรัชญา Decoupled Architecture & Real-Time Event Streaming: แยกฝั่ง OLTP (PostgreSQL) และ OLAP (Snowflake) โดยสิ้นเชิงเพื่อ Zero Workload Degradation
+- Change Data Capture (CDC) WAL Log Mining: ใช้ Debezium อ่าน Write-Ahead Log ของ PostgreSQL ➔ สตรีมเข้า Apache Kafka ➔ แปลงเป็น Parquet ลง AWS S3 ➔ Snowflake Snowpipe Auto-Ingestion
+- Modern ELT Orchestration: Apache Airflow DAGs คุม Workflow ➔ dbt Core ทำ SQL Transformation + Data Lineage + Data Quality Testing
+
+ส่วนที่ 2: พจนานุกรมข้อมูลและแคตตาล็อกเชิงลึก (In-depth Data Dictionary & MDM)
+- Golden Record CUST-001: รวมข้อมูลลูกค้าจาก 5 ระบบด้วยกฎ Attribute-level Survivorship (Source Priority + Recency + Completeness)
+- Security & Privacy: Vaultless FPE Tokenization (PCI DSS 4.0 Requirement 3.5.1) + Dynamic Data Masking (PDPA/GDPR)
+- Data Lifecycle Management (DLM): Hot SSD (0-1 ปี) ➔ AWS S3 Glacier Archive (-80% Cost, 2-9 ปี) ➔ Automated 10-Year Purge Policy
+
+ส่วนที่ 3: มาตรฐานการควบคุมคุณภาพและการกำกับดูแล (Data Quality & Governance)
+- DAMA-DMBOK 6 Dimensions: Accuracy, Completeness, Consistency, Timeliness, Validity, Uniqueness พร้อมสูตรวัดผลเชิงเทคนิคและสคริปต์ dbt-expectations
+- Roles & Workflow: CDO ➔ Data Owner ➔ Data Steward ➔ Data Custodian
+- Security & Lineage: TLS 1.3, AES-256 KMS, RBAC, Monte Carlo Root-Cause Analysis (สืบย้อนรอยสาเหตุข้อมูลผิดใน 2 นาที)
+
+ส่วนที่ 4: บทวิเคราะห์เปรียบเทียบสถาปัตยกรรมขั้นสูง (Architectural Deep Dive)
+- Data Warehouse vs Data Lake vs Data Lakehouse Matrix
+- Data Mesh (Decentralized Domain Products) vs Data Fabric (AI Active Metadata Layer)`,
+    example: 'องค์กรการเงินและประกันภัยขนาดใหญ่ใช้พิมพ์เขียวสถาปัตยกรรมนี้ในการสเกลระบบข้อมูล เชื่อมต่อระบบเคลมและบัตรเครดิตเข้ากับ Snowflake และ AWS S3 ปฏิบัติตามมาตรฐาน PCI DSS 4.0 และ PDPA 100%',
+    useCase: '[Use Case: Enterprise Governance & Risk Management Infrastructure]\nการสเกลท่อข้อมูลสตรีมมิ่งผ่าน Confluent Kafka + Flink + Snowflake รองรับธุรกรรมนับล้านรายการต่อนาที ป้องกันภัยทุจริต Real-Time sub-145ms SLA และออกใบรักษากฎหมาย Audit Certificate อัตโนมัติ'
+  },
+  {
     id: 'data-ecosystem',
     groupId: 'standards',
     groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
