@@ -302,11 +302,104 @@ export const buildLineageGraph = (
     }
   });
 
-  // --- Strict dbt Architecture Left-to-Right Column Alignment ---
-  // Only apply global column alignment if NO procedure group boxes are active
-  const hasActiveProcedureGroups = showProcedureGroups && procedures.length > 1 && newNodes.some(n => n.type === 'group');
+  // --- Procedure & Global Architectural Layout Engine ---
+  const groupNodes = newNodes.filter(n => n.type === 'group');
+  const hasActiveProcedureGroups = showProcedureGroups && procedures.length > 1 && groupNodes.length > 0;
 
-  if (viewMode === 'dbt' && !hasActiveProcedureGroups) {
+  if (hasActiveProcedureGroups) {
+    let currentProcY = 60;
+    const COLUMN_SPACING = 380;
+
+    // Stack procedure groups in the order they appear in the SQL script
+    procedures.forEach(proc => {
+      const groupNodeId = `group-${proc.name}`;
+      const groupNode = groupNodes.find(g => g.id === groupNodeId);
+      if (!groupNode) return;
+
+      const children = newNodes.filter(n => n.parentId === groupNodeId);
+      if (children.length === 0) return;
+
+      const dbtLayers: Record<string, any[]> = {
+        source: [],
+        staging: [],
+        marts: [],
+        exposure: []
+      };
+
+      children.forEach(c => {
+        const t = c.data?.dbtType || 'marts';
+        if (t === 'seed') dbtLayers['staging'].push(c);
+        else if (dbtLayers[t]) dbtLayers[t].push(c);
+        else dbtLayers['marts'].push(c);
+      });
+
+      const layerOrder: ('source' | 'staging' | 'marts' | 'exposure')[] = ['source', 'staging', 'marts', 'exposure'];
+      let groupWidth = 400;
+      let groupHeight = 200;
+
+      if (direction === 'LR') {
+        // Horizontal inside procedure box: Columns from Left to Right
+        let maxColHeight = 0;
+        let activeColsCount = 0;
+
+        layerOrder.forEach((layerKey, colIdx) => {
+          const colNodes = dbtLayers[layerKey];
+          if (colNodes.length === 0) return;
+          activeColsCount++;
+          colNodes.sort((a, b) => a.id.localeCompare(b.id));
+
+          let relY = 50; // top margin inside group box
+          const relX = 30 + (colIdx) * COLUMN_SPACING;
+
+          colNodes.forEach(child => {
+            child.position = { x: relX, y: relY };
+            const dNode = dagreGraph.hasNode(child.id) ? dagreGraph.node(child.id) : null;
+            const h = dNode?.height || (child.data?.isCollapsed ? 54 : 300);
+            relY += h + 25;
+          });
+
+          if (relY > maxColHeight) maxColHeight = relY;
+        });
+
+        groupWidth = Math.max(450, 60 + activeColsCount * COLUMN_SPACING);
+        groupHeight = Math.max(180, maxColHeight + 30);
+      } else {
+        // Vertical inside procedure box: Rows from Top to Bottom
+        let currentRelY = 50;
+
+        layerOrder.forEach((layerKey) => {
+          const rowNodes = dbtLayers[layerKey];
+          if (rowNodes.length === 0) return;
+          rowNodes.sort((a, b) => a.id.localeCompare(b.id));
+
+          let maxRowH = 0;
+          rowNodes.forEach((child, colIdx) => {
+            const relX = 30 + colIdx * 300;
+            child.position = { x: relX, y: currentRelY };
+            const dNode = dagreGraph.hasNode(child.id) ? dagreGraph.node(child.id) : null;
+            const h = dNode?.height || (child.data?.isCollapsed ? 54 : 300);
+            if (h > maxRowH) maxRowH = h;
+          });
+
+          currentRelY += maxRowH + 40;
+        });
+
+        groupWidth = Math.max(500, 80 + children.length * 280);
+        groupHeight = Math.max(200, currentRelY + 30);
+      }
+
+      // Position the procedure group box
+      groupNode.position = { x: 60, y: currentProcY };
+      groupNode.style = {
+        ...groupNode.style,
+        width: groupWidth,
+        height: groupHeight
+      };
+
+      currentProcY += groupHeight + 65; // Stack next procedure box below!
+    });
+  } else if (viewMode === 'dbt') {
+    // Global dbt Layout (Single procedure or Procedure Boxes toggled OFF)
     const dbtLayers: Record<string, any[]> = {
       source: [],
       staging: [],
@@ -325,30 +418,53 @@ export const buildLineageGraph = (
     const COLUMN_SPACING = 380;
     const START_X = 60;
     const START_Y = 60;
-
     const layerOrder: ('source' | 'staging' | 'marts' | 'exposure')[] = ['source', 'staging', 'marts', 'exposure'];
 
-    layerOrder.forEach((layerKey, colIndex) => {
-      const colNodes = dbtLayers[layerKey];
-      colNodes.sort((a, b) => a.id.localeCompare(b.id));
+    if (direction === 'LR') {
+      // Horizontal Global: Columns from Left to Right
+      layerOrder.forEach((layerKey, colIndex) => {
+        const colNodes = dbtLayers[layerKey];
+        colNodes.sort((a, b) => a.id.localeCompare(b.id));
 
-      let currentY = START_Y;
-      colNodes.forEach((node) => {
-        const x = START_X + colIndex * COLUMN_SPACING;
-        const y = currentY;
-        node.position = { x, y };
+        let currentY = START_Y;
+        colNodes.forEach((node) => {
+          const x = START_X + colIndex * COLUMN_SPACING;
+          const y = currentY;
+          node.position = { x, y };
 
-        const dNode = dagreGraph.hasNode(node.id) ? dagreGraph.node(node.id) : null;
-        const h = dNode?.height || (node.data?.isCollapsed ? 54 : 300);
+          const dNode = dagreGraph.hasNode(node.id) ? dagreGraph.node(node.id) : null;
+          const h = dNode?.height || (node.data?.isCollapsed ? 54 : 300);
 
-        if (dNode) {
-          dNode.x = x + COL_WIDTH / 2;
-          dNode.y = y + h / 2;
-        }
+          if (dNode) {
+            dNode.x = x + COL_WIDTH / 2;
+            dNode.y = y + h / 2;
+          }
 
-        currentY += h + 30; // Clean 30px gap below the node (shifts all nodes below down!)
+          currentY += h + 30;
+        });
       });
-    });
+    } else {
+      // Vertical Global: Rows from Top to Bottom
+      let currentY = START_Y;
+      layerOrder.forEach((layerKey) => {
+        const rowNodes = dbtLayers[layerKey];
+        if (rowNodes.length === 0) return;
+        rowNodes.sort((a, b) => a.id.localeCompare(b.id));
+
+        let maxRowH = 0;
+        rowNodes.forEach((node, colIndex) => {
+          const x = START_X + colIndex * 300;
+          const y = currentY;
+          node.position = { x, y };
+
+          const dNode = dagreGraph.hasNode(node.id) ? dagreGraph.node(node.id) : null;
+          const h = dNode?.height || (node.data?.isCollapsed ? 54 : 300);
+          if (h > maxRowH) maxRowH = h;
+        });
+
+        currentY += maxRowH + 45;
+      });
+    }
   }
 
   const allSourceTables = [...new Set(combinedFlows.map(f => f.sourceTable))];
