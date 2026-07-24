@@ -10,6 +10,7 @@ import { useToastStore } from '../../store/useToastStore';
 import { transpileSql, SqlDialect, DIALECT_LABELS, TranspileResult } from '../../utils/transpiler/sqlTranspilerEngine';
 import { MIGRATION_TEMPLATES } from '../../utils/transpiler/transpilerTemplates';
 import { lintSqlCompatibility, LinterResult } from '../../utils/transpiler/sqlLinterEngine';
+import { formatSql, computeSqlDiff } from '../../utils/sqlFormatter';
 import './SqlTranspilerView.css';
 
 const darkHighlightStyle = HighlightStyle.define([
@@ -55,6 +56,7 @@ export const SqlTranspilerView: React.FC = () => {
   const [targetSql, setTargetSql] = useState<string>('');
   const [transpileLog, setTranspileLog] = useState<string[]>([]);
   const [changesCount, setChangesCount] = useState<number>(0);
+  const [viewMode, setViewMode] = useState<'split' | 'diff'>('split');
 
   const leftEditorRef = useRef<HTMLDivElement>(null);
   const rightEditorRef = useRef<HTMLDivElement>(null);
@@ -90,7 +92,7 @@ export const SqlTranspilerView: React.FC = () => {
 
     leftViewRef.current = view;
     return () => view.destroy();
-  }, [theme]);
+  }, [theme, viewMode]);
 
   // Initialize Right Editor (Target Transpiled SQL)
   useEffect(() => {
@@ -121,7 +123,7 @@ export const SqlTranspilerView: React.FC = () => {
 
     rightViewRef.current = view;
     return () => view.destroy();
-  }, [theme]);
+  }, [theme, viewMode]);
 
   // Update Right Editor doc when targetSql changes programmatically
   const setRightEditorDoc = (newDoc: string) => {
@@ -155,6 +157,18 @@ export const SqlTranspilerView: React.FC = () => {
       setChangesCount(res.changesCount);
     }
   }, [sourceDialect, targetDialect]);
+
+  const handleFormatSource = () => {
+    if (!sourceSql.trim()) return;
+    const formatted = formatSql(sourceSql);
+    setSourceSql(formatted);
+    if (leftViewRef.current) {
+      leftViewRef.current.dispatch({
+        changes: { from: 0, to: leftViewRef.current.state.doc.length, insert: formatted }
+      });
+    }
+    useToastStore.getState().addToast({ type: 'success', message: 'Source SQL formatted!' });
+  };
 
   const handleCopyConverted = () => {
     if (!targetSql.trim()) return;
@@ -199,6 +213,7 @@ export const SqlTranspilerView: React.FC = () => {
   };
 
   const linterResult: LinterResult = lintSqlCompatibility(sourceSql, sourceDialect, targetDialect);
+  const diffLines = computeSqlDiff(sourceSql, targetSql);
 
   return (
     <div className="transpiler-container">
@@ -239,12 +254,30 @@ export const SqlTranspilerView: React.FC = () => {
         </div>
 
         <div className="transpiler-actions">
+          {/* View Mode Switcher */}
+          <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', padding: '2px', borderRadius: '6px', border: '1px solid var(--color-border)' }}>
+            <button 
+              className={`btn ${viewMode === 'split' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setViewMode('split')}
+              style={{ padding: '4px 10px', fontSize: '11px', border: 'none' }}
+            >
+              Side-by-Side
+            </button>
+            <button 
+              className={`btn ${viewMode === 'diff' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setViewMode('diff')}
+              style={{ padding: '4px 10px', fontSize: '11px', border: 'none' }}
+            >
+              🔍 Visual Diff
+            </button>
+          </div>
+
           {/* Migration Presets Dropdown */}
           <select 
             onChange={e => handleSelectTemplate(e.target.value)}
             className="transpiler-select"
             defaultValue=""
-            style={{ borderColor: 'var(--color-indigo, #6366f1)', minWidth: '180px' }}
+            style={{ borderColor: 'var(--color-indigo, #6366f1)', minWidth: '170px' }}
           >
             <option value="" disabled>📚 Migration Presets...</option>
             {MIGRATION_TEMPLATES.map(t => (
@@ -252,56 +285,96 @@ export const SqlTranspilerView: React.FC = () => {
             ))}
           </select>
 
+          <button className="btn btn-secondary" onClick={handleFormatSource} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            ✨ Format
+          </button>
+
           <button className="btn btn-secondary" onClick={handleLoadSample} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Sample SQL
+            Sample
           </button>
 
           <button className="btn btn-primary" onClick={handleTranspile} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Transpile SQL
+            Transpile
           </button>
 
           <button className="btn btn-secondary" onClick={handleCopyConverted} disabled={!targetSql.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy Output
+            Copy
           </button>
 
           <button className="btn btn-secondary" onClick={handleDownloadConverted} disabled={!targetSql.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download .sql
+            .sql
           </button>
         </div>
       </div>
 
-      {/* Side-by-Side Editors Grid */}
-      <div className="transpiler-editors-grid">
-        {/* Left Editor */}
-        <div className="transpiler-editor-panel glass-panel">
-          <div className="editor-panel-header">
-            <span className="panel-title">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Original SQL ({DIALECT_LABELS[sourceDialect]})
-            </span>
-            <span className="panel-badge source-badge">SOURCE</span>
+      {/* Main Workspace Display */}
+      {viewMode === 'split' ? (
+        <div className="transpiler-editors-grid">
+          {/* Left Editor */}
+          <div className="transpiler-editor-panel glass-panel">
+            <div className="editor-panel-header">
+              <span className="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Original SQL ({DIALECT_LABELS[sourceDialect]})
+              </span>
+              <span className="panel-badge source-badge">SOURCE</span>
+            </div>
+            <div className="editor-cm-wrapper" ref={leftEditorRef} />
           </div>
-          <div className="editor-cm-wrapper" ref={leftEditorRef} />
-        </div>
 
-        {/* Right Editor */}
-        <div className="transpiler-editor-panel glass-panel">
+          {/* Right Editor */}
+          <div className="transpiler-editor-panel glass-panel">
+            <div className="editor-panel-header">
+              <span className="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Transpiled Target SQL ({DIALECT_LABELS[targetDialect]})
+              </span>
+              <span className="panel-badge target-badge">
+                {changesCount > 0 ? `${changesCount} TRANSFORMATIONS` : 'READY'}
+              </span>
+            </div>
+            <div className="editor-cm-wrapper" ref={rightEditorRef} />
+          </div>
+        </div>
+      ) : (
+        /* Visual Diff View Panel */
+        <div className="transpiler-editor-panel glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div className="editor-panel-header">
             <span className="panel-title">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Transpiled Target SQL ({DIALECT_LABELS[targetDialect]})
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+              Transpilation Syntax Diff View ({DIALECT_LABELS[sourceDialect]} ➔ {DIALECT_LABELS[targetDialect]})
             </span>
-            <span className="panel-badge target-badge">
-              {changesCount > 0 ? `${changesCount} TRANSFORMATIONS` : 'READY'}
+            <span className="panel-badge target-badge" style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
+              GIT-STYLE DIFF
             </span>
           </div>
-          <div className="editor-cm-wrapper" ref={rightEditorRef} />
+          <div style={{ flex: 1, padding: '12px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.6' }}>
+            {diffLines.map((line, i) => (
+              <div 
+                key={i} 
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '2px 8px',
+                  borderRadius: '3px',
+                  backgroundColor: line.type === 'added' ? 'rgba(16, 185, 129, 0.15)' : (line.type === 'removed' ? 'rgba(239, 68, 68, 0.15)' : 'transparent'),
+                  color: line.type === 'added' ? '#34d399' : (line.type === 'removed' ? '#f87171' : 'var(--color-text-primary)'),
+                  borderLeft: line.type === 'added' ? '3px solid #10b981' : (line.type === 'removed' ? '3px solid #ef4444' : '3px solid transparent')
+                }}
+              >
+                <span style={{ width: '30px', color: 'var(--color-text-muted)', fontSize: '10px', userSelect: 'none' }}>
+                  {line.type === 'added' ? `+` : (line.type === 'removed' ? `-` : ` `)}
+                </span>
+                <span style={{ whiteSpace: 'pre-wrap' }}>{line.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Syntax & Dialect Compatibility Linter Warning Banner */}
       {linterResult.issues.length > 0 && (

@@ -38,6 +38,16 @@ export const SqlEditorHeader: React.FC<SqlEditorHeaderProps> = ({
     onUpdateEditor(SAMPLE_SQL);
   };
 
+  const handleFormat = async () => {
+    const { formatSql } = await import('../../utils/sqlFormatter');
+    const { sql: currentSql } = useSchemaStore.getState();
+    if (!currentSql.trim()) return;
+    const formatted = formatSql(currentSql);
+    setSql(formatted);
+    onUpdateEditor(formatted);
+    useToastStore.getState().addToast({ type: 'success', message: 'SQL formatted successfully!' });
+  };
+
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
@@ -124,6 +134,14 @@ export const SqlEditorHeader: React.FC<SqlEditorHeaderProps> = ({
             style={{ padding: '4px 10px', fontSize: '11px' }}
           >
             📁 Import SQL
+          </button>
+          <button 
+            onClick={handleFormat}
+            disabled={loading}
+            className="btn btn-secondary"
+            style={{ padding: '4px 10px', fontSize: '11px' }}
+          >
+            ✨ Format
           </button>
           <button 
             onClick={handleLoadSample}
