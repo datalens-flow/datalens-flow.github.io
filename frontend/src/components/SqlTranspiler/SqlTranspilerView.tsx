@@ -10,7 +10,7 @@ import { useToastStore } from '../../store/useToastStore';
 import { transpileSql, SqlDialect, DIALECT_LABELS, TranspileResult } from '../../utils/transpiler/sqlTranspilerEngine';
 import { MIGRATION_TEMPLATES } from '../../utils/transpiler/transpilerTemplates';
 import { lintSqlCompatibility, LinterResult } from '../../utils/transpiler/sqlLinterEngine';
-import { formatSql, computeSqlDiff } from '../../utils/sqlFormatter';
+import { formatSql } from '../../utils/sqlFormatter';
 import './SqlTranspilerView.css';
 
 const darkHighlightStyle = HighlightStyle.define([
@@ -213,7 +213,6 @@ export const SqlTranspilerView: React.FC = () => {
   };
 
   const linterResult: LinterResult = lintSqlCompatibility(sourceSql, sourceDialect, targetDialect);
-  const diffLines = computeSqlDiff(sourceSql, targetSql);
 
   return (
     <div className="transpiler-container">
@@ -341,37 +340,82 @@ export const SqlTranspilerView: React.FC = () => {
           </div>
         </div>
       ) : (
-        /* Visual Diff View Panel */
-        <div className="transpiler-editor-panel glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div className="editor-panel-header">
-            <span className="panel-title">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-              Transpilation Syntax Diff View ({DIALECT_LABELS[sourceDialect]} ➔ {DIALECT_LABELS[targetDialect]})
-            </span>
-            <span className="panel-badge target-badge" style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
-              GIT-STYLE DIFF
-            </span>
+        /* Side-by-Side Visual Diff View Grid */
+        <div className="transpiler-editors-grid">
+          {/* Left Panel: Original Source SQL Diff */}
+          <div className="transpiler-editor-panel glass-panel">
+            <div className="editor-panel-header">
+              <span className="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Original SQL ({DIALECT_LABELS[sourceDialect]})
+              </span>
+              <span className="panel-badge" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                BEFORE
+              </span>
+            </div>
+            <div style={{ flex: 1, padding: '12px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.6' }}>
+              {sourceSql.split('\n').map((lineText, i) => {
+                const targetText = targetSql.split('\n')[i];
+                const isChanged = lineText.trim() !== (targetText || '').trim();
+                return (
+                  <div 
+                    key={i} 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '2px 8px',
+                      borderRadius: '3px',
+                      backgroundColor: isChanged ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+                      color: isChanged ? '#f87171' : 'var(--color-text-primary)',
+                      borderLeft: isChanged ? '3px solid #ef4444' : '3px solid transparent'
+                    }}
+                  >
+                    <span style={{ width: '28px', color: 'var(--color-text-muted)', fontSize: '10px', userSelect: 'none' }}>
+                      {i + 1} {isChanged ? '-' : ''}
+                    </span>
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{lineText}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ flex: 1, padding: '12px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.6' }}>
-            {diffLines.map((line, i) => (
-              <div 
-                key={i} 
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '2px 8px',
-                  borderRadius: '3px',
-                  backgroundColor: line.type === 'added' ? 'rgba(16, 185, 129, 0.15)' : (line.type === 'removed' ? 'rgba(239, 68, 68, 0.15)' : 'transparent'),
-                  color: line.type === 'added' ? '#34d399' : (line.type === 'removed' ? '#f87171' : 'var(--color-text-primary)'),
-                  borderLeft: line.type === 'added' ? '3px solid #10b981' : (line.type === 'removed' ? '3px solid #ef4444' : '3px solid transparent')
-                }}
-              >
-                <span style={{ width: '30px', color: 'var(--color-text-muted)', fontSize: '10px', userSelect: 'none' }}>
-                  {line.type === 'added' ? `+` : (line.type === 'removed' ? `-` : ` `)}
-                </span>
-                <span style={{ whiteSpace: 'pre-wrap' }}>{line.text}</span>
-              </div>
-            ))}
+
+          {/* Right Panel: Transpiled Target SQL Diff */}
+          <div className="transpiler-editor-panel glass-panel">
+            <div className="editor-panel-header">
+              <span className="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Transpiled Target SQL ({DIALECT_LABELS[targetDialect]})
+              </span>
+              <span className="panel-badge target-badge">
+                AFTER ({changesCount} DIFFS)
+              </span>
+            </div>
+            <div style={{ flex: 1, padding: '12px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.6' }}>
+              {targetSql.split('\n').map((lineText, i) => {
+                const sourceText = sourceSql.split('\n')[i];
+                const isChanged = lineText.trim() !== (sourceText || '').trim();
+                return (
+                  <div 
+                    key={i} 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '2px 8px',
+                      borderRadius: '3px',
+                      backgroundColor: isChanged ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
+                      color: isChanged ? '#34d399' : 'var(--color-text-primary)',
+                      borderLeft: isChanged ? '3px solid #10b981' : '3px solid transparent'
+                    }}
+                  >
+                    <span style={{ width: '28px', color: 'var(--color-text-muted)', fontSize: '10px', userSelect: 'none' }}>
+                      {i + 1} {isChanged ? '+' : ''}
+                    </span>
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{lineText}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
