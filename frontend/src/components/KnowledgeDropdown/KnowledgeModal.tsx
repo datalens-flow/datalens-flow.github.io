@@ -106,7 +106,6 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                   style={{ 
                     margin: '12px 0 18px 0', 
                     borderRadius: '8px', 
-                    overflow: 'hidden', 
                     border: '1px solid var(--color-border)',
                     background: '#090d16',
                     cursor: 'zoom-in',
@@ -121,7 +120,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                       width: '100%', 
                       height: 'auto', 
                       display: 'block', 
-                      objectFit: 'contain'
+                      borderRadius: '8px'
                     }} 
                   />
                   <div style={{
@@ -153,6 +152,14 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                 <span>การเจาะลึก (Deep Dive Concept)</span>
               </h3>
               <p className="section-text">{currentTopic.deepDive}</p>
+              {currentTopic.deepDiveImageUrl && (
+                <div 
+                  onClick={() => setPreviewImage(currentTopic.deepDiveImageUrl || null)}
+                  style={{ margin: '10px 0 6px 0', borderRadius: '8px', border: '1px solid var(--color-border)', background: '#090d16', cursor: 'zoom-in', width: '100%' }}
+                >
+                  <img src={getImageUrl(currentTopic.deepDiveImageUrl)} alt="Deep Dive Diagram" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }} />
+                </div>
+              )}
             </div>
 
             {/* Real World Scenario Example */}
@@ -162,6 +169,14 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                 <span>ตัวอย่างการทำงานจริงในองค์กร (Enterprise Scenario)</span>
               </h3>
               <p className="section-text">{currentTopic.example}</p>
+              {currentTopic.exampleImageUrl && (
+                <div 
+                  onClick={() => setPreviewImage(currentTopic.exampleImageUrl || null)}
+                  style={{ margin: '10px 0 6px 0', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', background: '#090d16', cursor: 'zoom-in', width: '100%' }}
+                >
+                  <img src={getImageUrl(currentTopic.exampleImageUrl)} alt="Scenario Diagram" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }} />
+                </div>
+              )}
             </div>
 
             {/* Enterprise Use Case Box */}
@@ -172,6 +187,14 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                   <span>กรณีการใช้งานในธุรกิจ (Enterprise Use Case)</span>
                 </h3>
                 <p className="section-text" style={{ whiteSpace: 'pre-line' }}>{currentTopic.useCase}</p>
+                {currentTopic.useCaseImageUrl && (
+                  <div 
+                    onClick={() => setPreviewImage(currentTopic.useCaseImageUrl || null)}
+                    style={{ margin: '10px 0 6px 0', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)', background: '#090d16', cursor: 'zoom-in', width: '100%' }}
+                  >
+                    <img src={getImageUrl(currentTopic.useCaseImageUrl)} alt="Use Case Diagram" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }} />
+                  </div>
+                )}
               </div>
             )}
 

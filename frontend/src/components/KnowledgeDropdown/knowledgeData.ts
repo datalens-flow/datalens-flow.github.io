@@ -9,6 +9,9 @@ export interface KnowledgeTopic {
   example: string;
   useCase: string;
   imageUrl?: string;
+  deepDiveImageUrl?: string;
+  exampleImageUrl?: string;
+  useCaseImageUrl?: string;
   extraDetails?: {
     type: 'list' | 'comparison';
     items?: { title: string; desc: string }[];
@@ -34,6 +37,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     iconKey: 'data-ecosystem',
     tag: 'Overview & Harmony',
     imageUrl: '/images/knowledge/data-ecosystem.jpg',
+    useCaseImageUrl: '/images/knowledge/sub-realtime-fraud.jpg',
     deepDive: 'ระบบนิเวศของข้อมูล (Data Ecosystem) คือโครงสร้างพื้นฐาน เทคโนโลยี บุคลากร และกระบวนการทั้งหมดที่ปฏิสัมพันธ์กันอย่างสอดคล้องภายในองค์กร เพื่อเปลี่ยนข้อมูลดิบ (Raw Data) จากหลายแหล่งให้กลายเป็นคุณค่าทางธุรกิจ (Business Value) อย่างมีเสถียรภาพ มีความปลอดภัย และมีธรรมาภิบาล',
     example: 'ธนาคารพาณิชย์เชื่อมต่อระบบ Mobile Banking, ตู้ ATM, ระบบอนุมัติสินเชื่อ และระบบบัตรเครดิต เข้ากับ Data Lakehouse กลาง เพื่อให้ทุกฝ่ายทำงานบนฐานข้อมูลเดียวกันโดยไร้รอยต่อ',
     useCase: '[Use Case: Banking Real-time Fraud Detection]\nธนาคารพาณิชย์ใช้ Data Ecosystem ในการเฝ้าระวังภัยทุจริตทางการเงินแบบ Real-time ข้อมูลการรูดบัตรจากเครื่อง EDC และแอปพลิเคชันจะไหลผ่าน Data Pipeline ➔ ตรวจสอบ Data Quality ➔ กรองสิทธิ์ความปลอดภัย ➔ ผ่านโมเดล AI ใน Data Lakehouse เพื่อบล็อกรายการสุ่มเสี่ยงได้ภายใน 0.3 วินาที'
@@ -46,6 +50,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     iconKey: 'data-architecture',
     tag: 'Foundation',
     imageUrl: '/images/knowledge/data-architecture.jpg',
+    exampleImageUrl: '/images/knowledge/sub-cdc-architecture.jpg',
     deepDive: 'การออกแบบ "พิมพ์เขียว" (Blueprint) ของระบบข้อมูลทั้งหมดในองค์กร กำหนดว่าองค์กรมีข้อมูลอะไรบ้าง ข้อมูลเหล่านั้นจะถูกเก็บไว้ที่ไหน (On-premise หรือ Cloud) ไหลผ่านระบบใดบ้าง และเชื่อมต่อกันอย่างไรเพื่อรองรับทั้งการใช้งานประจำวัน (Operational) และการวิเคราะห์ขั้นสูง (Analytics)',
     example: 'การวาดแผนผังว่าข้อมูลลูกค้าเมื่อสมัครผ่านแอปพลิเคชัน Mobile Banking จะต้องวิ่งไปเก็บที่ Transaction DB (PostgreSQL) หลังบ้าน จากนั้น CDC (Change Data Capture) จะคัดลอกข้อมูลไปยัง Data Lake บน AWS S3 สำหรับให้ทีม Data Analytics ดึงไปใช้วิเคราะห์ต่อโดยไม่กระทบความเร็วของแอปหลัก',
     useCase: '[Use Case: E-Commerce Multi-Cloud Streaming]\nธุรกิจอีคอมเมิร์ซออกแบบ Data Architecture ด้วย Kafka + Snowflake โดยดึงข้อมูลสั่งซื้อจากคำสั่งซื้อนับล้านรายการต่อนาทีบน Cloud เข้าสู่ Snowflake Data Warehouse แบบ Real-time ทำให้ทีมการตลาดเห็นยอดขายใน Flash Sale ได้ทันทีโดยระบบหน้าร้านไม่ล่ม'
@@ -221,6 +226,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     iconKey: 'dmbok-people-roles',
     tag: 'DAMA-DMBOK Pillar 1',
     imageUrl: '/images/knowledge/dmbok-people-roles.jpg',
+    deepDiveImageUrl: '/images/knowledge/sub-dmbok-roles.jpg',
     deepDive: 'ตามมาตรฐาน DAMA-DMBOK การจัดการข้อมูลไม่ใช่หน้าที่ของฝ่าย IT เพียงฝ่ายเดียว แต่เป็นความรับผิดชอบร่วมกันทั้งองค์กร ต้องมีการแต่งตั้งบทบาทที่ชัดเจนระหว่างระดับนโยบาย (CDO), ระดับตัดสินใจธุรกิจ (Data Owner), ระดับปฏิบัติการดูแลนิยาม (Data Steward) และระดับเทคนิค (Data Custodian)',
     example: 'แต่งตั้ง Head of Marketing เป็น Data Owner ของตารางลูกค้า และแต่งตั้งทีม Risk Analyst เป็น Data Steward คอยเช็คว่าพนักงานกรอกข้อมูลกรมธรรม์ถูกต้องหรือไม่ โดยมีทีม Data Engineer เป็น Data Custodian คอยทำ Backup สิทธิ์',
     useCase: '[Use Case: Enterprise Data Governance Org Structure]\nองค์กรการเงินขนาดใหญ่จัดตั้งโครงสร้างตาม DAMA-DMBOK โดยแต่งตั้ง CDO คุมยุทธศาสตร์ภาพรวม ➔ ให้ผู้อำนวยการฝ่ายพันธมิตรเป็น Data Owner อนุมัติสิทธิ์เข้าถึงตารางพาร์ทเนอร์ ➔ ให้สถาปนิกความเสี่ยงเป็น Data Steward กำหนด Data Dictionary ➔ ให้ทีม Data Infrastructure เป็น Data Custodian คอยดูเซิร์ฟเวอร์',
