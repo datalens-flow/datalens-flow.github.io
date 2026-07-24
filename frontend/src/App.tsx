@@ -13,7 +13,7 @@ import { useSchemaStore } from './store/useSchemaStore';
 import { useRef } from 'react';
 import { ProjectManager } from './components/ProjectManager/ProjectManager';
 import { ModeDropdown } from './components/ModeDropdown/ModeDropdown';
-import { KnowledgeDropdown } from './components/KnowledgeDropdown/KnowledgeDropdown';
+import { KnowledgeView } from './components/KnowledgeView/KnowledgeView';
 
 const SqlTranspilerView = lazy(() => import('./components/SqlTranspiler/SqlTranspilerView').then(m => ({ default: m.SqlTranspilerView })));
 
@@ -22,10 +22,11 @@ function App() {
     return !sessionStorage.getItem('datalens-launched');
   });
 
-  const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage' | 'transpiler'>(() => {
+  const [currentMode, setCurrentMode] = useState<'diagram' | 'lineage' | 'transpiler' | 'knowledge'>(() => {
     const path = window.location.pathname;
     if (path.includes('/data_lineage')) return 'lineage';
     if (path.includes('/sql_transpiler')) return 'transpiler';
+    if (path.includes('/knowledge_hub')) return 'knowledge';
     return 'diagram';
   });
 
@@ -33,6 +34,7 @@ function App() {
     let targetPath = '/database_diagram';
     if (currentMode === 'lineage') targetPath = '/data_lineage';
     if (currentMode === 'transpiler') targetPath = '/sql_transpiler';
+    if (currentMode === 'knowledge') targetPath = '/knowledge_hub';
     if (window.location.pathname !== targetPath) {
       window.history.pushState(null, '', targetPath);
     }
@@ -45,6 +47,8 @@ function App() {
         setCurrentMode('lineage');
       } else if (path.includes('/sql_transpiler')) {
         setCurrentMode('transpiler');
+      } else if (path.includes('/knowledge_hub')) {
+        setCurrentMode('knowledge');
       } else {
         setCurrentMode('diagram');
       }
@@ -153,7 +157,6 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexGrow: 1, marginLeft: '24px' }}>
           <ProjectManager />
           <ModeDropdown currentMode={currentMode} setCurrentMode={setCurrentMode} />
-          <KnowledgeDropdown />
           
           {/* Centered Search Bar matching both diagram & lineage */}
           {showSearch && (
@@ -270,11 +273,15 @@ function App() {
         <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
           <DataLineage onSwitchToDiagram={() => setCurrentMode('diagram')} />
         </main>
-      ) : (
+      ) : currentMode === 'transpiler' ? (
         <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden', width: '100%' }}>
           <Suspense fallback={<div style={{ padding: '24px', color: 'var(--color-text-muted)', fontSize: '13px' }}>Loading SQL Transpiler...</div>}>
             <SqlTranspilerView />
           </Suspense>
+        </main>
+      ) : (
+        <main style={{ display: 'flex', flexGrow: 1, overflow: 'hidden', width: '100%' }}>
+          <KnowledgeView />
         </main>
       )}
       <ToastContainer />

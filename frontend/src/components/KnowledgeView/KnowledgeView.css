@@ -1,0 +1,244 @@
+.knowledge-view-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Header & Search Bar */
+.knowledge-view-header {
+  padding: 14px 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.knowledge-view-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.knowledge-view-title-group h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.knowledge-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  width: 380px;
+  transition: all 0.2s ease;
+}
+
+.knowledge-search-bar:focus-within {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+}
+
+.knowledge-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  width: 100%;
+}
+
+/* Main Body Layout */
+.knowledge-view-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left Sidebar */
+.knowledge-view-sidebar {
+  width: 360px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.group-filter-list {
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.group-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.group-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+.group-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.topic-scroll-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topic-item-card {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.topic-item-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.topic-item-card.selected {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: #38bdf8;
+}
+
+.topic-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.topic-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.topic-item-tag {
+  font-size: 10px;
+  color: #38bdf8;
+  opacity: 0.85;
+}
+
+/* Right Main Reading Content */
+.knowledge-view-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.content-header-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.content-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.content-main-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-primary);
+}
+
+.diagram-banner-box {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: #080c14;
+  overflow: hidden;
+  margin: 8px 0 16px 0;
+}
+
+.diagram-banner-box img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.knowledge-section-box {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-heading {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-body-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-text-primary);
+  margin: 0;
+  white-space: pre-line;
+}
+
+.example-box-theme {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.usecase-box-theme {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}

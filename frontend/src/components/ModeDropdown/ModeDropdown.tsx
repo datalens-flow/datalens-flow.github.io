@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 interface ModeDropdownProps {
-  currentMode: 'diagram' | 'lineage' | 'transpiler';
-  setCurrentMode: (mode: 'diagram' | 'lineage' | 'transpiler') => void;
+  currentMode: 'diagram' | 'lineage' | 'transpiler' | 'knowledge';
+  setCurrentMode: (mode: 'diagram' | 'lineage' | 'transpiler' | 'knowledge') => void;
 }
 
 export const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurrentMode }) => {
@@ -44,6 +44,12 @@ export const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurr
             <span>SQL Transpiler</span>
           </>
         )}
+        {currentMode === 'knowledge' && (
+          <>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Knowledge Hub</span>
+          </>
+        )}
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2.5 3.5L5 6.5 7.5 3.5"/>
         </svg>
@@ -80,6 +86,16 @@ export const ModeDropdown: React.FC<ModeDropdownProps> = ({ currentMode, setCurr
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             SQL Transpiler
+          </button>
+          <button
+            className={`toolbar-dropdown-item ${currentMode === 'knowledge' ? 'selected' : ''}`}
+            onClick={() => {
+              setCurrentMode('knowledge');
+              setOpen(false);
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Knowledge Hub
           </button>
         </div>
       )}
