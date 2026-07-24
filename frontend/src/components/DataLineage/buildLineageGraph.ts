@@ -177,7 +177,37 @@ export const buildLineageGraph = (
     const isTemp = isTempTable(table);
     const isView = lowerTable.startsWith('v_') || lowerTable.startsWith('vw_') || lowerTable.startsWith('view_');
     
-    // We can allow override if we pass node state, but for now we'll pass the derived type.
+    // dbt DAG Node Classification & Materialization Inferencing
+    let dbtType: 'source' | 'staging' | 'marts' | 'exposure' | 'seed' = 'marts';
+    let dbtMaterialization: 'table' | 'view' | 'incremental' | 'ephemeral' | 'source' = 'table';
+    let dbtSchema = 'analytics';
+
+    if (!isTgt && isSrc) {
+      dbtType = 'source';
+      dbtMaterialization = 'source';
+      dbtSchema = lowerTable.startsWith('raw_') ? 'raw' : (lowerTable.startsWith('src_') ? 'src' : 'public');
+    } else if (lowerTable.startsWith('seed_') || lowerTable.endsWith('_seed')) {
+      dbtType = 'seed';
+      dbtMaterialization = 'table';
+      dbtSchema = 'seeds';
+    } else if (isTemp || lowerTable.startsWith('stg_') || lowerTable.startsWith('int_') || lowerTable.startsWith('tmp_')) {
+      dbtType = 'staging';
+      dbtMaterialization = isTemp ? 'ephemeral' : 'view';
+      dbtSchema = lowerTable.startsWith('stg_') ? 'staging' : 'intermediate';
+    } else if (lowerTable.startsWith('fct_') || lowerTable.startsWith('dim_') || lowerTable.startsWith('rpt_') || lowerTable.startsWith('summary') || lowerTable.startsWith('analytics')) {
+      dbtType = 'marts';
+      dbtMaterialization = lowerTable.startsWith('fct_') ? 'incremental' : 'table';
+      dbtSchema = 'marts';
+    } else if (isSrc && isTgt) {
+      dbtType = 'staging';
+      dbtMaterialization = isView ? 'view' : 'table';
+      dbtSchema = 'intermediate';
+    } else if (!isSrc && isTgt) {
+      dbtType = 'exposure';
+      dbtMaterialization = 'table';
+      dbtSchema = 'reports';
+    }
+
     const nodeTypeOverride = isTemp ? 'temp' : (isView ? 'view' : role);
     const isCollapsed = !expandedNodes.has(table);
     
@@ -210,6 +240,9 @@ export const buildLineageGraph = (
         columns, 
         role, 
         nodeTypeOverride, 
+        dbtType,
+        dbtMaterialization,
+        dbtSchema,
         isCollapsed, 
         isTemp, 
         isView, 

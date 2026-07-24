@@ -35,27 +35,77 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
     }
   };
 
+  const getDbtColor = (type: string) => {
+    switch(type) {
+      case 'source': return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10b981', border: '#10b981', label: 'SOURCE' };
+      case 'staging': return { bg: 'rgba(6, 182, 212, 0.15)', text: '#06b6d4', border: '#06b6d4', label: 'MODEL.STAGING' };
+      case 'marts': return { bg: 'rgba(129, 140, 248, 0.15)', text: '#818cf8', border: '#818cf8', label: 'MODEL.MARTS' };
+      case 'exposure': return { bg: 'rgba(249, 115, 22, 0.15)', text: '#f97316', border: '#f97316', label: 'EXPOSURE' };
+      case 'seed': return { bg: 'rgba(250, 204, 21, 0.15)', text: '#facc15', border: '#facc15', label: 'SEED' };
+      default: return { bg: 'rgba(99, 102, 241, 0.15)', text: '#818cf8', border: '#818cf8', label: 'MODEL' };
+    }
+  };
+
+  const dbtMeta = getDbtColor(data.dbtType || 'marts');
+  const dbtPathLabel = `${(data.dbtType || 'model')}.${data.dbtSchema || 'analytics'}.${data.tableName}`;
+
   const theme = getTypeColor(nodeType);
 
   return (
-    <div style={{ position: 'relative', width: '250px' }}>
-      <div className="lineage-node" style={{ opacity: nodeType === 'temp' ? 0.9 : 1 }}>
-        <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: theme.bg, color: theme.text, display: 'flex', alignItems: 'center' }}>
+    <div style={{ position: 'relative', width: '260px' }}>
+      <div 
+        className="lineage-node" 
+        style={{ 
+          opacity: nodeType === 'temp' ? 0.9 : 1,
+          border: `1px solid ${dbtMeta.border}`,
+          borderRadius: '8px',
+          boxShadow: `0 4px 12px ${dbtMeta.bg}`
+        }}
+      >
+        {/* dbt Top Meta Pill */}
+        <div style={{
+          padding: '4px 10px',
+          background: dbtMeta.bg,
+          borderBottom: `1px solid ${dbtMeta.border}44`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '10px',
+          fontFamily: 'var(--font-mono, monospace)'
+        }}>
+          <span style={{ color: dbtMeta.text, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: dbtMeta.text }} />
+            <span>{dbtMeta.label}</span>
+          </span>
+          {data.dbtMaterialization && (
+            <span style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: 'var(--color-text-muted)',
+              padding: '1px 5px',
+              borderRadius: '3px',
+              fontSize: '9px'
+            }}>
+              [{data.dbtMaterialization}]
+            </span>
+          )}
+        </div>
+
+        <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: 'transparent', color: theme.text, display: 'flex', alignItems: 'center' }}>
           <Handle
             type="target"
             position={Position.Left}
             id="col-header"
             style={{ 
-              background: 'var(--color-emerald)', width: '10px', height: '10px', left: '-17px',
+              background: dbtMeta.text, width: '10px', height: '10px', left: '-17px',
               opacity: (isCollapsed || data.viewMode === 'overview' || !data.hasIncoming) ? 0.3 : 1,
               pointerEvents: 'all'
             }}
           />
-          <span style={{ fontSize: '10px', fontWeight: 'bold', background: theme.text, color: '#fff', padding: '2px 6px', borderRadius: '4px', marginRight: '6px', flexShrink: 0, display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <span style={{ fontSize: '10px', fontWeight: 'bold', background: dbtMeta.text, color: '#090d16', padding: '2px 6px', borderRadius: '4px', marginRight: '6px', flexShrink: 0, display: 'flex', gap: '4px', alignItems: 'center' }}>
             <span>{getBadgeIcon(nodeType)}</span>
             <span>{nodeType.toUpperCase()}</span>
           </span>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--color-text-primary)' }} title={data.tableName}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--color-text-primary)' }} title={dbtPathLabel}>
             {data.tableName}
           </span>
           <Handle
@@ -63,7 +113,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
             position={Position.Right}
             id="col-header"
             style={{ 
-              background: 'var(--color-indigo)', width: '10px', height: '10px', right: '-17px',
+              background: dbtMeta.text, width: '10px', height: '10px', right: '-17px',
               opacity: (isCollapsed || data.viewMode === 'overview' || !data.hasOutgoing) ? 0.3 : 1,
               pointerEvents: 'all'
             }}

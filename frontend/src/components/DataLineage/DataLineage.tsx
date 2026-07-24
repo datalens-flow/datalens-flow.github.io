@@ -82,6 +82,47 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
         />
       )}
       <div className="lineage-canvas" style={{ position: 'relative' }}>
+        {/* dbt DAG Legend Bar Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          left: '12px',
+          zIndex: 10,
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '8px',
+          padding: '6px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '11px',
+          color: 'var(--color-text-primary)',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+        }}>
+          <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>dbt DAG Lineage Mode</span>
+          </span>
+          <div style={{ width: '1px', height: '14px', background: 'var(--color-border)' }} />
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+            <span>Source</span>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#06b6d4' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#06b6d4' }} />
+            <span>Staging [View]</span>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#818cf8' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#818cf8' }} />
+            <span>Marts [Table/Incremental]</span>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f97316' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f97316' }} />
+            <span>Exposure</span>
+          </span>
+        </div>
+
         {isAnalyzing && (
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -91,7 +132,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           }}>
             <div style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.3)', borderTop: '4px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }} />
             <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-            Analyzing SQL & Calculating Graph...
+            Analyzing SQL & Calculating dbt DAG Graph...
           </div>
         )}
         <ReactFlow
