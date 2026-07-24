@@ -315,29 +315,37 @@ Airflow ทำหน้าที่เป็นวงดนตรีคุมท
     id: 'warehouse-vs-lake',
     groupId: 'modern',
     groupTitle: 'กลุ่มเทคโนโลยีและแนวคิดยุคใหม่ (Modern Concepts)',
-    title: 'Data Warehouse vs. Data Lake',
+    title: 'Data Warehouse vs. Data Lake vs. Data Lakehouse vs. Data Mart',
     iconKey: 'warehouse-vs-lake',
-    tag: 'Architecture Comparison Standard',
+    tag: 'Enterprise Architecture Comparison Standard',
     imageUrl: '/images/knowledge/warehouse-vs-lake.jpg',
-    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การเปรียบเทียบสถาปัตยกรรม Data Warehouse vs Data Lake]
-การเลือกใช้สถาปัตยกรรมจัดเก็บข้อมูลระดับองค์กรขึ้นอยู่กับลักษณะข้อมูลและวัตถุประสงค์การนำไปใช้งาน:
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การวิเคราะห์เปรียบเทียบ 4 สถาปัตยกรรม Data Warehouse vs Data Lake vs Data Lakehouse vs Data Mart]
+การเลือกใช้สถาปัตยกรรมจัดเก็บและประมวลผลข้อมูลระดับองค์กรขึ้นอยู่กับลักษณะโครงสร้างข้อมูล วัตถุประสงค์การใช้งาน และความเร็วในการประมวลผล:
 
 1. Data Warehouse (Structured & Schema-on-Write):
-เน้นเก็บข้อมูลที่มีโครงสร้างชัดเจน (SQL Tables) ผ่านการล้างและจัดโมเดลข้อมูลแล้ว เหมาะสำหรับทำ Business Intelligence, Executive Reports และ KPIs
+เน้นเก็บข้อมูลที่มีโครงสร้างชัดเจนผ่านการทำ Data Modeling (Star/Snowflake Schema) เหมาะสำหรับการทำ Business Intelligence (BI), Executive Financial Reports และ KPIs ที่ต้องการความถูกต้องแม่นยำ 100% (เช่น Snowflake, Teradata, Redshift)
 
 2. Data Lake (All Formats & Schema-on-Read):
-เน้นเก็บข้อมูลดิบทุกรูปแบบ (Structured, Semi-structured JSON, Unstructured Images/Logs) เหมาะสำหรับทีม Data Science, Machine Learning และ AI Training`,
-    example: 'ห้างสรรพสินค้าใช้ Snowflake (Data Warehouse) ทำรายงานวิเคราะห์ยอดขายประจำเดือน และใช้ AWS S3 (Data Lake) เก็บภาพจากกล้องวงจรปิดหน้าร้านสำหรับฝึก AI วิเคราะห์พฤติกรรมลูกค้า',
-    useCase: '[Use Case: Retail Hybrid Warehouse & Lake Architecture]\nการวางสถาปัตยกรรมคู่ขนาน ใช้ Snowflake ทำรายงาน BI และใช้ AWS S3 Data Lake สำหรับพัฒนาโมเดล AI',
+เน้นเก็บข้อมูลดิบทุกรูปแบบ (Structured, Semi-structured JSON, Unstructured Images, Sensor Logs, Audio) บน Object Storage ราคาประหยัด เหมาะสำหรับทีม Data Science, Machine Learning และ AI Training (เช่น AWS S3 Parquet, Azure ADLS)
+
+3. Data Lakehouse (Modern Unified Open Storage & ACID Transactions):
+สถาปัตยกรรมยุคใหม่ที่รวมจุดเด่นของ Data Lake และ Data Warehouse เข้าด้วยกัน โดยใช้ไฟล์ฟอร์แมตเปิด (Open Table Formats เช่น Delta Lake, Apache Iceberg) ซ้อนทับบน Object Storage ทำให้สามารถรองรับการทำ ACID Transactions, Schema Enforcement และ Time Travel ได้เหมือน Data Warehouse แต่มีต้นทุนจัดเก็บต่ำและรองรับ AI/ML ได้เหมือน Data Lake (เช่น Databricks Delta Lake, Snowflake Iceberg)
+
+4. Data Mart (Domain-Specific Analytical Subset):
+ส่วนย่อยของคลังข้อมูลที่ถูกสกัดและออกแบบโครงสร้างเฉพาะสำหรับสายงานหรือแผนกใดแผนกหนึ่งโดยเฉพาะ (เช่น Sales Mart, Marketing Mart, Claims Adjuster Mart) เพื่อให้ฝั่งธุรกิจรัน Query ได้รวดเร็วและควบคุมสิทธิ์การเข้าถึงข้อมูลเฉพาะแผนกได้อย่างรวดเร็ว`,
+    example: 'องค์กรการเงินระดับโลกใช้ Snowflake (Data Warehouse) ทำปิดงบการเงินประจำไตรมาส, ใช้ AWS S3 (Data Lake) เก็บไฟล์คลิปเสียงโทร Call Center 100,000 ชั่วโมง, ใช้ Databricks Delta Lake (Data Lakehouse) ทำระบบ Real-Time Fraud Prevention ร่วมกับ AI, และใช้ Sales Data Mart (Data Mart) ให้ทีมการตลาดวิเคราะห์ยอดขายเฉพาะภูมิภาค APAC',
+    useCase: '[Use Case: Enterprise 4-Tier Hybrid Data Architecture]\nการวางสถาปัตยกรรมจัดเก็บข้อมูล 4 ชั้น: ใช้ Data Lake รองรับข้อมูลดิบ ➔ Data Lakehouse เป็นเอนจิน AI/Analytics ➔ Data Warehouse ดูแลการเงินและงบการเงิน ➔ Data Mart กระจายข้อมูลให้ทีมธุรกิจใช้งานปลอดภัย',
     extraDetails: {
       type: 'comparison',
       table: {
-        headers: ['คุณลักษณะ (Feature)', 'Data Warehouse', 'Data Lake'],
+        headers: ['คุณลักษณะ (Feature)', 'Data Warehouse', 'Data Lake', 'Data Lakehouse', 'Data Mart'],
         rows: [
-          ['ประเภทข้อมูล', 'Structured Data (ตาราง SQL)', 'All Types (Text, Image, Video, Log, JSON)'],
-          ['โครงสร้างข้อมูล', 'Schema-on-Write (ล๊อกโครงสร้างก่อนบันทึก)', 'Schema-on-Read (จัดโครงสร้างตอนเรียกใช้)'],
-          ['กลุ่มผู้ใช้งานหลัก', 'Business Analysts, Executives', 'Data Scientists, Data Engineers'],
-          ['วัตถุประสงค์', 'BI Reports, Dashboards, KPIs', 'Machine Learning, AI, Deep Analytics']
+          ['ประเภทข้อมูลที่รองรับ', 'Structured Data (ตาราง SQL)', 'All Formats (Text, Image, Video, Log, JSON)', 'All Formats ผ่าน Open File Format (Parquet, Iceberg)', 'Structured Data เฉพาะโดเมน'],
+          ['โครงสร้าง Schema', 'Schema-on-Write (ล๊อกโครงสร้างก่อนบันทึก)', 'Schema-on-Read (จัดโครงสร้างตอนดึงไปใช้)', 'Schema Enforcement & Evolution (ยืดหยุ่นได้)', 'Schema-on-Write ปรับเพื่อแผนกเฉพาะ'],
+          ['กลไก ACID Transactions', 'รองรับ ACID 100%', 'ไม่รองรับ (เสี่ยงข้อมูลขัดแย้งขณะเขียน)', 'รองรับ ACID ผ่าน Delta/Iceberg Transaction Log', 'รองรับ ACID 100%'],
+          ['กลุ่มผู้ใช้งานหลัก', 'Executives, Financial Auditors, BI Analysts', 'Data Scientists, ML/AI Engineers', 'Data Engineers, AI Teams, Analysts', 'Department Managers, Marketing Teams'],
+          ['ต้นทุนจัดเก็บ (Storage Cost)', 'สูง (คิดตามคลัง Proprietary Storage)', 'ต่ำมาก (คิดตามราคา Cloud Object Storage)', 'ต่ำมาก (แยก Storage และ Compute ออกจากกัน)', 'ปานกลาง (มีขนาดเล็กเฉพาะส่วน)'],
+          ['ตัวอย่างเทคโนโลยี', 'Snowflake, Teradata, Redshift', 'AWS S3, Azure ADLS, HDFS', 'Databricks Delta Lake, Snowflake Iceberg', 'Postgres Data Mart, BigQuery Datamarts']
         ]
       }
     }
