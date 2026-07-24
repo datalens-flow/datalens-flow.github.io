@@ -174,6 +174,12 @@ export const CanvasToolbar: React.FC<{ mode?: 'diagram' | 'lineage' }> = ({ mode
           <>
             <div className="toolbar-dropdown-group-label">View Detail Mode</div>
             <button 
+              className={`toolbar-dropdown-item ${lineageViewMode === 'dbt' ? 'selected' : ''}`}
+              onClick={() => setLineageViewMode('dbt')}
+            >
+              ⚡ dbt Docs DAG (dbt View)
+            </button>
+            <button 
               className={`toolbar-dropdown-item ${lineageViewMode === 'detailed' ? 'selected' : ''}`}
               onClick={() => setLineageViewMode('detailed')}
             >

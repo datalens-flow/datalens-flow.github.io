@@ -39,7 +39,7 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   lineageSearchQuery: '',
   setLineageSearchQuery: (lineageSearchQuery) => set({ lineageSearchQuery }),
-  lineageViewMode: 'detailed',
+  lineageViewMode: 'dbt',
   setLineageViewMode: (lineageViewMode) => set({ lineageViewMode }),
   activeLineageProcedureIndex: 0,
   setActiveLineageProcedureIndex: (index) => set({ activeLineageProcedureIndex: index }),

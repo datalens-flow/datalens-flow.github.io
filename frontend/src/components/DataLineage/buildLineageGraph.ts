@@ -18,7 +18,7 @@ export const buildLineageGraph = (
   direction: 'LR' | 'TB' = 'LR',
   expandedNodes: Set<string> = new Set(),
   ignoredTables: string[] = [],
-  viewMode: 'overview' | 'detailed' = 'detailed',
+  viewMode: 'dbt' | 'overview' | 'detailed' = 'dbt',
   showProcedureGroups: boolean = true
 ) => {
   const newNodes: any[] = [];
@@ -215,7 +215,7 @@ export const buildLineageGraph = (
     const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
     const hasMoreButton = isCollapsed && columns.length > MAX_COLS_VISIBLE;
     
-    const nodeHeight = viewMode === 'overview' ? 40 : 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0);
+    const nodeHeight = viewMode === 'dbt' ? 54 : (viewMode === 'overview' ? 40 : 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0));
     
     dagreGraph.setNode(table, { width: COL_WIDTH, height: nodeHeight });
 
@@ -289,10 +289,6 @@ export const buildLineageGraph = (
       };
     } else {
       const nodeWithPosition = dagreGraph.node(node.id);
-      // For children in compound graphs, dagre positions them relative to the top-left of the entire graph,
-      // but ReactFlow expects positions relative to the parent.
-      // So if parent exists, we adjust the coordinates. Wait, dagre gives absolute coordinates for all nodes!
-      // To get relative coordinates for ReactFlow children, we subtract parent's absolute top-left.
       let absX = nodeWithPosition.x - COL_WIDTH / 2;
       let absY = nodeWithPosition.y - nodeWithPosition.height / 2;
       
@@ -316,7 +312,7 @@ export const buildLineageGraph = (
     sourceColorMap[src] = EDGE_COLORS[idx % EDGE_COLORS.length];
   });
 
-  if (viewMode === 'overview') {
+  if (viewMode === 'dbt' || viewMode === 'overview') {
     const edgeSet = new Set<string>();
     combinedFlows.forEach((flow, idx) => {
       const edgeKey = `${flow.sourceTable}-${flow.targetTable}`;
@@ -330,7 +326,7 @@ export const buildLineageGraph = (
       else if (flow.action === 'truncate') edgeColor = '#dc2626';
       else if (flow.action === 'drop') edgeColor = '#991b1b';
 
-      const actionLabel = flow.action ? `[${flow.action.toUpperCase()}]` : '';
+      const actionLabel = (viewMode === 'dbt') ? '' : (flow.action ? `[${flow.action.toUpperCase()}]` : '');
       const isDestructive = flow.action === 'delete' || flow.action === 'truncate' || flow.action === 'drop';
 
       newEdges.push({
@@ -345,7 +341,7 @@ export const buildLineageGraph = (
         labelBgStyle: { fill: 'var(--bg-primary)', fillOpacity: 0.8 },
         labelBgPadding: [4, 2],
         labelBgBorderRadius: 4,
-        style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 1.5, opacity: 0.8, strokeDasharray: isDestructive ? '4 4' : undefined },
+        style: { stroke: edgeColor, strokeWidth: isDestructive ? 2 : 2, opacity: 0.9, strokeDasharray: isDestructive ? '4 4' : undefined },
         markerEnd: { type: 'arrowclosed', color: edgeColor, width: 12, height: 12 }
       });
     });

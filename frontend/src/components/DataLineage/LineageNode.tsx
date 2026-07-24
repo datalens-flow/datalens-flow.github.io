@@ -119,7 +119,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
             }}
           />
         </div>
-        {data.viewMode !== 'overview' && (
+        {data.viewMode !== 'overview' && data.viewMode !== 'dbt' && (
           <div className="lineage-node-body">
           {visibleCols.map((col, i) => (
             <div key={i} className="lineage-col-row">
