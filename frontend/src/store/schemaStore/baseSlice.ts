@@ -23,7 +23,7 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   loading: false,
   error: null,
 
-  theme: 'dark',
+  theme: 'light',
   layoutDir: 'LR',
   inferRelationships: false,
   showGrid: true,

@@ -88,7 +88,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           top: '12px',
           left: '12px',
           zIndex: 10,
-          background: 'rgba(15, 23, 42, 0.85)',
+          background: 'var(--bg-secondary)',
           backdropFilter: 'blur(8px)',
           border: '1px solid var(--color-border)',
           borderRadius: '8px',
@@ -98,7 +98,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           gap: '12px',
           fontSize: '11px',
           color: 'var(--color-text-primary)',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
