@@ -78,13 +78,15 @@
 .group-filter-list {
   padding: 12px;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 6px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .group-btn {
-  padding: 5px 10px;
+  width: 100%;
+  text-align: left;
+  padding: 7px 12px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
