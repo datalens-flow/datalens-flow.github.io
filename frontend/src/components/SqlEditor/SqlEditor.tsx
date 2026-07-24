@@ -12,6 +12,9 @@ import { darkHighlightStyle, lightHighlightStyle } from './constants';
 import { SqlEditorHeader } from './SqlEditorHeader';
 import './SqlEditor.css';
 
+import { createSqlAutocompletion } from '../../utils/sqlAutocompletion';
+import { analyzeSqlQuality, SqlAnalyzerReport } from '../../utils/sqlAnalyzerEngine';
+
 export const SqlEditor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -20,6 +23,7 @@ export const SqlEditor: React.FC = () => {
     setSql, 
     dialect, 
     theme,
+    schema,
     setSchema,
     setOriginalSchema,
     clearRenameEvents,
@@ -64,6 +68,7 @@ export const SqlEditor: React.FC = () => {
       extensions: [
         basicSetup,
         sqlLang(),
+        createSqlAutocompletion(schema),
         keymap.of(defaultKeymap),
         syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
         EditorView.updateListener.of((update) => {
@@ -98,7 +103,7 @@ export const SqlEditor: React.FC = () => {
     return () => {
       view.destroy();
     };
-  }, [theme]);
+  }, [theme, schema]);
 
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -116,6 +121,8 @@ export const SqlEditor: React.FC = () => {
     }
   }, [sql]);
 
+  const analyzerReport: SqlAnalyzerReport = analyzeSqlQuality(sql);
+
   return (
     <div className={`sql-editor-container glass-panel ${isFullscreen ? 'fullscreen-editor' : ''}`}>
       <SqlEditorHeader 
@@ -125,6 +132,39 @@ export const SqlEditor: React.FC = () => {
         onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
       />
       <div className="editor-workspace" ref={editorRef}></div>
+
+      {/* SQL Quality & Performance Analyzer Panel */}
+      {analyzerReport.issues.length > 0 && (
+        <div style={{
+          padding: '8px 12px',
+          borderTop: '1px solid var(--color-border)',
+          backgroundColor: 'var(--bg-tertiary)',
+          fontSize: '11px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontWeight: 'bold', color: 'var(--color-text-primary)' }}>
+              🛡️ SQL Quality & Performance Health: {analyzerReport.score}%
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {analyzerReport.issues.map((issue, idx) => (
+              <div key={idx} style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                backgroundColor: issue.severity === 'critical' ? 'rgba(239, 68, 68, 0.15)' : (issue.severity === 'warning' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(56, 189, 248, 0.15)'),
+                color: issue.severity === 'critical' ? '#f87171' : (issue.severity === 'warning' ? '#fef08a' : '#38bdf8'),
+                borderLeft: `3px solid ${issue.severity === 'critical' ? '#ef4444' : (issue.severity === 'warning' ? '#eab308' : '#38bdf8')}`
+              }}>
+                <div style={{ fontWeight: 'bold' }}>{issue.title}</div>
+                <div style={{ fontSize: '10px', opacity: 0.9 }}>{issue.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

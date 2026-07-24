@@ -10,6 +10,8 @@ import { useToastStore } from '../../store/useToastStore';
 import { transpileSql, SqlDialect, DIALECT_LABELS, TranspileResult } from '../../utils/transpiler/sqlTranspilerEngine';
 import { lintSqlCompatibility, LinterResult } from '../../utils/transpiler/sqlLinterEngine';
 import { formatSql } from '../../utils/sqlFormatter';
+import { createSqlAutocompletion } from '../../utils/sqlAutocompletion';
+import { analyzeSqlQuality, SqlAnalyzerReport, SqlAnalyzerIssue } from '../../utils/sqlAnalyzerEngine';
 import './SqlTranspilerView.css';
 
 const darkHighlightStyle = HighlightStyle.define([
@@ -48,7 +50,7 @@ FROM ext_customer_orders
 WHERE created_date >= SYSDATE - 30;`;
 
 export const SqlTranspilerView: React.FC = () => {
-  const { theme } = useSchemaStore();
+  const { theme, schema } = useSchemaStore();
   const [sourceDialect, setSourceDialect] = useState<SqlDialect>('oracle');
   const [targetDialect, setTargetDialect] = useState<SqlDialect>('postgres');
   const [sourceSql, setSourceSql] = useState<string>(SAMPLE_ORACLE_SQL);
@@ -72,6 +74,7 @@ export const SqlTranspilerView: React.FC = () => {
       extensions: [
         lineNumbers(),
         sqlLang(),
+        createSqlAutocompletion(schema),
         syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
@@ -91,7 +94,7 @@ export const SqlTranspilerView: React.FC = () => {
 
     leftViewRef.current = view;
     return () => view.destroy();
-  }, [theme, showDiff]);
+  }, [theme, showDiff, schema]);
 
   // Initialize Right Editor (Target Transpiled SQL)
   useEffect(() => {
@@ -103,6 +106,7 @@ export const SqlTranspilerView: React.FC = () => {
       extensions: [
         lineNumbers(),
         sqlLang(),
+        createSqlAutocompletion(schema),
         syntaxHighlighting(theme === 'dark' ? darkHighlightStyle : lightHighlightStyle),
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
@@ -199,6 +203,7 @@ export const SqlTranspilerView: React.FC = () => {
   };
 
   const linterResult: LinterResult = lintSqlCompatibility(sourceSql, sourceDialect, targetDialect);
+  const analyzerReport: SqlAnalyzerReport = analyzeSqlQuality(sourceSql);
 
   return (
     <div className="transpiler-container">
@@ -412,6 +417,36 @@ export const SqlTranspilerView: React.FC = () => {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SQL Quality & Performance Health Banner */}
+      {analyzerReport.issues.length > 0 && (
+        <div style={{
+          backgroundColor: 'rgba(56, 189, 248, 0.08)',
+          border: '1px solid rgba(56, 189, 248, 0.3)',
+          borderRadius: '8px',
+          padding: '8px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '12px',
+          color: '#38bdf8'
+        }}>
+          <span style={{ fontWeight: 'bold' }}>🛡️ SQL Performance & Safety Score: {analyzerReport.score}%</span>
+          <div style={{ flex: 1, display: 'flex', gap: '8px', overflowX: 'auto' }}>
+            {analyzerReport.issues.map((issue: SqlAnalyzerIssue, idx: number) => (
+              <span key={idx} style={{
+                backgroundColor: issue.severity === 'critical' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+                color: issue.severity === 'critical' ? '#f87171' : '#fef08a',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                whiteSpace: 'nowrap'
+              }}>
+                {issue.title}
+              </span>
+            ))}
           </div>
         </div>
       )}
