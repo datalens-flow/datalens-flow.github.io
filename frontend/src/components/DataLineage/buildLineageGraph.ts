@@ -302,6 +302,50 @@ export const buildLineageGraph = (
     }
   });
 
+  // --- Strict dbt Architecture Left-to-Right Column Alignment ---
+  if (viewMode === 'dbt') {
+    const dbtLayers: Record<string, any[]> = {
+      source: [],
+      staging: [],
+      marts: [],
+      exposure: []
+    };
+
+    newNodes.forEach(node => {
+      if (node.type === 'group') return;
+      const t = node.data?.dbtType || 'marts';
+      if (t === 'seed') dbtLayers['staging'].push(node);
+      else if (dbtLayers[t]) dbtLayers[t].push(node);
+      else dbtLayers['marts'].push(node);
+    });
+
+    const COLUMN_SPACING = 380;
+    const NODE_VERTICAL_GAP = 75;
+    const START_X = 60;
+    const START_Y = 60;
+
+    const layerOrder: ('source' | 'staging' | 'marts' | 'exposure')[] = ['source', 'staging', 'marts', 'exposure'];
+
+    layerOrder.forEach((layerKey, colIndex) => {
+      const colNodes = dbtLayers[layerKey];
+      colNodes.sort((a, b) => a.id.localeCompare(b.id));
+
+      colNodes.forEach((node, rowIndex) => {
+        const x = START_X + colIndex * COLUMN_SPACING;
+        const y = START_Y + rowIndex * NODE_VERTICAL_GAP;
+        node.position = { x, y };
+
+        if (dagreGraph.hasNode(node.id)) {
+          const dNode = dagreGraph.node(node.id);
+          if (dNode) {
+            dNode.x = x + COL_WIDTH / 2;
+            dNode.y = y + 27;
+          }
+        }
+      });
+    });
+  }
+
   const allSourceTables = [...new Set(combinedFlows.map(f => f.sourceTable))];
   const sourceColorMap: Record<string, string> = {};
   allSourceTables.forEach((src, idx) => {
