@@ -95,12 +95,15 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (data.onToggleCollapse) {
+                    data.onToggleCollapse(data.tableName);
+                  }
                   setShowColsInDbt(prev => !prev);
                 }}
                 style={{
-                  background: showColsInDbt ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                  background: (!isCollapsed || showColsInDbt) ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
                   border: '1px solid var(--color-border)',
-                  color: showColsInDbt ? '#38bdf8' : 'var(--color-text-muted)',
+                  color: (!isCollapsed || showColsInDbt) ? '#38bdf8' : 'var(--color-text-muted)',
                   borderRadius: '3px',
                   padding: '1px 6px',
                   fontSize: '9px',
@@ -109,7 +112,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
                 }}
                 title="Toggle Columns List"
               >
-                {showColsInDbt ? '▲ Hide cols' : `▼ ${columns.length} cols`}
+                {(!isCollapsed || showColsInDbt) ? '▲ Hide cols' : `▼ ${columns.length} cols`}
               </button>
             )}
           </div>
@@ -144,7 +147,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
             }}
           />
         </div>
-        {data.viewMode !== 'overview' && (data.viewMode !== 'dbt' || showColsInDbt) && (
+        {data.viewMode !== 'overview' && (data.viewMode !== 'dbt' || !isCollapsed || showColsInDbt) && (
           <div className="lineage-node-body">
           {visibleCols.map((col, i) => (
             <div key={i} className="lineage-col-row">

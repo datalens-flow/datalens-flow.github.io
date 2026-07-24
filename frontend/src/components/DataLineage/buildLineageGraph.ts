@@ -215,7 +215,7 @@ export const buildLineageGraph = (
     const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
     const hasMoreButton = isCollapsed && columns.length > MAX_COLS_VISIBLE;
     
-    const nodeHeight = viewMode === 'dbt' ? 54 : (viewMode === 'overview' ? 40 : 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0));
+    const nodeHeight = (viewMode === 'dbt' && isCollapsed) ? 54 : (viewMode === 'overview' ? 40 : 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0));
     
     dagreGraph.setNode(table, { width: COL_WIDTH, height: nodeHeight });
 
