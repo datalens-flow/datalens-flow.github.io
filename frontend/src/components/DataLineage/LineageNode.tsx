@@ -8,6 +8,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
   const role: 'source' | 'target' | 'both' = data.role || 'source';
   const nodeType: 'source' | 'target' | 'both' | 'temp' | 'view' = data.nodeTypeOverride || role;
   const isCollapsed: boolean = data.isCollapsed || false;
+  const isTemp = data.isTemp || nodeType === 'temp';
   
   const MAX_COLS_VISIBLE = 5;
   const visibleCols = isCollapsed ? columns.slice(0, MAX_COLS_VISIBLE) : columns;
@@ -58,10 +59,12 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
       <div 
         className="lineage-node" 
         style={{ 
-          opacity: nodeType === 'temp' ? 0.9 : 1,
-          border: `1px solid ${dbtMeta.border}`,
+          opacity: isTemp ? 0.95 : 1,
+          border: isTemp ? `1.5px dashed ${dbtMeta.border}` : `1px solid ${dbtMeta.border}`,
           borderRadius: '8px',
-          boxShadow: `0 4px 12px ${dbtMeta.bg}`
+          boxShadow: `0 2px 8px ${dbtMeta.bg}`,
+          background: 'var(--bg-secondary)',
+          overflow: 'hidden'
         }}
       >
         {/* dbt Top Meta Pill */}

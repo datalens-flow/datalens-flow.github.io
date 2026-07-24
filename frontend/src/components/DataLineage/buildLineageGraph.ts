@@ -249,9 +249,9 @@ export const buildLineageGraph = (
       },
       style: {
         width: COL_WIDTH,
-        background: 'var(--bg-secondary)',
-        border: isTemp ? '2px dashed var(--color-indigo)' : (isView ? '1px solid var(--color-purple)' : '1px solid var(--color-border)'),
-        borderRadius: '6px',
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '8px',
         color: 'var(--color-text-primary)',
       }
     });
