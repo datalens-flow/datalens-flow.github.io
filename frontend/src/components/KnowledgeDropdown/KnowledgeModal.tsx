@@ -89,6 +89,17 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
               </h1>
             </div>
 
+            {/* Architecture Diagram Banner */}
+            {currentTopic.imageUrl && (
+              <div className="knowledge-diagram-container" style={{ margin: '12px 0 18px 0', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+                <img 
+                  src={currentTopic.imageUrl} 
+                  alt={currentTopic.title} 
+                  style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} 
+                />
+              </div>
+            )}
+
             {/* Deep Dive Section */}
             <div className="knowledge-section">
               <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
