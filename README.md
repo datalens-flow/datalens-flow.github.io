@@ -1,6 +1,6 @@
-# 🔍 DataLens Flow: 100% Serverless Database Modeler & Migration Engine
+# 🔍 DataLens Flow: 100% Serverless Database Modeler, Transpiler & Lineage Engine
 
-DataLens Flow is a premium, high-performance web tool designed for developers and data architects. It parses SQL DDL/DML scripts (PostgreSQL, MySQL, SQLite, Oracle, BigQuery, Snowflake, etc.), automatically generates interactive, editable Entity-Relationship Diagrams (ERD), translates schemas across multiple dialects in real-time, builds automatic Data Dictionaries, and calculates schema diffs to produce `ALTER` database migrations.
+DataLens Flow is a premium, high-performance web suite designed for developers, data engineers, and data architects. It parses SQL DDL/DML scripts (PostgreSQL, Microsoft SQL Server, MySQL, SQLite, Oracle, BigQuery, Snowflake), automatically generates interactive, editable Entity-Relationship Diagrams (ERD), translates schemas across multiple dialects in real-time, visualizes end-to-end Data Lineage, builds automatic Data Dictionaries, and calculates schema diffs to produce `ALTER` database migrations.
 
 The entire application runs **100% client-side in the browser** (no-backend architecture), making it 100% serverless, zero-cost to host, and lightning-fast with zero network latency.
 
@@ -8,37 +8,40 @@ The entire application runs **100% client-side in the browser** (no-backend arch
 
 ## 🚀 Key Features
 
-### 1. Local SQL Parser & DML Inference
-- **DDL parsing**: Resolves `CREATE TABLE` statements, column definitions, primary keys, and `FOREIGN KEY` relationships entirely in TypeScript.
-- **DML INSERT inference**: Infers table structures dynamically from `INSERT` datasets if full DDL definitions are missing.
-- **Dialect support**: Handles PostgreSQL, MySQL, MS SQL, SQLite, Oracle, BigQuery, and Snowflake dialect grammars.
+### 1. ⚡ Schema-Aware SQL Auto-Complete & Intellisense
+- **CodeMirror 6 Intellisense**: Auto-suggests symbols as you type in the editor.
+- **Dynamic Context Suggestions**:
+  - 🏷️ **Tables**: Suggests all tables loaded from active ERD schemas or procedure definitions.
+  - 📌 **Columns**: Suggests column names scoped to active tables.
+  - ⚡ **SQL Functions**: Suggests cross-dialect keywords (`COALESCE`, `CURRENT_TIMESTAMP`, `GROUP BY`, `CASE WHEN`).
 
-### 2. Real-Time SQL Transpiler & Type Converter
-- **Cross-Dialect Translation**: Translates schemas across database dialects. Pick an input dialect and copy/view SQL code generated in another target dialect in real-time.
-- **Smart Data Type Mapping**: Automatically maps data types correctly across systems (e.g., converting Oracle's `VARCHAR2` and `NUMBER` to Redshift's `VARCHAR` and `NUMERIC`).
+### 2. 🛡️ Real-Time SQL Anti-Pattern & Performance Analyzer
+- **Safety & Risk Scanner**: Real-time inspection panel detecting dangerous SQL anti-patterns and performance bottlenecks:
+  - 🛑 **Critical Risk**: `DELETE / UPDATE` statements missing a `WHERE` clause (prevents accidental data loss).
+  - ⚠️ **Performance Warning**: `SELECT *` in analytical queries (recommends explicit columns to minimize BigQuery/Snowflake scan costs).
+  - ⚠️ **Cartesian Product**: Implicit comma joins (`FROM tableA, tableB`) missing join conditions.
+  - 💡 **Best Practice**: `ORDER BY` without row limiters (`LIMIT` / `TOP`).
 
-### 3. Interactive ERD Canvas
+### 3. 🔄 Real-Time SQL Transpiler & Type Converter
+- **Cross-Dialect Translation**: Translates schemas and queries across 7 database dialects (Oracle, T-SQL, Postgres, MySQL, BigQuery, Snowflake, SQLite).
+- **2-Column Side-by-Side Visual Diff**: Toggle `🔍 Show Diff` to view original BEFORE code and transpiled AFTER code side-by-side with color-coded diff highlights (green/red).
+- **Preserved Statement Spacing SQL Formatter**: `✨ Format` button auto-prettifies keywords while preserving blank line breaks between statements.
+- **Top-Right Panel Copy & Collapsible Rules Log**: `📋 Copy` button located inside target editor header panel, and `Dialect Transformation Rules Applied` log panel is collapsible with animated toggle chevron.
+
+### 4. 🌳 Data Lineage Analysis (ETL Flow Visualizer)
+- **Stored Procedure Parsing**: Paste `STORED PROCEDURE`, `CTAS`, `CREATE VIEW`, `MERGE INTO`, or `UPDATE ... FROM` scripts to automatically visualize table/column data flows.
+- **Interactive Focus & Opacity Dimming**: Clicking any table node dims unrelated flow connections to 0.2 opacity for clear focus.
+- **Diagram Exporters**: Export lineage flows to **Mermaid.js (`flowchart LR`)**, **PlantUML (`.puml`)**, PNG, and SVG.
+
+### 5. 📊 Interactive ERD Canvas
 - **Visual Modeler**: Add/remove tables and columns, rename fields, change data types, and draw relationships by connecting handles.
-- **Seamless Drag-and-Drop**: Easily drag and reposition tables by clicking anywhere on the table node, providing a smooth and intuitive UX.
-- **Bi-directional Sync**: Any modification on the canvas updates the DDL code in the editor in real-time.
-- **Search & Auto-Focus**: Type search queries in the header search bar to automatically center and zoom on matching tables/columns.
-- **Implicit Relationship Heuristics**: Automatically scans and maps candidate relations (e.g. matching `user_id` or `company_id` columns to target primary key tables) with animated connection lines.
+- **Implicit Relationship Heuristics**: Automatically scans and maps candidate relations (e.g. matching `user_id` or `company_id` columns to target primary key tables).
+- **Multi-Format ERD Exporters**: Export ERD diagrams to **Mermaid.js (`erDiagram`)**, Draw.io XML, SQL DDL, JSON, Excel (.xlsx), Markdown (.md), and PDF.
 
-### 4. Interactive Constraints & Comments
-- Toggle column constraints (Primary Key, Nullable) directly from table cards.
-- Add column descriptions/comments inline using comment bubble toggles, syncing annotations back to the DDL.
-
-### 5. Multi-Format Exporters
-- **Diagram Screenshots**: Export high-resolution PNG or SVG images of your diagrams, automatically fitted and cropped to your node bounds with clean margins (no controls/overlays included).
-- **Draw.io integration**: Copy diagram XML directly to your clipboard to paste (Cmd+V/Ctrl+V) cards into your Draw.io canvas.
-- **Data Dictionary**: Export structured schemas in **Excel (.xlsx)** or **Markdown (.md)** data dictionary formats.
-- **Migration Engine**: Compares the baseline parsed schema with your current canvas to generate clean `ALTER TABLE` DDL migration scripts.
-
-### 6. Data Lineage Analysis (ETL Flow Visualizer)
-- **Stored Procedure Parsing**: Paste massive `STORED PROCEDURE` or ETL scripts to automatically visualize the data flow.
-- **Automatic Role Classification**: Intelligently classifies tables as Sources, Targets, Temp Tables, Views, or Intermediate/Staging based on read/write patterns.
-- **Overview & Detailed Modes**: Toggle between a high-level Table-to-Table overview mode, and a granular Column-to-Column detailed lineage mode.
-- **Inspection Panel**: Click on any table in the lineage graph to inspect the exact columns involved in the transformation process.
+### 6. 📚 Data Dictionary & Project Manager
+- **Column Count Badges**: Displays `(N columns)` badge on each table header.
+- **Thai Glossary & Catalog**: Inline Thai description editing for data dictionary items.
+- **Multi-Project Manager**: Local project dropdown switching with JSON export/import capability.
 
 ---
 
@@ -49,8 +52,8 @@ The entire application runs **100% client-side in the browser** (no-backend arch
 - **Diagram Canvas**: `@xyflow/react` (React Flow)
 - **Automatic Layouts**: `@dagrejs/dagre`
 - **State Management**: Zustand
-- **Syntax Highlighting Editor**: CodeMirror 6 (with SQL Autocomplete & Intellisense)
-- **Client-side Excel Exporter**: SheetJS (`xlsx`)
+- **Code Editor**: CodeMirror 6 (with SQL Autocomplete, Syntax Highlighting & Line Numbers)
+- **Diagram Exporters**: Mermaid.js, PlantUML, Draw.io XML, SheetJS (`xlsx`), jsPDF, html-to-image
 
 ---
 
@@ -76,7 +79,7 @@ Since the app has no backend dependencies, you only need to run the frontend cli
 
 ## 🚀 Build for Production
 
-To bundle the application into a 100% static client-side bundle for deployment (e.g., Netlify, GitHub Pages, Vercel):
+To bundle the application into a 100% static client-side bundle for deployment (e.g., GitHub Pages, Netlify, Vercel):
 ```bash
 cd frontend
 npm run build
