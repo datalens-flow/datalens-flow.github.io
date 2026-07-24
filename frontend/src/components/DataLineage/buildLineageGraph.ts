@@ -302,6 +302,50 @@ export const buildLineageGraph = (
     }
   });
 
+  // --- Topological Depth Calculation (Longest Path from Source) ---
+  const tableDepth: Record<string, number> = {};
+  const inDegreeMap: Record<string, number> = {};
+  const adjMap: Record<string, Set<string>> = {};
+
+  allTables.forEach(t => {
+    inDegreeMap[t] = 0;
+    adjMap[t] = new Set();
+  });
+
+  const allTablesSet = new Set(allTables);
+  combinedFlows.forEach(f => {
+    if (f.sourceTable !== f.targetTable && allTablesSet.has(f.sourceTable) && allTablesSet.has(f.targetTable)) {
+      if (!adjMap[f.sourceTable].has(f.targetTable)) {
+        adjMap[f.sourceTable].add(f.targetTable);
+        inDegreeMap[f.targetTable] = (inDegreeMap[f.targetTable] || 0) + 1;
+      }
+    }
+  });
+
+  const topoQueue: string[] = [];
+  allTables.forEach(t => {
+    if (inDegreeMap[t] === 0) {
+      tableDepth[t] = 0;
+      topoQueue.push(t);
+    }
+  });
+
+  while (topoQueue.length > 0) {
+    const curr = topoQueue.shift()!;
+    const currDepth = tableDepth[curr] || 0;
+    adjMap[curr].forEach(next => {
+      tableDepth[next] = Math.max(tableDepth[next] || 0, currDepth + 1);
+      inDegreeMap[next]--;
+      if (inDegreeMap[next] === 0) {
+        topoQueue.push(next);
+      }
+    });
+  }
+
+  allTables.forEach(t => {
+    if (tableDepth[t] === undefined) tableDepth[t] = 0;
+  });
+
   // --- Procedure & Global Architectural Layout Engine ---
   const groupNodes = newNodes.filter(n => n.type === 'group');
   const hasActiveProcedureGroups = showProcedureGroups && procedures.length > 1 && groupNodes.length > 0;
@@ -319,37 +363,28 @@ export const buildLineageGraph = (
       const children = newNodes.filter(n => n.parentId === groupNodeId);
       if (children.length === 0) return;
 
-      const dbtLayers: Record<string, any[]> = {
-        source: [],
-        staging: [],
-        marts: [],
-        exposure: []
-      };
-
+      // Group children into sub-columns by topological depth
+      const depthBuckets: Record<number, any[]> = {};
       children.forEach(c => {
-        const t = c.data?.dbtType || 'marts';
-        if (t === 'seed') dbtLayers['staging'].push(c);
-        else if (dbtLayers[t]) dbtLayers[t].push(c);
-        else dbtLayers['marts'].push(c);
+        const d = tableDepth[c.id] ?? 0;
+        if (!depthBuckets[d]) depthBuckets[d] = [];
+        depthBuckets[d].push(c);
       });
 
-      const layerOrder: ('source' | 'staging' | 'marts' | 'exposure')[] = ['source', 'staging', 'marts', 'exposure'];
+      const sortedDepths = Object.keys(depthBuckets).map(Number).sort((a, b) => a - b);
       let groupWidth = 400;
       let groupHeight = 200;
 
       if (direction === 'LR') {
-        // Horizontal inside procedure box: Columns from Left to Right
+        // Horizontal inside procedure box: Columns from Left to Right by topological depth
         let maxColHeight = 0;
-        let activeColsCount = 0;
 
-        layerOrder.forEach((layerKey, colIdx) => {
-          const colNodes = dbtLayers[layerKey];
-          if (colNodes.length === 0) return;
-          activeColsCount++;
+        sortedDepths.forEach((d, colIdx) => {
+          const colNodes = depthBuckets[d];
           colNodes.sort((a, b) => a.id.localeCompare(b.id));
 
           let relY = 50; // top margin inside group box
-          const relX = 30 + (colIdx) * COLUMN_SPACING;
+          const relX = 30 + colIdx * COLUMN_SPACING;
 
           colNodes.forEach(child => {
             child.position = { x: relX, y: relY };
@@ -361,15 +396,14 @@ export const buildLineageGraph = (
           if (relY > maxColHeight) maxColHeight = relY;
         });
 
-        groupWidth = Math.max(450, 60 + activeColsCount * COLUMN_SPACING);
+        groupWidth = Math.max(450, 60 + sortedDepths.length * COLUMN_SPACING);
         groupHeight = Math.max(180, maxColHeight + 30);
       } else {
-        // Vertical inside procedure box: Rows from Top to Bottom
+        // Vertical inside procedure box: Rows from Top to Bottom by topological depth
         let currentRelY = 50;
 
-        layerOrder.forEach((layerKey) => {
-          const rowNodes = dbtLayers[layerKey];
-          if (rowNodes.length === 0) return;
+        sortedDepths.forEach((d) => {
+          const rowNodes = depthBuckets[d];
           rowNodes.sort((a, b) => a.id.localeCompare(b.id));
 
           let maxRowH = 0;
@@ -400,30 +434,23 @@ export const buildLineageGraph = (
     });
   } else if (viewMode === 'dbt') {
     // Global dbt Layout (Single procedure or Procedure Boxes toggled OFF)
-    const dbtLayers: Record<string, any[]> = {
-      source: [],
-      staging: [],
-      marts: [],
-      exposure: []
-    };
-
+    const depthBuckets: Record<number, any[]> = {};
     newNodes.forEach(node => {
       if (node.type === 'group') return;
-      const t = node.data?.dbtType || 'marts';
-      if (t === 'seed') dbtLayers['staging'].push(node);
-      else if (dbtLayers[t]) dbtLayers[t].push(node);
-      else dbtLayers['marts'].push(node);
+      const d = tableDepth[node.id] ?? 0;
+      if (!depthBuckets[d]) depthBuckets[d] = [];
+      depthBuckets[d].push(node);
     });
 
+    const sortedDepths = Object.keys(depthBuckets).map(Number).sort((a, b) => a - b);
     const COLUMN_SPACING = 380;
     const START_X = 60;
     const START_Y = 60;
-    const layerOrder: ('source' | 'staging' | 'marts' | 'exposure')[] = ['source', 'staging', 'marts', 'exposure'];
 
     if (direction === 'LR') {
-      // Horizontal Global: Columns from Left to Right
-      layerOrder.forEach((layerKey, colIndex) => {
-        const colNodes = dbtLayers[layerKey];
+      // Horizontal Global: Columns from Left to Right by topological depth
+      sortedDepths.forEach((d, colIndex) => {
+        const colNodes = depthBuckets[d];
         colNodes.sort((a, b) => a.id.localeCompare(b.id));
 
         let currentY = START_Y;
@@ -444,11 +471,10 @@ export const buildLineageGraph = (
         });
       });
     } else {
-      // Vertical Global: Rows from Top to Bottom
+      // Vertical Global: Rows from Top to Bottom by topological depth
       let currentY = START_Y;
-      layerOrder.forEach((layerKey) => {
-        const rowNodes = dbtLayers[layerKey];
-        if (rowNodes.length === 0) return;
+      sortedDepths.forEach((d) => {
+        const rowNodes = depthBuckets[d];
         rowNodes.sort((a, b) => a.id.localeCompare(b.id));
 
         let maxRowH = 0;
