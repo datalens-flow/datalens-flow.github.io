@@ -21,6 +21,13 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
     ? KNOWLEDGE_TOPICS
     : KNOWLEDGE_TOPICS.filter(t => t.groupId === selectedGroupFilter);
 
+  const getImageUrl = (url?: string | null) => {
+    if (!url) return '';
+    const baseUrl = (import.meta as any).env?.BASE_URL || '/';
+    const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+    return `${baseUrl}${cleanUrl}`;
+  };
+
   return (
     <>
       <div className="knowledge-modal-overlay" onClick={onClose}>
@@ -103,18 +110,18 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
                     border: '1px solid var(--color-border)',
                     background: '#090d16',
                     cursor: 'zoom-in',
-                    position: 'relative'
+                    position: 'relative',
+                    width: '100%'
                   }}
                 >
                   <img 
-                    src={currentTopic.imageUrl} 
+                    src={getImageUrl(currentTopic.imageUrl)} 
                     alt={currentTopic.title} 
                     style={{ 
                       width: '100%', 
                       height: 'auto', 
                       display: 'block', 
-                      objectFit: 'contain',
-                      maxHeight: '520px'
+                      objectFit: 'contain'
                     }} 
                   />
                   <div style={{
@@ -250,7 +257,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
             <span>✕ ปิด (Close)</span>
           </button>
           <img 
-            src={previewImage} 
+            src={getImageUrl(previewImage)} 
             alt="Expanded Architecture Diagram" 
             style={{ 
               maxWidth: '95vw', 
