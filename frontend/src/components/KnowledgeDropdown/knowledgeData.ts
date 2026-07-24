@@ -392,6 +392,34 @@ Airflow ทำหน้าที่เป็นวงดนตรีคุมท
     example: 'องค์กรการเงินวางสถาปัตยกรรม Data Platform for AI โดยใช้ Feast ทำ Feature Store ป้อนโมเดล AI อนุมัติสินเชื่อแบบ Real-time และใช้ Pinecone Vector Database ร่วมกับ LangChain สร้าง Enterprise GenAI Assistant ช่วยพนักงานค้นหากฎหมายและสัญญาคู่ค้า',
     useCase: '[Use Case: Enterprise GenAI Knowledge Assistant & Real-Time Fraud AI]\nการสร้างท่อข้อมูลสตรีมมิ่งเชื่อมต่อ Vector Database (Pinecone) สำหรับระบบ RAG ควบคู่กับ Feature Store (Feast) เพื่อป้อนฟีเจอร์ให้โมเดล AI ตรวจจับทุจริตเรียลไทม์ โดยมี MLflow & Arize AI คอยติดตาม Model Performance'
   },
+  {
+    id: 'dbt-integration-hub',
+    groupId: 'modern',
+    groupTitle: 'กลุ่มเทคโนโลยีและแนวคิดยุคใหม่ (Modern Concepts)',
+    title: 'dbt Enterprise Integration & Artifacts Standard (การประยุกต์ใช้ dbt ระดับองค์กร)',
+    iconKey: 'dbt-integration-hub',
+    tag: 'Lead Analytics Engineer & dbt Architect Specification',
+    imageUrl: '/images/knowledge/modern-concepts.jpg',
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การประยุกต์ใช้งาน dbt (data build tool) ระดับองค์กรบนแพลตฟอร์ม DataLens Flow]
+สถาปัตยกรรมและการนำความสามารถของ dbt มาบูรณาการ (Integrate) บน DataLens Flow เพื่อยกระดับสถาปัตยกรรมข้อมูลองค์กร:
+
+1. dbt Artifacts Importer (manifest.json & catalog.json):
+การอ่านไฟล์ manifest.json และ catalog.json ที่เจเนอเรตจาก dbt CLI (dbt docs generate) เพื่อสร้างผัง Data Lineage (dbt DAG) ตรงกับสภาพแวดล้อม Production จริง 100% พร้อมคำอธิบายคอลัมน์และเมตาดาต้า
+
+2. dbt Semantic Layer & Metrics Definition (metrics.yml):
+การกำหนดตัวชี้วัดทางธุรกิจ (Business Metrics) ในรูปแบบ Jinja/YAML ตามมาตรฐาน dbt Semantic Layer (เช่น monthly_recurring_revenue, churn_rate) เพื่อให้เครื่องมือ BI และเอนจิน AI/LLM สร้าง SQL คำนวณเบี้ยและรายได้อย่างแม่นยำ
+
+3. dbt Exposures & Downstream Impact Tracker (exposures.yml):
+การเชื่อมโยงผัง Lineage จากตาราง Marts ไปยังแดชบอร์ดปลายทาง (PowerBI, Tableau, Looker) เพื่อทำ Impact Analysis วิเคราะห์ผลกระทบก่อนการแก้ไขคอลัมน์ต้นทาง
+
+4. dbt Automated Data Quality Test Overlay (dbt test & dbt-expectations):
+การแสดงป้ายบอกสถานะการทดสอบคุณภาพข้อมูล (PASSED, FAILED, WARN) บนการ์ด dbt DAG Lineage สำหรับตรวจสอบความถูกต้องของ Primary Key (unique), FK (relationships), และ Non-Null Constraints
+
+5. dbt Project Generator & Code Package Exporter:
+การส่งออกโค้ด dbt Project แบบ 1-Click (.zip) ประกอบด้วย dbt_project.yml, models/staging, models/intermediate, models/marts, และ _sources.yml ที่เปลี่ยน SQL ดั้งเดิมให้พร้อมรัน dbt run บน Production ทันที`,
+    example: 'องค์กรประกันภัยแปลง Stored Procedure SQL ดั้งเดิม 50 ไฟล์เป็น dbt Project พร้อมไฟล์ manifest.json และแสดงผัง dbt DAG ที่มีป้ายตรวจสอบคุณภาพข้อมูล',
+    useCase: '[Use Case: Modern Analytics Engineering Transformation]\nการย้ายระบบ ETL ดั้งเดิมสู่ dbt Production Project และการกำกับดูแลด้วย dbt DAG Lineage'
+  },
 
   // 5. กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)
   {
