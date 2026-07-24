@@ -255,18 +255,18 @@ export const SqlTranspilerView: React.FC = () => {
 
         <div className="transpiler-actions">
           {/* View Mode Switcher */}
-          <div style={{ display: 'flex', backgroundColor: 'var(--bg-primary)', padding: '2px', borderRadius: '6px', border: '1px solid var(--color-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--bg-primary)', padding: '2px', borderRadius: '6px', border: '1px solid var(--color-border)', height: '32px', boxSizing: 'border-box' }}>
             <button 
               className={`btn ${viewMode === 'split' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('split')}
-              style={{ padding: '4px 10px', fontSize: '11px', border: 'none' }}
+              style={{ height: '26px', padding: '0 10px', fontSize: '11px', border: 'none' }}
             >
               Side-by-Side
             </button>
             <button 
               className={`btn ${viewMode === 'diff' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('diff')}
-              style={{ padding: '4px 10px', fontSize: '11px', border: 'none' }}
+              style={{ height: '26px', padding: '0 10px', fontSize: '11px', border: 'none' }}
             >
               🔍 Visual Diff
             </button>

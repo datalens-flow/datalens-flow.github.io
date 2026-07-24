@@ -15,34 +15,38 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
+  padding: 10px 16px;
   background-color: var(--bg-secondary, #1e293b);
   border: 1px solid var(--color-border, #334155);
   border-radius: 8px;
+  min-height: 52px;
+  box-sizing: border-box;
 }
 
 .transpiler-dialect-selectors {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .dialect-select-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .dialect-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--color-text-muted, #94a3b8);
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .transpiler-select {
-  padding: 6px 12px;
-  font-size: 12px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 11px;
   font-weight: 600;
   border-radius: 6px;
   background-color: var(--bg-primary, #090b11);
@@ -50,18 +54,36 @@
   border: 1px solid var(--color-border, #334155);
   outline: none;
   cursor: pointer;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
 }
 
 .transpiler-arrow {
   display: flex;
   align-items: center;
+  justify-content: center;
   padding-top: 14px;
 }
 
 .transpiler-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.transpiler-actions .btn {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .transpiler-editors-grid {
