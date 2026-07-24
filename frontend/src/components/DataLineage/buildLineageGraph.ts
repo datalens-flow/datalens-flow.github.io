@@ -218,9 +218,9 @@ export const buildLineageGraph = (
     const procs = tableProcedures.get(table);
     let parentNodeId = undefined;
     // Only group if MULTIPLE procedures are being viewed at the same time and showProcedureGroups is enabled
-    if (showProcedureGroups && procs && procs.size === 1 && procedures.length > 1 && activeProcedures.size > 1) {
-      const pName = procs.values().next().value!;
-      if (pName !== 'Global Script') {
+    if (showProcedureGroups && procs && procs.size >= 1 && procedures.length > 1) {
+      const pName = Array.from(procs)[0];
+      if (pName && pName !== 'Global Script') {
         parentNodeId = `group-${pName}`;
         dagreGraph.setParent(table, parentNodeId);
       }
@@ -303,7 +303,10 @@ export const buildLineageGraph = (
   });
 
   // --- Strict dbt Architecture Left-to-Right Column Alignment ---
-  if (viewMode === 'dbt') {
+  // Only apply global column alignment if NO procedure group boxes are active
+  const hasActiveProcedureGroups = showProcedureGroups && procedures.length > 1 && newNodes.some(n => n.type === 'group');
+
+  if (viewMode === 'dbt' && !hasActiveProcedureGroups) {
     const dbtLayers: Record<string, any[]> = {
       source: [],
       staging: [],
