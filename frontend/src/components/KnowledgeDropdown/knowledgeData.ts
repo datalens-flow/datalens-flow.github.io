@@ -297,6 +297,29 @@ Airflow ทำหน้าที่เป็นวงดนตรีคุมท
     example: 'บริษัทผลิตรถยนต์ใช้ Data Mesh กระจายให้ทีม R&D และทีมโรงงานสร้าง Data Products ของตนเอง และใช้ Data Fabric ทำ Data Cataloging สแกนทั่วองค์กรอัตโนมัติ',
     useCase: '[Use Case: Global Automotive Enterprise Data Paradigm]\nการผสมผสาน Data Mesh ในการจัดการทีมธุรกิจ ควบคู่กับ Data Fabric ในการจัดการเมตาดาต้าข้าม Cloud อัตโนมัติ'
   },
+  {
+    id: 'data-platform-for-ai',
+    groupId: 'modern',
+    groupTitle: 'กลุ่มเทคโนโลยีและแนวคิดยุคใหม่ (Modern Concepts)',
+    title: 'Data Platform for AI & LLMOps (แพลตฟอร์มข้อมูลสำหรับ AI)',
+    iconKey: 'data-platform-for-ai',
+    tag: 'Databricks Lakehouse AI / Feast / Pinecone Standard',
+    imageUrl: '/images/knowledge/data-platform-for-ai.jpg',
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: แพลตฟอร์มข้อมูลสำหรับปัญญาประดิษฐ์ (Data Platform for AI & LLMOps)]
+สถาปัตยกรรมคลังข้อมูลสำหรับปัญญาประดิษฐ์ยุคใหม่ (AI Data Platform) อ้างอิงกรอบการวางระบบของ Databricks Lakehouse AI, Feast/Tecton Feature Store, Pinecone Vector Database และ MLflow/Arize AI Observability:
+
+1. Real-Time Feature Store (Feast & Tecton):
+- Online Feature Store (Redis/DynamoDB): คำนวณฟีเจอร์พฤติกรรมเรียลไทม์ (sub-10ms latency) เพื่อป้อนโมเดล AI Inference หน้าร้าน
+- Offline Feature Store (Snowflake/BigQuery): เก็บฟีเจอร์ประวัติศาสตร์ย้อนหลังสำหรับการฝึกโมเดล (Model Training & Fine-Tuning) พร้อมระบบ Time-Travel ป้องกันปัญหา Data Leakage
+
+2. Unstructured Data Pipeline & RAG Retrieval (Pinecone / Milvus & LangChain):
+การเตรียมข้อมูลประเภทข้อความและเอกสาร (Unstructured PDF, Logs, Documents) ผ่านกระบวนการ Chunking ➔ Embedding Generation (OpenAI / HuggingFace) ➔ บันทึกลงใน Vector Database (Pinecone / Milvus / Pgvector) เพื่อให้ระบบ RAG (Retrieval-Augmented Generation) ดึงบริบทเฉพาะขององค์กรไปตอบคำถามร่วมกับ LLM ได้อย่างแม่นยำ
+
+3. LLMOps & Model Observability (MLflow & Arize AI):
+การกำกับดูแลโมเดล AI ในสายการผลิตด้วย MLflow Model Registry ร่วมกับ Arize AI ในการเฝ้าระวังปัญหา Data Drift, Model Degradation, Hallucination Rate และคำนวณต้นทุน Token Usage แบบเรียลไทม์`,
+    example: 'องค์กรการเงินวางสถาปัตยกรรม Data Platform for AI โดยใช้ Feast ทำ Feature Store ป้อนโมเดล AI อนุมัติสินเชื่อแบบ Real-time และใช้ Pinecone Vector Database ร่วมกับ LangChain สร้าง Enterprise GenAI Assistant ช่วยพนักงานค้นหากฎหมายและสัญญาคู่ค้า',
+    useCase: '[Use Case: Enterprise GenAI Knowledge Assistant & Real-Time Fraud AI]\nการสร้างท่อข้อมูลสตรีมมิ่งเชื่อมต่อ Vector Database (Pinecone) สำหรับระบบ RAG ควบคู่กับ Feature Store (Feast) เพื่อป้อนฟีเจอร์ให้โมเดล AI ตรวจจับทุจริตเรียลไทม์ โดยมี MLflow & Arize AI คอยติดตาม Model Performance'
+  },
 
   // 5. กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)
   {
