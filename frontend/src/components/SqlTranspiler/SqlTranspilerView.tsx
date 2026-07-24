@@ -285,7 +285,7 @@ export const SqlTranspilerView: React.FC = () => {
                 color: showDiff ? '#ffffff' : 'var(--color-text-primary)'
               }}
             >
-              🔍 Show Diff {changesCount > 0 ? `(${changesCount})` : ''}
+              🔍 Show Diff
             </button>
           </div>
 
