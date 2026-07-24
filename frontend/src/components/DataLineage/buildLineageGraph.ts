@@ -190,11 +190,11 @@ export const buildLineageGraph = (
       dbtType = 'seed';
       dbtMaterialization = 'table';
       dbtSchema = 'seeds';
-    } else if (isTemp || lowerTable.startsWith('stg_') || lowerTable.startsWith('int_') || lowerTable.startsWith('tmp_')) {
+    } else if (isTemp || lowerTable.startsWith('stg_') || lowerTable.startsWith('int_') || lowerTable.startsWith('tmp_') || lowerTable.startsWith('temp_') || lowerTable.startsWith('ext_')) {
       dbtType = 'staging';
       dbtMaterialization = isTemp ? 'ephemeral' : 'view';
       dbtSchema = lowerTable.startsWith('stg_') ? 'staging' : 'intermediate';
-    } else if (lowerTable.startsWith('fct_') || lowerTable.startsWith('dim_') || lowerTable.startsWith('rpt_') || lowerTable.startsWith('summary') || lowerTable.startsWith('analytics')) {
+    } else if (role === 'target' || (!isSrc && isTgt) || lowerTable.startsWith('fct_') || lowerTable.startsWith('dim_') || lowerTable.startsWith('rpt_') || lowerTable.startsWith('riskgrade_') || lowerTable.startsWith('summary') || lowerTable.startsWith('analytics')) {
       dbtType = 'marts';
       dbtMaterialization = lowerTable.startsWith('fct_') ? 'incremental' : 'table';
       dbtSchema = 'marts';
@@ -202,10 +202,6 @@ export const buildLineageGraph = (
       dbtType = 'staging';
       dbtMaterialization = isView ? 'view' : 'table';
       dbtSchema = 'intermediate';
-    } else if (!isSrc && isTgt) {
-      dbtType = 'exposure';
-      dbtMaterialization = 'table';
-      dbtSchema = 'reports';
     }
 
     const nodeTypeOverride = isTemp ? 'temp' : (isView ? 'view' : role);
