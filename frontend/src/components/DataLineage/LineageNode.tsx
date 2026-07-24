@@ -35,6 +35,8 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
     }
   };
 
+  const [showColsInDbt, setShowColsInDbt] = React.useState(false);
+
   const getDbtColor = (type: string) => {
     switch(type) {
       case 'source': return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10b981', border: '#10b981', label: 'SOURCE' };
@@ -77,17 +79,40 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: dbtMeta.text }} />
             <span>{dbtMeta.label}</span>
           </span>
-          {data.dbtMaterialization && (
-            <span style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: 'var(--color-text-muted)',
-              padding: '1px 5px',
-              borderRadius: '3px',
-              fontSize: '9px'
-            }}>
-              [{data.dbtMaterialization}]
-            </span>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {data.dbtMaterialization && (
+              <span style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: 'var(--color-text-muted)',
+                padding: '1px 5px',
+                borderRadius: '3px',
+                fontSize: '9px'
+              }}>
+                [{data.dbtMaterialization}]
+              </span>
+            )}
+            {columns.length > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowColsInDbt(prev => !prev);
+                }}
+                style={{
+                  background: showColsInDbt ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--color-border)',
+                  color: showColsInDbt ? '#38bdf8' : 'var(--color-text-muted)',
+                  borderRadius: '3px',
+                  padding: '1px 6px',
+                  fontSize: '9px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+                title="Toggle Columns List"
+              >
+                {showColsInDbt ? '▲ Hide cols' : `▼ ${columns.length} cols`}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: 'transparent', color: theme.text, display: 'flex', alignItems: 'center' }}>
@@ -119,7 +144,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
             }}
           />
         </div>
-        {data.viewMode !== 'overview' && data.viewMode !== 'dbt' && (
+        {data.viewMode !== 'overview' && (data.viewMode !== 'dbt' || showColsInDbt) && (
           <div className="lineage-node-body">
           {visibleCols.map((col, i) => (
             <div key={i} className="lineage-col-row">
