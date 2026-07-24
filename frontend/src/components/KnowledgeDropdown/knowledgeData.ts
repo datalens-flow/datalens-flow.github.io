@@ -37,7 +37,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     iconKey: 'standards',
     tag: 'Chief Architect & DAMA Board Reference Manual',
     imageUrl: '/images/knowledge/data-ecosystem.jpg',
-    useCaseImageUrl: '/images/knowledge/dmbok-framework-roles.jpg',
+    useCaseImageUrl: '/images/knowledge/sub-dmbok-roles.jpg',
     deepDive: `🏛️ [เอกสารคู่มือสถาปัตยกรรมข้อมูลองค์กรเชิงลึก - Enterprise Data Architecture Guide v4.2.0]
 การวางสถาปัตยกรรมข้อมูลระดับองค์กรอ้างอิงกรอบ DAMA-DMBOK และนโยบายบริหารความเสี่ยงธุรกิจประกันภัยและธนาคารพาณิชย์:
 
