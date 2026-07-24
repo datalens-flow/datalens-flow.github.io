@@ -29,8 +29,8 @@ export const transpileSql = (
   let changesCount = 0;
   const transformationLog: string[] = [];
 
-  const logChange = (rule: string) => {
-    changesCount++;
+  const logChange = (rule: string, occurrencesCount: number = 1) => {
+    changesCount += occurrencesCount;
     if (!transformationLog.includes(rule)) {
       transformationLog.push(rule);
     }
@@ -50,7 +50,7 @@ export const transpileSql = (
     const matches = result.match(/\bnvl\s*\(/gi);
     if (matches) {
       result = result.replace(/\bnvl\s*\(/gi, 'COALESCE(');
-      logChange(`Mapped Oracle NVL() ➔ COALESCE() (${matches.length} occurrences)`);
+      logChange(`Mapped Oracle NVL() ➔ COALESCE() (${matches.length} occurrences)`, matches.length);
     }
   }
 
@@ -59,7 +59,7 @@ export const transpileSql = (
     const matches = result.match(/\bisnull\s*\(/gi);
     if (matches) {
       result = result.replace(/\bisnull\s*\(/gi, 'COALESCE(');
-      logChange(`Mapped T-SQL ISNULL() ➔ COALESCE() (${matches.length} occurrences)`);
+      logChange(`Mapped T-SQL ISNULL() ➔ COALESCE() (${matches.length} occurrences)`, matches.length);
     }
   }
 
@@ -68,7 +68,7 @@ export const transpileSql = (
     const matches = result.match(/\bifnull\s*\(/gi);
     if (matches) {
       result = result.replace(/\bifnull\s*\(/gi, 'COALESCE(');
-      logChange(`Mapped IFNULL() ➔ COALESCE() (${matches.length} occurrences)`);
+      logChange(`Mapped IFNULL() ➔ COALESCE() (${matches.length} occurrences)`, matches.length);
     }
   }
 
@@ -77,7 +77,7 @@ export const transpileSql = (
     const nvl2Matches = result.match(/\bnvl2\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^)]+)\)/gi);
     if (nvl2Matches) {
       result = result.replace(/\bnvl2\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^)]+)\)/gi, 'CASE WHEN $1 IS NOT NULL THEN $2 ELSE $3 END');
-      logChange(`Transformed NVL2(a, b, c) ➔ CASE WHEN a IS NOT NULL THEN b ELSE c END (${nvl2Matches.length} occurrences)`);
+      logChange(`Transformed NVL2(a, b, c) ➔ CASE WHEN a IS NOT NULL THEN b ELSE c END (${nvl2Matches.length} occurrences)`, nvl2Matches.length);
     }
   }
 
@@ -102,7 +102,7 @@ export const transpileSql = (
         caseExpr += ' END';
         return caseExpr;
       });
-      logChange(`Transformed Oracle DECODE() ➔ CASE WHEN clause (${matches.length} occurrences)`);
+      logChange(`Transformed Oracle DECODE() ➔ CASE WHEN clause (${matches.length} occurrences)`, matches.length);
     }
   }
 
@@ -116,13 +116,13 @@ export const transpileSql = (
     const count = (result.match(/\bgetdate\s*\(\s*\)/gi) || []).length;
     if (targetDialect === 'postgres' || targetDialect === 'bigquery' || targetDialect === 'snowflake') {
       result = result.replace(/\bgetdate\s*\(\s*\)/gi, 'CURRENT_TIMESTAMP');
-      logChange(`Mapped T-SQL GETDATE() ➔ CURRENT_TIMESTAMP (${count} occurrences)`);
+      logChange(`Mapped T-SQL GETDATE() ➔ CURRENT_TIMESTAMP (${count} occurrences)`, count);
     } else if (targetDialect === 'mysql') {
       result = result.replace(/\bgetdate\s*\(\s*\)/gi, 'NOW()');
-      logChange(`Mapped T-SQL GETDATE() ➔ NOW() (${count} occurrences)`);
+      logChange(`Mapped T-SQL GETDATE() ➔ NOW() (${count} occurrences)`, count);
     } else if (targetDialect === 'sqlite') {
       result = result.replace(/\bgetdate\s*\(\s*\)/gi, "datetime('now')");
-      logChange(`Mapped T-SQL GETDATE() ➔ datetime('now') (${count} occurrences)`);
+      logChange(`Mapped T-SQL GETDATE() ➔ datetime('now') (${count} occurrences)`, count);
     }
   }
 
@@ -130,13 +130,13 @@ export const transpileSql = (
     const count = (result.match(/\bsysdate\b/gi) || []).length;
     if (targetDialect === 'postgres' || targetDialect === 'bigquery' || targetDialect === 'snowflake') {
       result = result.replace(/\bsysdate\b/gi, 'CURRENT_TIMESTAMP');
-      logChange(`Mapped Oracle SYSDATE ➔ CURRENT_TIMESTAMP (${count} occurrences)`);
+      logChange(`Mapped Oracle SYSDATE ➔ CURRENT_TIMESTAMP (${count} occurrences)`, count);
     } else if (targetDialect === 'mysql') {
       result = result.replace(/\bsysdate\b/gi, 'NOW()');
-      logChange(`Mapped Oracle SYSDATE ➔ NOW() (${count} occurrences)`);
+      logChange(`Mapped Oracle SYSDATE ➔ NOW() (${count} occurrences)`, count);
     } else if (targetDialect === 'sqlite') {
       result = result.replace(/\bsysdate\b/gi, "datetime('now')");
-      logChange(`Mapped Oracle SYSDATE ➔ datetime('now') (${count} occurrences)`);
+      logChange(`Mapped Oracle SYSDATE ➔ datetime('now') (${count} occurrences)`, count);
     }
   }
 
@@ -268,21 +268,21 @@ export const transpileSql = (
     if (v2Matches) {
       const newType = targetDialect === 'bigquery' ? 'STRING' : 'VARCHAR';
       result = result.replace(/\bvarchar2\b/gi, newType);
-      logChange(`Converted Oracle VARCHAR2 ➔ ${newType} (${v2Matches.length} occurrences)`);
+      logChange(`Converted Oracle VARCHAR2 ➔ ${newType} (${v2Matches.length} occurrences)`, v2Matches.length);
     }
 
     const numMatches = result.match(/\bnumber\b/gi);
     if (numMatches) {
       const newType = targetDialect === 'bigquery' ? 'NUMERIC' : (targetDialect === 'postgres' ? 'NUMERIC' : 'DECIMAL');
       result = result.replace(/\bnumber\b/gi, newType);
-      logChange(`Converted Oracle NUMBER ➔ ${newType} (${numMatches.length} occurrences)`);
+      logChange(`Converted Oracle NUMBER ➔ ${newType} (${numMatches.length} occurrences)`, numMatches.length);
     }
 
     const clobMatches = result.match(/\bclob\b/gi);
     if (clobMatches) {
       const newType = targetDialect === 'bigquery' ? 'STRING' : (targetDialect === 'postgres' ? 'TEXT' : 'LONGTEXT');
       result = result.replace(/\bclob\b/gi, newType);
-      logChange(`Converted Oracle CLOB ➔ ${newType} (${clobMatches.length} occurrences)`);
+      logChange(`Converted Oracle CLOB ➔ ${newType} (${clobMatches.length} occurrences)`, clobMatches.length);
     }
   }
 

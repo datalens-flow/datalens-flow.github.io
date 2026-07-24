@@ -308,7 +308,7 @@ export const SqlTranspilerView: React.FC = () => {
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="panel-badge target-badge">
-                  {changesCount > 0 ? `${changesCount} TRANSFORMATIONS` : 'READY'}
+                  {changesCount > 0 ? `${changesCount} REPLACEMENTS APPLIED` : 'READY'}
                 </span>
                 <button 
                   className="btn btn-secondary" 
@@ -374,7 +374,7 @@ export const SqlTranspilerView: React.FC = () => {
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="panel-badge target-badge">
-                  AFTER ({changesCount} DIFFS)
+                  AFTER ({changesCount} REPLACEMENTS)
                 </span>
                 <button 
                   className="btn btn-secondary" 
