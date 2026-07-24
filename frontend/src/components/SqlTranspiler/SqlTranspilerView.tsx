@@ -206,7 +206,7 @@ export const SqlTranspilerView: React.FC = () => {
       <div className="transpiler-toolbar glass-panel">
         <div className="transpiler-dialect-selectors">
           <div className="dialect-select-group">
-            <span className="dialect-label">SOURCE DIALECT (BEFORE)</span>
+            <span className="dialect-label">SOURCE:</span>
             <select 
               value={sourceDialect} 
               onChange={e => setSourceDialect(e.target.value as SqlDialect)}
@@ -219,13 +219,13 @@ export const SqlTranspilerView: React.FC = () => {
           </div>
 
           <div className="transpiler-arrow">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
             </svg>
           </div>
 
           <div className="dialect-select-group">
-            <span className="dialect-label">TARGET DIALECT (AFTER)</span>
+            <span className="dialect-label">TARGET:</span>
             <select 
               value={targetDialect} 
               onChange={e => setTargetDialect(e.target.value as SqlDialect)}
