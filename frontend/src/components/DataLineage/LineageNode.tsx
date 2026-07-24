@@ -36,7 +36,6 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
     }
   };
 
-  const [showColsInDbt, setShowColsInDbt] = React.useState(false);
 
   const getDbtColor = (type: string) => {
     switch(type) {
@@ -101,12 +100,11 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
                   if (data.onToggleCollapse) {
                     data.onToggleCollapse(data.tableName);
                   }
-                  setShowColsInDbt(prev => !prev);
                 }}
                 style={{
-                  background: (!isCollapsed || showColsInDbt) ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                  background: !isCollapsed ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
                   border: '1px solid var(--color-border)',
-                  color: (!isCollapsed || showColsInDbt) ? '#38bdf8' : 'var(--color-text-muted)',
+                  color: !isCollapsed ? '#38bdf8' : 'var(--color-text-muted)',
                   borderRadius: '3px',
                   padding: '1px 6px',
                   fontSize: '9px',
@@ -115,7 +113,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
                 }}
                 title="Toggle Columns List"
               >
-                {(!isCollapsed || showColsInDbt) ? '▲ Hide cols' : `▼ ${columns.length} cols`}
+                {!isCollapsed ? '▲ Hide cols' : `▼ ${columns.length} cols`}
               </button>
             )}
           </div>
@@ -150,7 +148,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
             }}
           />
         </div>
-        {data.viewMode !== 'overview' && (data.viewMode !== 'dbt' || !isCollapsed || showColsInDbt) && (
+        {data.viewMode !== 'overview' && (data.viewMode !== 'dbt' || !isCollapsed) && (
           <div className="lineage-node-body">
           {visibleCols.map((col, i) => (
             <div key={i} className="lineage-col-row">

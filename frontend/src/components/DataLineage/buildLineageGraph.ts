@@ -323,7 +323,6 @@ export const buildLineageGraph = (
     });
 
     const COLUMN_SPACING = 380;
-    const NODE_VERTICAL_GAP = 75;
     const START_X = 60;
     const START_Y = 60;
 
@@ -333,18 +332,21 @@ export const buildLineageGraph = (
       const colNodes = dbtLayers[layerKey];
       colNodes.sort((a, b) => a.id.localeCompare(b.id));
 
-      colNodes.forEach((node, rowIndex) => {
+      let currentY = START_Y;
+      colNodes.forEach((node) => {
         const x = START_X + colIndex * COLUMN_SPACING;
-        const y = START_Y + rowIndex * NODE_VERTICAL_GAP;
+        const y = currentY;
         node.position = { x, y };
 
-        if (dagreGraph.hasNode(node.id)) {
-          const dNode = dagreGraph.node(node.id);
-          if (dNode) {
-            dNode.x = x + COL_WIDTH / 2;
-            dNode.y = y + 27;
-          }
+        const dNode = dagreGraph.hasNode(node.id) ? dagreGraph.node(node.id) : null;
+        const h = dNode?.height || (node.data?.isCollapsed ? 54 : 300);
+
+        if (dNode) {
+          dNode.x = x + COL_WIDTH / 2;
+          dNode.y = y + h / 2;
         }
+
+        currentY += h + 30; // Clean 30px gap below the node (shifts all nodes below down!)
       });
     });
   }
