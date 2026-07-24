@@ -33,48 +33,76 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     id: 'data-ecosystem',
     groupId: 'standards',
     groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
-    title: 'ระบบนิเวศของข้อมูล (Data Ecosystem)',
+    title: 'ระบบนิเวศของข้อมูล (Data Ecosystem & Streaming Architecture)',
     iconKey: 'data-ecosystem',
-    tag: 'Overview & Harmony',
+    tag: 'Confluent / Equinix / Microsoft Fabric Standard',
     imageUrl: '/images/knowledge/data-ecosystem.jpg',
     useCaseImageUrl: '/images/knowledge/sub-realtime-fraud.jpg',
-    deepDive: 'ระบบนิเวศของข้อมูล (Data Ecosystem) คือโครงสร้างพื้นฐาน เทคโนโลยี บุคลากร และกระบวนการทั้งหมดที่ปฏิสัมพันธ์กันอย่างสอดคล้องภายในองค์กร เพื่อเปลี่ยนข้อมูลดิบ (Raw Data) จากหลายแหล่งให้กลายเป็นคุณค่าทางธุรกิจ (Business Value) อย่างมีเสถียรภาพ มีความปลอดภัย และมีธรรมาภิบาล',
-    example: 'ธนาคารพาณิชย์เชื่อมต่อระบบ Mobile Banking, ตู้ ATM, ระบบอนุมัติสินเชื่อ และระบบบัตรเครดิต เข้ากับ Data Lakehouse กลาง เพื่อให้ทุกฝ่ายทำงานบนฐานข้อมูลเดียวกันโดยไร้รอยต่อ',
-    useCase: '[Use Case: Banking Real-time Fraud Detection]\nธนาคารพาณิชย์ใช้ Data Ecosystem ในการเฝ้าระวังภัยทุจริตทางการเงินแบบ Real-time ข้อมูลการรูดบัตรจากเครื่อง EDC และแอปพลิเคชันจะไหลผ่าน Data Pipeline ➔ ตรวจสอบ Data Quality ➔ กรองสิทธิ์ความปลอดภัย ➔ ผ่านโมเดล AI ใน Data Lakehouse เพื่อบล็อกรายการสุ่มเสี่ยงได้ภายใน 0.3 วินาที'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: สถาปัตยกรรม Streaming อ้างอิง Confluent, Equinix & Microsoft Fabric]
+ระบบนิเวศข้อมูลยุคใหม่ไม่ได้อาศัยการประมวลผลแบบ Batch ประจำคืนอีกต่อไป แต่อ้างอิงกรอบสถาปัตยกรรม Event-Driven Streaming ของ Confluent (Apache Kafka) และสถาปัตยกรรมระดับโครงสร้างพื้นฐานข้ามคลาวด์ของ Equinix ร่วมกับ Microsoft Fabric Real-Time Analytics
+
+1. Event Ingestion & Network Interconnection (Equinix & Confluent Cloud):
+การดึงข้อมูลจากจุดสัมผัสหลากหลาย (EDC, Mobile App, ATM, IoT) ผ่านโครงสร้างเครือข่ายความล่าช้าต่ำ (Low-latency Interconnection) ของ Equinix เข้าสู่ Apache Kafka Cluster ของ Confluent เพื่อให้มั่นใจว่า Event ทุกธุรกรรมถูกบันทึกลงใน Immutable Event Log แบบการันตีความสม่ำเสมอของลำดับ (Sequential Consistency)
+
+2. Real-Time Stream Processing & Feature Store (Microsoft Fabric & Flink):
+ท่อข้อมูลประมวลผล continuous streams ด้วย Apache Flink / Microsoft Fabric Eventstream คำนวณฟีเจอร์พฤติกรรมย้อนหลังในหน่วยมิลลิวินาที (เช่น ยอดโอนสะสมใน 5 นาทีล่าสุด) แล้วส่งเข้า Online Feature Store เพื่อเตรียมเข้าโมเดล AI
+
+3. AI Model Scoring & Dynamic Decisioning (sub-300ms SLA):
+โมเดล Machine Learning ประเมินคะแนนความเสี่ยง (Fraud Risk Score) ร่วมกับ Rules Engine หากพบความผิดปกติ ระบบจะระงับธุรกรรมและบล็อกบัญชีสุ่มเสี่ยงได้ทันทีในเวลาไม่เกิน 300 มิลลิวินาที`,
+    example: 'ธนาคารพาณิชย์ขนาดใหญ่เชื่อมต่อสตรีมธุรกรรมการรูดบัตรจากเครื่อง EDC ทั่วประเทศเข้ากับ Confluent Kafka บน Equinix Interconnect ประมวลผลผ่าน Microsoft Fabric Eventstream เพื่อระงับบัญชีที่ถูกแฮกแบบ Real-time',
+    useCase: '[Use Case: Confluent & Microsoft Fabric Real-Time Fraud Prevention]\nระบบเฝ้าระวังภัยทุจริตการเงินสตรีมข้อมูลผ่าน Confluent Kafka ➔ ตรวจสอบ Data Quality ด้วย Flink ➔ คำนวณฟีเจอร์ลง Microsoft Fabric Eventstream ➔ ประเมินด้วย AI Model ➔ ส่งสัญญาณ Block/Approve ไปยัง Payment Gateway ภายใน 145ms'
   },
   {
     id: 'data-architecture',
     groupId: 'standards',
     groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
-    title: 'Data Architecture (สถาปัตยกรรมข้อมูล)',
+    title: 'Data Architecture (CDC to Snowflake & AWS S3)',
     iconKey: 'data-architecture',
-    tag: 'Foundation',
+    tag: 'PostgreSQL / Debezium / Snowflake Standard',
     imageUrl: '/images/knowledge/data-architecture.jpg',
     exampleImageUrl: '/images/knowledge/sub-cdc-architecture.jpg',
-    deepDive: 'การออกแบบ "พิมพ์เขียว" (Blueprint) ของระบบข้อมูลทั้งหมดในองค์กร กำหนดว่าองค์กรมีข้อมูลอะไรบ้าง ข้อมูลเหล่านั้นจะถูกเก็บไว้ที่ไหน (On-premise หรือ Cloud) ไหลผ่านระบบใดบ้าง และเชื่อมต่อกันอย่างไรเพื่อรองรับทั้งการใช้งานประจำวัน (Operational) และการวิเคราะห์ขั้นสูง (Analytics)',
-    example: 'การวาดแผนผังว่าข้อมูลลูกค้าเมื่อสมัครผ่านแอปพลิเคชัน Mobile Banking จะต้องวิ่งไปเก็บที่ Transaction DB (PostgreSQL) หลังบ้าน จากนั้น CDC (Change Data Capture) จะคัดลอกข้อมูลไปยัง Data Lake บน AWS S3 สำหรับให้ทีม Data Analytics ดึงไปใช้วิเคราะห์ต่อโดยไม่กระทบความเร็วของแอปหลัก',
-    useCase: '[Use Case: E-Commerce Multi-Cloud Streaming]\nธุรกิจอีคอมเมิร์ซออกแบบ Data Architecture ด้วย Kafka + Snowflake โดยดึงข้อมูลสั่งซื้อจากคำสั่งซื้อนับล้านรายการต่อนาทีบน Cloud เข้าสู่ Snowflake Data Warehouse แบบ Real-time ทำให้ทีมการตลาดเห็นยอดขายใน Flash Sale ได้ทันทีโดยระบบหน้าร้านไม่ล่ม'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: สถาปัตยกรรม Change Data Capture (CDC) ไปยัง Snowflake และ AWS S3]
+สถาปัตยกรรมข้อมูลระดับ enterprise อ้างอิงมาตรฐานการทำ Change Data Capture (CDC) จากระบบ Production PostgreSQL ไปยัง AWS S3 Data Lake และคลังข้อมูล Snowflake โดยไม่ส่งผลกระทบต่อประสิทธิภาพการทำงานของฐานข้อมูลหลัก (Zero Workload Degradation)
+
+1. Transaction Log Mining (Debezium & PostgreSQL WAL):
+แทนที่การรัน SQL Query SELECT * เพื่อดึงข้อมูล ซึ่งสร้างภาระหนักให้ระบบ Production สถาปัตยกรรม CDC อ้างอิงการอ่านไฟล์ Write-Ahead Log (WAL) ของ PostgreSQL โดยตรงผ่าน Debezium Connector เพื่อจับทุกลำดับคำสั่ง INSERT, UPDATE, DELETE เป็น Event JSON
+
+2. Event Buffering & Cloud Staging (Apache Kafka & AWS S3 Parquet):
+Debezium ส่งสตรีมการเปลี่ยนแปลงเข้า Apache Kafka จากนั้น Kafka Connect S3 Sink จะแปลงข้อมูลเป็นไฟล์ Parquet format ที่มีการบีบอัดและจัดโครงสร้างแบบ Columnar เก็บไว้ใน AWS S3 Staging Bucket
+
+3. Auto-Ingestion & Table Materialization (Snowflake Snowpipe & Iceberg):
+Snowflake Snowpipe คอยเฝ้าระวัง Event Sns Notification จาก AWS S3 เมื่อมีไฟล์ Parquet ใหม่เข้ามา Snowpipe จะทำการ Auto-ingest ข้อมูลเข้าสู่ Snowflake Target Tables แบบ Real-time ทำให้ข้อมูลฝั่ง Analytics อัปเดตตรงกับ Production ตลอดเวลา`,
+    example: 'ระบบอีคอมเมิร์ซขนาดใหญ่จับสัญญาณคำสั่งซื้อจาก PostgreSQL ผ่าน Debezium สตรีมไฟล์ Parquet ลง AWS S3 แล้วให้ Snowflake Snowpipe อัปเดตตาราง Analytics โดยอัตโนมัติ',
+    useCase: '[Use Case: PostgreSQL to Snowflake Continuous Replication]\nท่อส่งข้อมูล CDC อ่าน WAL Log จาก PostgreSQL ➔ สตรีมผ่าน Debezium เข้า Kafka ➔ บันทึกลง AWS S3 Parquet ➔ Snowflake Snowpipe Auto-Ingest เข้าคลังข้อมูล เพื่อให้ทีม BI เห็นยอดขาย Real-time โดย Production DB ไม่ช้าลง'
   },
   {
     id: 'data-quality',
     groupId: 'standards',
     groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
-    title: 'Data Quality (คุณภาพข้อมูล 6 มิติ)',
+    title: 'Data Quality (6 DAMA-DMBOK Dimensions)',
     iconKey: 'data-quality',
-    tag: 'Quality Standard',
+    tag: 'DAMA-DMBOK Standard Framework',
     imageUrl: '/images/knowledge/data-quality.jpg',
-    deepDive: 'การทำให้แน่ใจว่าข้อมูลมีคุณภาพสมบูรณ์พร้อมใช้งานเพื่อการตัดสินใจที่ถูกต้อง โดยประเมินและวัดผลจาก 6 มิติหลักทางสถิติและวิศวกรรมข้อมูล (6 Quality Dimensions)',
-    example: 'การตั้งระบบ Data Quality Rule อัตโนมัติใน Data Pipeline ตรวจสอบว่าเบอร์โทรศัพท์ลูกค้าต้องมี 10 หลักเท่านั้น หากใครกรอกมา 9 หลัก ระบบจะกักข้อมูลไว้ใน Staging Zone และส่งการแจ้งเตือนให้ทีมบริการลูกค้าแก้ไข',
-    useCase: '[Use Case: Healthcare Patient Prescription Validation]\nโรงพยาบาลตั้งกฎ Data Quality Validation บนระบบจ่ายยา โดยเช็คความครบถ้วน (Completeness) และความถูกต้อง (Accuracy) ของประวัติแพ้ยาของคนไข้ หากพบข้อมูลขัดแย้งกัน ระบบจะระงับการสั่งยาและแจ้งเตือนแพทย์ผู้รักษาทันที เพื่อความปลอดภัยสูงสุดของคนไข้',
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การวัดคุณภาพข้อมูล 6 มิติตามมาตรฐาน DAMA-DMBOK]
+คัมภีร์ DAMA-DMBOK (Data Management Body of Knowledge) กำหนดเกณฑ์มาตรฐานในการประเมินและวัดผลคุณภาพข้อมูลในระดับวิศวกรรมข้อมูลและสถิติผ่าน 6 มิติหลัก (6 Quality Dimensions) เพื่อให้มั่นใจว่าข้อมูลพร้อมสำหรับการนำไปใช้งานจริง (Fit for Purpose)
+
+1. Accuracy (ความถูกต้อง): ข้อมูลสะท้อนความจริงโดยไม่มีข้อผิดพลาด ประเมินโดยการเปรียบเทียบค่าข้อมูลกับแหล่งอ้างอิงภายนอกที่เชื่อถือได้ (Match Rate = Correct Records / Total Records)
+2. Completeness (ความครบถ้วน): ข้อมูลสำคัญและฟิลด์จำเป็นต้องถูกบันทึกครบถ้วน โดยไม่มีค่า Null หรือข้อมูลขาดหายไป (Completeness Rate = Non-Null Fields / Total Fields)
+3. Consistency (ความสม่ำเสมอ): ข้อมูลในทุกระบบตรงกัน ไร้ข้อขัดแย้งเมื่อเปรียบเทียบข้ามฐานข้อมูล (Cross-system Synchronization)
+4. Timeliness (ความทันเวลา): ความสดใหม่และความพร้อมใช้งานของข้อมูลเมื่อเทียบกับข้อตกลง SLA (Timeliness = Arrival Time - Transaction Time)
+5. Validity (ความสมเหตุสมผล): ข้อมูลเป็นไปตามกฎทางธุรกิจ รูปแบบ (Format) และโดเมนที่กำหนด (เช่น เลขประจำตัวประชาชน 13 หลัก)
+6. Uniqueness (ความไม่ซ้ำซ้อน): ข้อมูลแต่ละเอนทิตีต้องถูกบันทึกเพียงระเบียนเดียวเท่านั้น โดยขจัดรายการ Duplicate ออกจากระบบ`,
+    example: 'โรงพยาบาลตั้งระบบ Data Quality Pipeline ตรวจสอบประวัติแพ้ยาของคนไข้ตาม DAMA-DMBOK ทั้ง 6 มิติ หากพบข้อมูลไม่สมบูรณ์หรือขัดแย้งกัน ระบบจะล็อคการสั่งยาและเตือนแพทย์ทันที',
+    useCase: '[Use Case: Healthcare Prescription Quality Auditing]\nการตั้ง Automated DQ Rules ตรวจสอบความถูกต้องและครบถ้วนของประวัติการจ่ายยาคนไข้ เพื่อความปลอดภัยสูงสุดในการรักษาพยาบาล',
     extraDetails: {
       type: 'list',
       items: [
-        { title: '1. ความถูกต้อง (Accuracy)', desc: 'ข้อมูลสะท้อนความจริงโดยไม่มีข้อผิดพลาด (เช่น ยอดขายตรงกับสลิปโอนเงิน)' },
-        { title: '2. ความครบถ้วน (Completeness)', desc: 'ไม่มีคอลัมน์สำคัญขาดหายไป (เช่น โปรไฟล์ลูกค้ามีทั้งชื่อ เบอร์โทร และอีเมล)' },
-        { title: '3. ความสม่ำเสมอ (Consistency)', desc: 'ข้อมูลในทุกระบบตรงกัน ไม่ขัดแย้งกันเอง (เช่น วันเกิดในระบบขายกับระบบบัญชีตรงกัน)' },
-        { title: '4. ความทันเวลา (Timeliness)', desc: 'ข้อมูลอัปเดตสดใหม่ทันต่อการใช้งาน (เช่น ยอดขาย Real-time สำหรับโปรโมชัน)' },
-        { title: '5. ความสมเหตุสมผล (Validity)', desc: 'ข้อมูลเป็นไปตามรูปแบบและขอบเขตที่กำหนด (เช่น อายุต้องเป็นตัวเลขมากกว่า 0)' },
-        { title: '6. ความไม่ซ้ำซ้อน (Uniqueness)', desc: 'ไม่มีระเบียนข้อมูลซ้ำซ้อนกันในฐานข้อมูล (ไม่มี Duplicate Records)' }
+        { title: '1. Accuracy (ความถูกต้อง)', desc: 'ข้อมูลตรงกับความเป็นจริง เช่น ยอดโอนเงินตรงกับใบเสร็จ (Match Rate 100%)' },
+        { title: '2. Completeness (ความครบถ้วน)', desc: 'ฟิลด์สำคัญต้องไม่ว่างเปล่า เช่น โปรไฟล์คนไข้มีทั้งชื่อ เลขบัตร และประวัติแพ้ยา' },
+        { title: '3. Consistency (ความสม่ำเสมอ)', desc: 'ข้อมูลตรงกันทุกระบบ เช่น วันเกิดในระบบเวชระเบียนกับระบบบัญชีตรงกัน' },
+        { title: '4. Timeliness (ความทันเวลา)', desc: 'ข้อมูลสดใหม่ตาม SLA เช่น ยอดขายอัปเดตทุก 5 นาทีสำหรับแคมเปญการตลาด' },
+        { title: '5. Validity (ความสมเหตุสมผล)', desc: 'รูปแบบข้อมูลถูกต้องตามกฎ เช่น รหัสไทย 13 หลัก อีเมลมีเครื่องหมาย @' },
+        { title: '6. Uniqueness (ความไม่ซ้ำซ้อน)', desc: 'ขจัดระเบียนซ้ำซ้อน ให้มีข้อมูลคนไข้ 1 รายต่อ 1 Master Record เท่านั้น' }
       ]
     }
   },
@@ -82,25 +110,23 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     id: 'data-catalog',
     groupId: 'standards',
     groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
-    title: 'Data Catalog & Data Dictionary',
+    title: 'Data Catalog & Data Dictionary (Data Lineage)',
     iconKey: 'data-catalog',
-    tag: 'Documentation',
+    tag: 'Atlan / Monte Carlo / Databricks Standard',
     imageUrl: '/images/knowledge/data-catalog.jpg',
-    deepDive: 'Data Dictionary คือพจนานุกรมอธิบายความหมายระดับเทคนิคของแต่ละคอลัมน์ (เช่น `cus_id` คือ รหัสประจำตัวลูกค้า PK) ส่วน Data Catalog ยกระดับขึ้นมาเป็น "Google Search ของข้อมูลองค์กร" ที่เปิดให้ทุกคนค้นหาชุดข้อมูลที่มี เจ้าของข้อมูล (Owner) และ Lineage การเชื่อมโยงได้ทันที',
-    example: 'พนักงานฝ่ายการตลาดต้องการทำแคมเปญวันเกิด สามารถเข้า Data Catalog ค้นหาคำว่า "Customer Birthdate" ระบบจะแสดงทันทีว่าชุดข้อมูลนี้อยู่ที่ตาราง `dim_customers` บน Snowflake อัปเดตทุกเที่ยงคืน โดยมีหัวหน้าฝ่าย CRM เป็นเจ้าของอนุมัติสิทธิ์',
-    useCase: '[Use Case: Retail Chain 500+ Branches Self-Service BI]\nห้างสรรพสินค้าที่มีกว่า 500 สาขา ใช้ Data Catalog ในการทำ Self-Service Analytics ให้ผู้จัดการสาขาสามารถค้นหาชุดข้อมูลยอดขายรายสินค้า (SKU) และทราบความหมายของคอลัมน์ได้เอง โดยไม่ต้องคอยส่งตั๋วคำร้องขอข้อมูลจากทีม IT'
-  },
-  {
-    id: 'data-stewardship',
-    groupId: 'standards',
-    groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
-    title: 'Data Stewardship & Governance',
-    iconKey: 'data-stewardship',
-    tag: 'Governance',
-    imageUrl: '/images/knowledge/data-stewardship.jpg',
-    deepDive: 'Data Governance คือการกำหนดนโยบายและกรอบกติกาบริหารจัดการข้อมูล ส่วน Data Steward คือ "ผู้ปฏิบัติงานจริง" ซึ่งเป็นตัวแทนจากฝ่ายธุรกิจและฝ่ายไอที คอยกำกับดูแล คุณภาพ ความถูกต้อง และการอนุมัติเข้าถึงข้อมูลในขอบเขตรับผิดชอบของตน',
-    example: 'ฝ่ายทรัพยากรบุคคล (HR) มี Data Steward ทำหน้าที่ตรวจสอบสิทธิ์ว่าพนักงานคนใดสามารถดูข้อมูลเงินเดือนได้บ้าง และคอยตรวจสอบความถูกต้องของข้อมูลตำแหน่งพนักงานก่อนส่งให้ฝ่ายบัญชีจ่ายเงินเดือน',
-    useCase: '[Use Case: Telecom Subscriber Ownership & Access Control]\nค่ายมือถือแต่งตั้ง Data Steward ประจำฝ่ายการตลาดเพื่ออนุมัติสิทธิ์การเข้าถึงประวัติการเติมเงินของลูกค้า โดย Data Steward จะคอยรีวิวตั๋วขอใช้ข้อมูลจากทีม Analytics และตรวจสอบว่าตรงตามนโยบาย PDPA ก่อนอนุมัติสิทธิ์เสมอ'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: ข้อแตกต่างและการทำ Data Lineage อ้างอิง Atlan, Monte Carlo & Databricks]
+การบริหารจัดการเมตาดาต้าอ้างอิงบทความเฉพาะทางจาก Atlan, Monte Carlo และ Databricks Unity Catalog ซึ่งแบ่งแยกบทบาทเทคนิคและบทบาทธุรกิจอย่างชัดเจน:
+
+1. Data Dictionary vs Data Catalog (Atlan & Databricks Unity Catalog):
+- Data Dictionary: เน้นอธิบายโครงสร้างทางเทคนิคระดับฐานข้อมูลเดียว (Physical Metadata) เช่น ชื่อตาราง คอลัมน์ Data Type และ Constraints สำหรับ DBA
+- Data Catalog: ระบบ Search Engine ค้นหาเมตาดาต้าทั่วทั้งองค์กร (Business & Active Metadata) รวบรวมข้อมูล Owner, Quality Score, PII Sensitivity Tag และคำอธิบายทางธุรกิจให้ทุกคนทำ Self-Service Analytics
+
+2. Automated Data Lineage & Observability (Monte Carlo):
+ Data Lineage คือการวาดผังการเดินทางของข้อมูลแบบ end-to-end ตั้งแต่ต้นทาง (Source DB) ➔ ท่อส่ง (ETL/dbt) ➔ คลังข้อมูล (Snowflake/BigQuery) ➔ รายงานปลายทาง (Looker/PowerBI)
+- Impact Analysis: ประเมินผลกระทบก่อนแก้ไขคอลัมน์ต้นทาง ว่าจะทำให้แดชบอร์ดใดพังบ้าง
+- Root Cause Analysis: เมื่อตัวเลขแดชบอร์ดผิดปกติ Monte Carlo Lineage จะสืบย้อนรอยหาท่อส่งข้อมูลที่พังได้ภายใน 2 นาที`,
+    example: 'ทีม Data Analytics ใช้ Atlan Data Catalog ค้นหาชุดข้อมูลยอดขาย พร้อมดูผัง Data Lineage จาก Monte Carlo เพื่อเช็คต้นตอเมื่อรายงานแดชบอร์ดมีตัวเลขคลาดเคลื่อน',
+    useCase: '[Use Case: Atlan & Monte Carlo Enterprise Lineage Mapping]\nการเชื่อมต่อ Databricks Unity Catalog เข้ากับ Atlan เพื่อทำ Data Catalog กลาง ให้ผู้ใช้ 500+ คนค้นหาข้อมูลได้เอง และใช้ Monte Carlo สืบย้อนรอยหาสาเหตุข้อมูลผิดพลาดแบบอัตโนมัติ'
   },
 
   // 2. กลุ่มความปลอดภัยและสิทธิส่วนบุคคล
@@ -108,25 +134,45 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     id: 'data-security',
     groupId: 'security',
     groupTitle: 'กลุ่มความปลอดภัยและสิทธิส่วนบุคคล (Security & Privacy)',
-    title: 'Data Security (ความปลอดภัยของข้อมูล)',
+    title: 'Data Security (PCI DSS 4.0 Standard)',
     iconKey: 'data-security',
-    tag: 'Security & Protection',
+    tag: 'PCI DSS 4.0 Standard Manual',
     imageUrl: '/images/knowledge/data-security.jpg',
-    deepDive: 'มุ่งเน้นมาตรการป้องกันทางเทคโนโลยีและการเข้าถึงจากผู้ไม่มีสิทธิ์ ประกอบด้วย 3 เสาหลัก: การเข้ารหัสข้อมูล (Encryption at Rest / In Transit), การบดบังข้อมูลสำคัญ (Data Masking / Anonymization) และการควบคุมสิทธิ์ตามบทบาท (Role-Based Access Control - RBAC)',
-    example: 'การบดบังหมายเลขบัตรเครดิตและเลขบัตรประชาชนในหน้าจอของพนักงาน Call Center ให้เห็นเฉพาะ 4 หลักสุดท้าย (`****-****-****-1234`) เพื่อป้องกันการรั่วไหลของข้อมูลการเงิน',
-    useCase: '[Use Case: Insurance PCI-DSS Tokenization]\nบริษัทประกันภัยใช้ระบบ Tokenization เข้ารหัสข้อมูลบัตรเครดิตของลูกค้าตั้งแต่หน้าเว็บชำระเงิน และแปลงเป็นสัญลักษณ์สุ่ม (Token) บันทึกลงใน Data Warehouse ทำให้แม้นักวิเคราะห์ข้อมูลจะรัน SQL ก็จะไม่เห็นเลขบัตรจริง ตรงตามมาตรฐาน PCI-DSS'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: มาตรฐานความปลอดภัยข้อมูลอ้างอิง PCI DSS 4.0]
+การรักษาความปลอดภัยข้อมูลตามข้อกำหนด PCI DSS 4.0 (Payment Card Industry Data Security Standard) มุ่งเน้นการปกป้องข้อมูลหมายเลขบัตรชำระเงิน (PAN) และข้อมูลการเงินสำคัญผ่าน 3 มาตรการหลัก:
+
+1. Role-Based Access Control (RBAC):
+การควบคุมสิทธิ์เข้าถึงข้อมูลตามบทบาทหน้าที่ (Requirement 7) กำหนดให้ผู้มีสิทธิ์เท่านั้นที่สามารถมองเห็นข้อมูลจริงได้ โดยใช้หลัก Least Privilege
+
+2. Data Masking (Requirement 3.5.1):
+การบดบังหมายเลขบัตรบนหน้าจอแสดงผล โดยแสดงผลเฉพาะ 4 หลักสุดท้าย (เช่น ****-****-****-1234) เพื่อป้องกันการแอบดูหรือรั่วไหลของข้อมูลในการทำงานประจำวัน
+
+3. Vaultless Format-Preserving Encryption (FPE) Tokenization:
+การแปลงหมายเลขบัตรจริงเป็นสัญลักษณ์สุ่ม (Token) ที่ไม่มีความสัมพันธ์ทางคณิตศาสตร์กับข้อมูลเดิม การใช้ Tokenization ช่วยลดขอบเขตการประเมินความปลอดภัย (PCI DSS Audit Scope) และปกป้องข้อมูลทั้งขณะจัดเก็บ (At Rest) และส่งผ่านท่อ (In Transit)`,
+    example: 'ระบบชำระเงินของบริษัทประกันภัยแปลงเลขบัตรเครดิตลูกค้าเป็น Token ตั้งแต่หน้าเว็บ ชำระเงิน ทำให้พนักงาน Call Center เห็นเฉพาะเลขบดบัง `****-1234` บนหน้าจอ',
+    useCase: '[Use Case: Insurance PCI DSS 4.0 Tokenization Architecture]\nการตั้งระบบ Tokenization เพื่อสกัดข้อมูลบัตรเครดิตออกจากคลังข้อมูลวิเคราะห์ ป้องกันการถูกโจรกรรมข้อมูลและผ่านการรับรองมาตรฐาน PCI DSS 4.0'
   },
   {
     id: 'data-privacy',
     groupId: 'security',
     groupTitle: 'กลุ่มความปลอดภัยและสิทธิส่วนบุคคล (Security & Privacy)',
-    title: 'Data Privacy (ความเป็นส่วนตัว & กฎหมาย PDPA/GDPR)',
+    title: 'Data Privacy & Right to be Forgotten (GDPR / PDPA)',
     iconKey: 'data-privacy',
-    tag: 'Compliance',
+    tag: 'GDPR Article 17 / PDPA Automated Workflow',
     imageUrl: '/images/knowledge/data-privacy.jpg',
-    deepDive: 'มุ่งเน้นการปฏิบัติตามกฎหมายคุ้มครองข้อมูลส่วนบุคคล (เช่น PDPA ของไทย หรือ GDPR ของยุโรป) กำหนดให้องค์กรต้องจัดเก็บข้อมูลเฉพาะเท่าที่จำเป็น แจ้งวัตถุประสงค์ (Purpose) ขอความยินยอม (Consent) และรองรับสิทธิของเจ้าของข้อมูล เช่น สิทธิการขอทำลายข้อมูล (Right to be Forgotten)',
-    example: 'เมื่อลูกค้ายกเลิกสมาชิกและใช้สิทธิ "ขอให้ลบข้อมูลส่วนบุคคล" ระบบสถาปัตยกรรมข้อมูลต้องสามารถตามไปลบระเบียนชื่อ-ที่อยู่-เบอร์โทร ของลูกค้าในทุกฐานข้อมูล ทั้ง Production DB, Data Lake และ Backup File ได้อย่างหมดจดภายใน 30 วัน',
-    useCase: '[Use Case: Airline Automated Right-to-be-Forgotten]\nสายการบินระดับโลกสร้างระบบ Automated Privacy Workflow เมื่อผู้โดยสารยื่นคำร้องลบข้อมูลผ่านแอป ระบบจะรัน Script ตามไปลบโปรไฟล์ สิทธิประโยชน์สะสมไมล์ และประวัติเดินทางในทุกฐานข้อมูลย่อย พร้อมออกใบรักษากฎหมาย GDPR ให้อัตโนมัติ'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การวางสถาปัตยกรรมลบข้อมูลอัตโนมัติตาม GDPR & PDPA]
+การปฏิบัติตามกฎหมายคุ้มครองข้อมูลส่วนบุคคล (GDPR Article 17 และ PDPA ของไทย) กำหนดสิทธิการขอทำลายข้อมูล (Right to be Forgotten) ซึ่งองค์กรต้องมีสถาปัตยกรรมรองรับการลบข้อมูลส่วนบุคคลข้ามทุกระบบภายใน 30 วัน
+
+1. Centralized Privacy Control Plane (MDM & Privacy Service):
+เมื่อเจ้าของข้อมูลยื่นคำร้องขอทำลายข้อมูล Privacy Workflow จะใช้ Master Data Management (MDM) สแกนหา Digital Footprint และสืบหาข้อมูลส่วนบุคคล (PII) ของลูกค้ารายนั้นทั่วทั้งองค์กร
+
+2. Multi-System Automated Erasure Execution:
+สคริปต์อัตโนมัติจะส่งสัญญาณ API ตามไปลบหรือแปลงข้อมูลให้ไม่สามารถระบุตัวตนได้ (Anonymization) ข้ามทุกระบบย่อย ทั้ง Production DB, Data Lakehouse, Cloud Storage และ Log Files
+
+3. Compliance Audit Trail Generation:
+เมื่อการลบเสร็จสิ้น ระบบจะสร้างใบรักษากฎหมาย (Audit Trail Certificate) บันทึกหลักฐานว่ากระบวนการลบสำเร็จเรียบร้อยโดยไม่มีการหลงเหลือของข้อมูล PII`,
+    example: 'สายการบินรับคำร้องขอให้ลบข้อมูลจากผู้โดยสาร ระบบ Privacy Workflow จะรันสคริปต์อัตโนมัติตามไปลบประวัติเดินทาง สิทธิสะสมไมล์ และโปรไฟล์ลูกค้าข้าม 10 ฐานข้อมูลย่อยภายใน 30 วัน',
+    useCase: '[Use Case: Airline Automated PDPA Right-to-be-Forgotten]\nระบบอัตโนมัติตามสืบค้นและทำลายข้อมูล PII ข้าม 10 ระบบย่อย พร้อมออกใบรักษากฎหมายยืนยันความถูกต้องตาม PDPA/GDPR'
   },
 
   // 3. กลุ่มการจัดการและการนำไปใช้
@@ -134,37 +180,70 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     id: 'master-data-management',
     groupId: 'management',
     groupTitle: 'กลุ่มการจัดการและการนำไปใช้ (Management & Integration)',
-    title: 'Master Data Management (MDM - ความจริงเพียงหนึ่งเดียว)',
+    title: 'Master Data Management (Profisee & LatentView Standard)',
     iconKey: 'master-data-management',
-    tag: 'Single Source of Truth',
+    tag: 'Profisee & LatentView MDM Standard',
     imageUrl: '/images/knowledge/master-data-management.jpg',
-    deepDive: 'กระบวนการรวมและขจัดความขัดแย้งของข้อมูลหลัก (Customer, Product, Vendor) จากหลายระบบย่อย เพื่อสร้าง "ความจริงเพียงหนึ่งเดียว" (Single Source of Truth / Golden Record) ให้ทั้งองค์กรใช้งานตรงกัน',
-    example: 'ฝ่ายขายระบุชื่อลูกค้าว่า "นายสมชาย" ฝ่ายบริการลูกค้าระบุว่า "Somchai" ฝ่ายบัญชีระบุว่า "คุณสมชาย ใจดี" ระบบ MDM จะทำ Matching Rule ยืนยันด้วยเลขบัตรประชาชน แล้วยุบรวมเป็น Golden Record ลูกค้ารหัส `CUST-001` รายเดียวกัน',
-    useCase: '[Use Case: Enterprise Conglomerate Single Customer View]\nเครือธุรกิจขนาดใหญ่ที่มีทั้งธุรกิจห้างสรรพสินค้า โรงแรม และซูเปอร์มาร์เก็ต ใช้ MDM เชื่อมโปรไฟล์ลูกค้าจาก 3 บริษัทในเครือเข้าด้วยกันเป็น Golden ID ทำให้สามารถทำคะแนนสะสมร่วมและมอบสิทธิประโยชน์ข้ามธุรกิจได้อย่างแม่นยำ'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: กฎ Survivorship และการสร้าง Golden Record อ้างอิง Profisee & LatentView]
+การทำ Master Data Management (MDM) ตามแนวทางของ Profisee และ LatentView มุ่งเน้นการขจัดความขัดแย้งของข้อมูลหลักเพื่อสร้าง "ความจริงเพียงหนึ่งเดียว" (Single Source of Truth / Golden Record)
+
+1. Identity Matching & Fuzzy Deduplication (Profisee Engine):
+ระบบดึงข้อมูลลูกค้าจาก CRM, ERP และ POS นำมาผ่าน อัลกอริทึม Matching (เช่น Levenshtein Distance, Jaro-Winkler) เพื่อจับคู่ระเบียนข้อมูลที่ชี้ไปยังบุคคลเดียวกันแม้สะกดชื่อต่างกัน
+
+2. Attribute-Level Survivorship Rules (LatentView Framework):
+การตั้งกฎตัดสินว่าคอลัมน์ใดจากระบบใดจะได้รับการคัดเลือกให้รอดชีวิต (Survive) เข้าสู่ Golden Record (CUST-001):
+- Source Priority: กำหนดลำดับความน่าเชื่อถือของระบบ (เช่น ระบบภาษียึด Tax ID, ระบบ CRM ยึดเบอร์โทร)
+- Recency: เลือกข้อมูลที่มีการอัปเดตล่าสุด
+- Completeness: เลือกข้อมูลจากระเบียนที่มีค่า Null น้อยที่สุด
+
+3. Golden Record Publishing:
+เมื่อล้างข้อมูลเสร็จสิ้น ระบบ MDM จะส่งออก Golden Record (CUST-001) กลับไปยังระบบย่อยทั้งหมด เพื่อให้ทั้งองค์กรใช้ข้อมูลตรงกัน`,
+    example: 'เครือธุรกิจห้างสรรพสินค้าใช้ Profisee MDM รวมข้อมูลสมาชิกจากระบบห้าง โรงแรม และซูเปอร์มาร์เก็ต สร้างเป็น Golden Record ลูกค้าคีย์เดียว (CUST-001)',
+    useCase: '[Use Case: Enterprise Conglomerate Single Customer View]\nการเชื่อมต่อระบบ MDM ยุบรวมข้อมูลลูกค้า 3 บริษัทในเครือ ขจัดความซ้ำซ้อน และสร้าง Golden Record สำหรับแคมเปญการตลาดข้ามธุรกิจ'
   },
   {
     id: 'data-integration',
     groupId: 'management',
     groupTitle: 'กลุ่มการจัดการและการนำไปใช้ (Management & Integration)',
-    title: 'Data Integration & ETL / ELT',
+    title: 'Data Integration & Modern ELT (Airflow, dbt & BigQuery)',
     iconKey: 'data-integration',
-    tag: 'Pipeline & Integration',
+    tag: 'Apache Airflow / dbt / Google BigQuery Standard',
     imageUrl: '/images/knowledge/data-integration.jpg',
-    deepDive: 'กระบวนการเชื่อมโยงและดึงข้อมูลจากแหล่งที่มากระจัดกระจาย (Database, API, Cloud SaaS) เข้าสู่คลังข้อมูลกลาง ผ่านท่อส่งข้อมูล ETL (Extract -> Transform -> Load) หรือ ELT (Extract -> Load -> Transform บน Cloud Data Warehouse)',
-    example: 'ท่อส่งข้อมูลดึงยอดขายจากเครื่อง POS ตามหน้าร้าน (Extract) นำมาแปลงสกุลเงินเป็นบาทและปรับฟอร์แมตวันที่เป็น ค.ศ. (Transform) แล้วนำไปบันทึกลง Google BigQuery ทุกๆ 15 นาที (Load)',
-    useCase: '[Use Case: Logistics Real-Time Fleet Tracking & Analytics]\nบริษัทขนส่งใช้ Airflow + BigQuery ทำ ELT Pipeline ดึงตำแหน่ง GPS รถขนส่ง 10,000 คันทุก 5 วินาทีเข้า BigQuery เพื่อคำนวณเส้นทางประหยัดน้ำมันและประมาณเวลาส่งสินค้า (ETA) ให้ลูกค้าได้แบบ Real-time'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: สถาปัตยกรรม Modern ELT Pipeline ด้วย Airflow, dbt & BigQuery]
+สถาปัตยกรรมประมวลผลข้อมูลยุคใหม่เปลี่ยนจาก ETL เป็น ELT (Extract, Load, Transform) เพื่อดึงพลังการประมวลผลแบบขนานมหาศาลของ Cloud Data Warehouse อย่าง Google BigQuery
+
+1. Extraction & Orchestration (Apache Airflow DAGs):
+Airflow ทำหน้าที่เป็นวงดนตรีคุมท่อส่งข้อมูล (Orchestrator) รัน DAGs ดึงข้อมูลจาก APIs และฐานข้อมูล นำไปโหลดเก็บไว้ใน Cloud Storage Raw Zone
+
+2. Warehouse Loading (Google BigQuery Storage):
+ดึงข้อมูลดิบจาก Cloud Storage เข้าสู่ BigQuery Staging Tables โดยตรงแบบ Schema-on-Read เพื่อความรวดเร็ว
+
+3. Code-based Transformation & Testing (dbt Core):
+ใช้ dbt (Data Build Tool) ในการเขียนคำสั่ง SQL Transformation แปลงข้อมูลดิบให้กลายเป็น Data Marts โดยมีระบบ Version Control (Git), Automated Lineage และ Data Quality Testing ควบคุมทุกขั้นตอนก่อนนำไปใช้งานบน BI Dashboards`,
+    example: 'บริษัทขนส่งใช้ Airflow + BigQuery + dbt ดูดตำแหน่ง GPS รถขนส่ง 10,000 คัน นำมาคำนวณเส้นทางและเวลาประเมินถึงปลายทาง (ETA) แบบ Real-time',
+    useCase: '[Use Case: Logistics Modern ELT Fleet Tracking Pipeline]\nท่อส่งข้อมูล ELT ประมวลผลข้อมูล GPS รถขนส่งด้วย Airflow Orchestration ➔ โหลดลง BigQuery ➔ แปลงข้อมูลด้วย dbt แสดงผลบนรายงาน Real-time'
   },
   {
     id: 'data-lifecycle',
     groupId: 'management',
     groupTitle: 'กลุ่มการจัดการและการนำไปใช้ (Management & Integration)',
-    title: 'Data Lifecycle Management (DLM - วงจรชีวิตข้อมูล)',
+    title: 'Data Lifecycle Management (Snowflake & AWS Glacier Manual)',
     iconKey: 'data-lifecycle',
-    tag: 'Lifecycle & Archiving',
+    tag: 'Snowflake & AWS Storage Manual',
     imageUrl: '/images/knowledge/data-lifecycle.jpg',
-    deepDive: 'การบริหารวงจรชีวิตของข้อมูลตั้งแต่เริ่มสร้าง ใช้งาน จัดเก็บสำรอง (Archive) จนถึงทำลายทิ้งตามกฎหมาย เพื่อบริหารต้นทุน Storage และลดความเสี่ยงทางกฎหมายจากการเก็บข้อมูลที่หมดอายุ',
-    example: 'ข้อมูลการโอนเงินปีปัจจุบันเก็บไว้ใน SSD ความเร็วสูง (Hot Storage) ข้อมูลอายุ 2-5 ปี ย้ายไปเก็บใน Cloud Cold Storage ที่ราคาถูกลง และข้อมูลธุรกรรมที่อายุครบ 10 ปีจะถูกลบทำลายทิ้งตามกฎหมายบัญชีโดยอัตโนมัติ',
-    useCase: '[Use Case: Financial 10-Year Auto-Archiving & Purge Policy]\nสถาบันการเงินตั้งนโยบาย DLM บน Cloud โดยข้อมูลสเตทเม้นท์ปีปัจจุบันอยู่บน SSD Performance ➔ พ้น 1 ปี ย้ายลง Glacier Flexible Archive (ลดค่าใช้จ่าย 80%) ➔ พ้น 10 ปี ระบบรัน Script ลบทำลายทิ้งตามกฎหมายการเงินอัตโนมัติ'
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การบริหารวงจรชีวิตข้อมูลและการแบ่ง Tiering อ้างอิง Snowflake & AWS Guide]
+การบริหารวงจรชีวิตข้อมูล (DLM) ตามคู่มือของ Snowflake และ AWS มุ่งเน้นการลดต้นทุนจัดเก็บและปฏิบัติตามกฎหมายจัดเก็บข้อมูลผ่านนโยบายคลาวด์อัตโนมัติ (Automated Storage Lifecycle Policies):
+
+1. Hot Storage Tier (High Performance SSD):
+ข้อมูลธุรกรรมปีปัจจุบันจัดเก็บอยู่ใน SSD Performance สูงสุดบน Snowflake / AWS S3 Standard เพื่อรองรับ Query แดชบอร์ดอย่างรวดเร็ว
+
+2. Cold Storage Tier (Infrequent Access & AWS S3 Glacier):
+เมื่อข้อมูลมีอายุพ้น 1 ปี นโยบายอัตโนมัติจะย้ายข้อมูลลง AWS S3 Glacier Flexible Archive ช่วยลดต้นทุนจัดเก็บลงมากกว่า 80%
+
+3. Automated Regulatory Purge (10-Year Expiry):
+เมื่อข้อมูลจัดเก็บครบกำหนด 10 ปีตามกฎหมายบัญชีและการเงิน นโยบาย DLM จะรันสคริปต์ลบทำลายทิ้งอัตโนมัติ (Automated Purge) เพื่อลดภาระจัดเก็บและความเสี่ยงทางกฎหมาย`,
+    example: 'สถาบันการเงินตั้งนโยบาย DLM บน AWS ย้ายสเตทเม้นท์ธนาคารที่อายุเกิน 1 ปีลง S3 Glacier และตั้งระบบลบทำลายอัตโนมัติเมื่อครบ 10 ปี',
+    useCase: '[Use Case: Financial Automated 10-Year Retention & Purge Policy]\nการบริหารจัดการ Tiering ข้อมูลสเตทเม้นท์บน Cloud ลดต้นทุนจัดเก็บ 80% และลบข้อมูลหมดอายุอัตโนมัติถูกต้องตามกฎหมาย'
   },
 
   // 4. กลุ่มเทคโนโลยีและแนวคิดยุคใหม่
@@ -174,11 +253,18 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     groupTitle: 'กลุ่มเทคโนโลยีและแนวคิดยุคใหม่ (Modern Concepts)',
     title: 'Data Warehouse vs. Data Lake',
     iconKey: 'warehouse-vs-lake',
-    tag: 'Architecture Comparison',
+    tag: 'Architecture Comparison Standard',
     imageUrl: '/images/knowledge/warehouse-vs-lake.jpg',
-    deepDive: 'การเปรียบเทียบสองสถาปัตยกรรมคลังข้อมูลหลัก: Data Warehouse เน้นจัดเก็บข้อมูลที่มีโครงสร้างชัดเจน (Structured Data) ผ่านการทำความสะอาดแล้ว เหมาะสำหรับ Business Intelligence & Dashboard ส่วน Data Lake เน้นเก็บข้อมูลดิบทุกรูปแบบ (Structured, Semi-Structured, Unstructured) เหมาะสำหรับ Data Science & AI',
-    example: 'บริษัท E-Commerce ใช้ Data Warehouse (Snowflake) สำหรับทำรายงานยอดขายประจำเดือนให้ผู้บริหาร และใช้ Data Lake (AWS S3) สำหรับเก็บไฟล์รูปภาพสินค้าและ Log พฤติกรรมการคลิกเพื่อฝึกโมเดล AI แนะนำสินค้า',
-    useCase: '[Use Case: Supermarket Retail Personalization Engine]\nซูเปอร์มาร์เก็ตใช้ Snowflake (Data Warehouse) ทำรายงานวิเคราะห์ยอดขายและกำไรรายสาขาให้ผู้บริหาร และใช้ AWS S3 Data Lake เก็บภาพจากกล้องวงจรปิดหน้าร้านเพื่อวิเคราะห์พฤติกรรมการเดินเลือกซื้อของลูกค้าด้วย AI Camera',
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การเปรียบเทียบสถาปัตยกรรม Data Warehouse vs Data Lake]
+การเลือกใช้สถาปัตยกรรมจัดเก็บข้อมูลระดับองค์กรขึ้นอยู่กับลักษณะข้อมูลและวัตถุประสงค์การนำไปใช้งาน:
+
+1. Data Warehouse (Structured & Schema-on-Write):
+เน้นเก็บข้อมูลที่มีโครงสร้างชัดเจน (SQL Tables) ผ่านการล้างและจัดโมเดลข้อมูลแล้ว เหมาะสำหรับทำ Business Intelligence, Executive Reports และ KPIs
+
+2. Data Lake (All Formats & Schema-on-Read):
+เน้นเก็บข้อมูลดิบทุกรูปแบบ (Structured, Semi-structured JSON, Unstructured Images/Logs) เหมาะสำหรับทีม Data Science, Machine Learning และ AI Training`,
+    example: 'ห้างสรรพสินค้าใช้ Snowflake (Data Warehouse) ทำรายงานวิเคราะห์ยอดขายประจำเดือน และใช้ AWS S3 (Data Lake) เก็บภาพจากกล้องวงจรปิดหน้าร้านสำหรับฝึก AI วิเคราะห์พฤติกรรมลูกค้า',
+    useCase: '[Use Case: Retail Hybrid Warehouse & Lake Architecture]\nการวางสถาปัตยกรรมคู่ขนาน ใช้ Snowflake ทำรายงาน BI และใช้ AWS S3 Data Lake สำหรับพัฒนาโมเดล AI',
     extraDetails: {
       type: 'comparison',
       table: {
@@ -196,25 +282,20 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     id: 'mesh-vs-fabric',
     groupId: 'modern',
     groupTitle: 'กลุ่มเทคโนโลยีและแนวคิดยุคใหม่ (Modern Concepts)',
-    title: 'Data Mesh vs. Data Fabric',
+    title: 'Data Mesh vs. Data Fabric (Alation & Gartner Evaluation)',
     iconKey: 'mesh-vs-fabric',
-    tag: 'Enterprise Paradigm',
+    tag: 'Alation & Gartner Vision Assessment',
     imageUrl: '/images/knowledge/mesh-vs-fabric.jpg',
-    deepDive: 'Data Mesh เป็นแนวคิดระดับ "องค์กรและคน" (Organizational Paradigm) ที่กระจายอำนาจให้แต่ละแผนก (Domain) ดูแลและสร้างข้อมูลเป็น "ผลิตภัณฑ์ (Data as a Product)" ส่วน Data Fabric เป็นแนวคิดเชิง "เทคโนโลยี" (Technical Architecture Layer) ที่ใช้ AI/Metadata อัจฉริยะเชื่อมต่อทุกระบบข้อมูลเข้าด้วยกันเสมือนเป็นผืนผ้าชิ้นเดียว',
-    example: 'องค์กรขนาดใหญ่ใช้ Data Mesh ให้ทีมฝ่ายขายและทีมฝ่ายผลิตดูแลคลังข้อมูลของตนเอง และส่งออก Data API ให้แผนกอื่นใช้ และใช้ Data Fabric คอยทำ Automated Data Cataloging และ Access Control สแกนทั่วทั้งองค์กร',
-    useCase: '[Use Case: Global Automotive Decentralized Domain Products]\nบริษัทผลิตรถยนต์ระดับโลกใช้ Data Mesh กระจายให้ทีม R&D, ทีมโรงงานผลิต และทีมฝ่ายขาย สร้างผลิตภัณฑ์ข้อมูลของตนเอง (Data Products) แล้วเปิด API ให้กัน และใช้ Data Fabric ในการจัดการความปลอดภัยและเมตาดาต้ากลางโดยอัตโนมัติ',
-    extraDetails: {
-      type: 'comparison',
-      table: {
-        headers: ['มิติการเปรียบเทียบ', 'Data Mesh', 'Data Fabric'],
-        rows: [
-          ['จุดเน้นหลัก (Core Focus)', 'คนและโครงสร้างองค์กร (People & Domain)', 'เทคโนโลยีและ AI Integration (Tech Layer)'],
-          ['การบริหารจัดการ', 'Decentralized (กระจายศูนย์ตามแผนก)', 'Centralized Smart Layer (โพลีการจัดการกลาง)'],
-          ['การส่งมอบข้อมูล', 'Data as a Product (ผลิตภัณฑ์ข้อมูล)', 'Automated Unified Metadata (เมตาดาต้าอัตโนมัติ)'],
-          ['ความเหมาะสม', 'องค์กรขนาดใหญ่ที่มีหลายทีมธุรกิจ', 'องค์กรที่มีระบบข้อมูลกระจัดกระจายหลาย Cloud']
-        ]
-      }
-    }
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การวิเคราะห์เปรียบเทียบ Data Mesh vs Data Fabric อ้างอิง Alation & Gartner]
+บทวิเคราะห์เปรียบเทียบสถาปัตยกรรมข้อมูลยุคใหม่จาก Alation และรายงานการประเมินวิสัยทัศน์โดยสถาบัน Gartner:
+
+1. Data Mesh (Organizational & Domain Paradigm):
+เน้นการปรับโครงสร้างคนและองค์กร (Decentralized Operating Model) กระจายอำนาจให้แต่ละแผนก (Domain) ดูแลข้อมูลของตนเอง และส่งมอบข้อมูลในรูปแบบ "ผลิตภัณฑ์ข้อมูล" (Data as a Product) โดยมีระบบ Federated Computational Governance กำกับดูแลมาตรฐานกลาง
+
+2. Data Fabric (Technology & Active Metadata Layer):
+เน้นการใช้ชั้นเทคโนโลยีอัจฉริยะ (Active Metadata & AI-Driven Integration) เชื่อมต่อทุกระบบข้อมูลที่กระจัดกระจายข้าม multi-cloud ให้ทำงานร่วมกันเสมือนผืนผ้าชิ้นเดียว โดยใช้ AI ช่วยทำ Automated Data Discovery และ Access Control`,
+    example: 'บริษัทผลิตรถยนต์ใช้ Data Mesh กระจายให้ทีม R&D และทีมโรงงานสร้าง Data Products ของตนเอง และใช้ Data Fabric ทำ Data Cataloging สแกนทั่วองค์กรอัตโนมัติ',
+    useCase: '[Use Case: Global Automotive Enterprise Data Paradigm]\nการผสมผสาน Data Mesh ในการจัดการทีมธุรกิจ ควบคู่กับ Data Fabric ในการจัดการเมตาดาต้าข้าม Cloud อัตโนมัติ'
   },
 
   // 5. กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)
@@ -222,85 +303,77 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     id: 'dmbok-people-roles',
     groupId: 'dmbok',
     groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
-    title: '1. โครงสร้างบุคลากรและบทบาทหน้าที่ (People & Roles)',
+    title: '1. โครงสร้างบุคลากรและบทบาทหน้าที่ (DAMA-DMBOK Roles)',
     iconKey: 'dmbok-people-roles',
-    tag: 'DAMA-DMBOK Pillar 1',
+    tag: 'DAMA-DMBOK Governance Team Standard',
     imageUrl: '/images/knowledge/dmbok-people-roles.jpg',
     deepDiveImageUrl: '/images/knowledge/sub-dmbok-roles.jpg',
-    deepDive: 'ตามมาตรฐาน DAMA-DMBOK การจัดการข้อมูลไม่ใช่หน้าที่ของฝ่าย IT เพียงฝ่ายเดียว แต่เป็นความรับผิดชอบร่วมกันทั้งองค์กร ต้องมีการแต่งตั้งบทบาทที่ชัดเจนระหว่างระดับนโยบาย (CDO), ระดับตัดสินใจธุรกิจ (Data Owner), ระดับปฏิบัติการดูแลนิยาม (Data Steward) และระดับเทคนิค (Data Custodian)',
-    example: 'แต่งตั้ง Head of Marketing เป็น Data Owner ของตารางลูกค้า และแต่งตั้งทีม Risk Analyst เป็น Data Steward คอยเช็คว่าพนักงานกรอกข้อมูลกรมธรรม์ถูกต้องหรือไม่ โดยมีทีม Data Engineer เป็น Data Custodian คอยทำ Backup สิทธิ์',
-    useCase: '[Use Case: Enterprise Data Governance Org Structure]\nองค์กรการเงินขนาดใหญ่จัดตั้งโครงสร้างตาม DAMA-DMBOK โดยแต่งตั้ง CDO คุมยุทธศาสตร์ภาพรวม ➔ ให้ผู้อำนวยการฝ่ายพันธมิตรเป็น Data Owner อนุมัติสิทธิ์เข้าถึงตารางพาร์ทเนอร์ ➔ ให้สถาปนิกความเสี่ยงเป็น Data Steward กำหนด Data Dictionary ➔ ให้ทีม Data Infrastructure เป็น Data Custodian คอยดูเซิร์ฟเวอร์',
-    extraDetails: {
-      type: 'list',
-      items: [
-        { title: '1. Chief Data Officer (CDO)', desc: 'แม่ทัพใหญ่กำหนดกลยุทธ์ข้อมูลองค์กรให้สอดคล้องทิศทางธุรกิจ' },
-        { title: '2. Data Owner (เจ้าของข้อมูล)', desc: 'ผู้บริหารระดับสูงแผนก (เช่น Head of Marketing) มีอำนาจตัดสินใจสิทธิ์เข้าถึงและรับผิดชอบความเสียหาย' },
-        { title: '3. Data Steward (ผู้ดูแลปฏิบัติการ)', desc: 'ผู้เชี่ยวชาญธุรกิจคอยตรวจสอบคุณภาพข้อมูล กำหนด Data Dictionary และกำกับการกรอกข้อมูล' },
-        { title: '4. Data Custodian (ผู้เก็บรักษาข้อมูล)', desc: 'ทีม IT / Data Engineer ดูแลเทคนิค Backup, Server, Network และสิทธิ์การเข้าถึงตาม Data Owner สั่ง' }
-      ]
-    }
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: นิยามบทบาทบุคลากรหลักตามมาตรฐาน DAMA-DMBOK]
+การจัดตั้งทีม Data Governance ตามมาตรฐาน DAMA-DMBOK กำหนดบทบาทและความรับผิดชอบอย่างชัดเจน 4 ระดับ:
+
+1. Chief Data Officer (CDO): ผู้บริหารระดับสูงสุด คุมยุทธศาสตร์ข้อมูลภาพรวม และผลักดันนโยบายธรรมภิบาลข้ามองค์กร
+2. Data Owner (เจ้าของข้อมูล): ผู้บริหารระดับสูงแผนกธุรกิจ มีอำนาจตัดสินใจสิทธิ์การเข้าถึงข้อมูลและรับผิดชอบความเสี่ยง
+3. Data Steward (ผู้ดูแลปฏิบัติการ): ผู้เชี่ยวชาญธุรกิจ คอยบริหาร Data Dictionary จัดทำ Data Lineage และตรวจ DQ ปฏิบัติการ
+4. Data Custodian (ผู้เก็บรักษาข้อมูล): ทีม IT / Data Engineer ดูแลเทคนิค Server, Backup, Network และสิทธิ์การเข้าถึง`,
+    example: 'แต่งตั้ง Head of Marketing เป็น Data Owner ตารางลูกค้า และแต่งตั้ง Risk Analyst เป็น Data Steward กำหนด Data Dictionary โดยมี Data Engineer เป็น Data Custodian',
+    useCase: '[Use Case: Enterprise Governance Team Org Setup]\nการจัดตั้งโครงสร้างทีมธรรมภิบาลข้อมูลตาม DAMA-DMBOK แบ่งแยกบทบาทชัดเจนระหว่าง CDO, Data Owner, Data Steward และ Data Custodian'
   },
   {
     id: 'dmbok-process-framework',
     groupId: 'dmbok',
     groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
-    title: '2. กระบวนการและมาตรฐานการทำงาน (Process & Framework)',
+    title: '2. กระบวนการประเมินวุฒิภาวะ 5 ระดับ (Data Maturity Assessment)',
     iconKey: 'dmbok-process-framework',
-    tag: 'DAMA-DMBOK Pillar 2',
+    tag: 'DAMA-DMBOK 5 Maturity Stages',
     imageUrl: '/images/knowledge/dmbok-process-framework.jpg',
-    deepDive: 'กระบวนการขับเคลื่อนธรรมภิบาลข้อมูลตามมาตรฐาน DAMA-DMBOK เริ่มจากการประเมินวุฒิภาวะ (Maturity Assessment) การตั้งคณะกรรมการกำกับดูแล (Governance Board) และกระบวนการแก้ไขปัญหาข้อผิดพลาดข้อมูล (Issue Resolution Process) เพื่อสร้าง Single Source of Truth',
-    example: 'เมื่อพบรายชื่อพาร์ทเนอร์ซ้ำซ้อนกันใน 5 ระบบ คณะกรรมการ Data Governance Board จะเรียกประชุมและใช้ Issue Resolution Workflow กำหนดให้ระบบ CRM เป็นระบบหลักในการยึดความถูกต้อง',
-    useCase: '[Use Case: Multi-Subsidiary Issue Resolution Workflow]\nกลุ่มบริษัทร่วมทุน 5 บริษัทใช้ DAMA-DMBOK Process ในการประเมิน Data Maturity จากระดับ 1 (Excel) สู่ระดับ 4 (Managed) และจัดประชุม Governance Board ทุกเดือนเพื่อแก้ไขปัญหารายชื่อพาร์ทเนอร์ซ้ำซ้อนให้รวมเป็น Single Source of Truth',
-    extraDetails: {
-      type: 'list',
-      items: [
-        { title: '1. Data Maturity Assessment', desc: 'การประเมินวุฒิภาวะข้อมูลเพื่อรู้จุดยืนปัจจุบันและวาง Roadmap การพัฒนา' },
-        { title: '2. Data Governance Board', desc: 'คณะกรรมการตัวแทนทุกฝ่ายร่วมประชุมกำหนดนโยบายความปลอดภัยและเกณฑ์ข้อมูลความลับ' },
-        { title: '3. Issue Resolution Process', desc: 'กระบวนการแจ้ง ตรวจสอบ และแก้ไขข้อมูลผิดพลาดข้ามระบบให้เป็น Single Source of Truth' }
-      ]
-    }
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การประเมินวุฒิภาวะการจัดการข้อมูล 5 ระดับตาม DAMA-DMBOK]
+กรอบการประเมินวุฒิภาวะทางการจัดการข้อมูล (Data Maturity Assessment) 5 ระดับตามมาตรฐาน DAMA-DMBOK:
+
+1. Level 1 - Initial (เริ่มแรก): จัดเก็บข้อมูลใน Excel กระจัดกระจาย ขาดนโยบายและเครื่องมือกลาง
+2. Level 2 - Repeatable (ทำซ้ำได้): เริ่มมีกระบวนการย่อยในบางทีม แต่ขาดมาตรฐานร่วมทั่วทั้งองค์กร
+3. Level 3 - Defined (กำหนดไว้): มีการกำหนดนโยบาย Data Policy และ Data Dictionary เป็นลายลักษณ์อักษร
+4. Level 4 - Monitored (ถูกติดตาม): จัดตั้ง Data Governance Board ติดตามคุณภาพด้วย metrics และแก้ไขปัญหา Single Source of Truth
+5. Level 5 - Optimizing (ปรับปรุงต่อเนื่อง): ธรรมภิบาลข้อมูลกลายเป็นวัฒนธรรมองค์กร ปรับปรุงด้วยอัตโนมัติและ AI`,
+    example: 'องค์กรประเมินวุฒิภาวะตนเองจากระดับ 1 สู่ระดับ 4 โดยจัดตั้ง Data Governance Board ประชุมแก้ไขปัญหาข้อมูลขัดแย้งทุกเดือน',
+    useCase: '[Use Case: Enterprise Data Maturity Transformation]\nการประเมินและยกระดับวุฒิภาวะข้อมูลองค์กรจาก Level 1 (Excel) สู่ Level 4 (Managed) ด้วยกรอบ DAMA-DMBOK'
   },
   {
     id: 'dmbok-tech-stack',
     groupId: 'dmbok',
     groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
-    title: '3. โครงสร้างพื้นฐานทางเทคโนโลยี (Technology Stack)',
+    title: '3. โครงสร้างพื้นฐานทางเทคโนโลยี (DAMA-DMBOK Tech Stack)',
     iconKey: 'dmbok-tech-stack',
-    tag: 'DAMA-DMBOK Pillar 3',
+    tag: 'Enterprise Infrastructure Matrix',
     imageUrl: '/images/knowledge/dmbok-tech-stack.jpg',
-    deepDive: 'เทคโนโลยีระดับองค์กรตามมาตรฐาน DAMA-DMBOK คือเครื่องมืออัตโนมัติที่เชื่อม People และ Process เข้าด้วยกัน ประกอบด้วย 4 ชั้นหลัก: สารบบข้อมูล (Catalog Tools), ท่อส่งข้อมูล (Integration/ETL Tools), คลังข้อมูลคลาวด์ (Modern Storage) และระบบล้างข้อมูลหลัก (MDM System)',
-    example: 'การใช้ Microsoft Purview ทำ Data Catalog ร่วมกับ dbt ทำ ETL Pipeline บน Snowflake และใช้ Reltio ทำ Master Data Management ล้างข้อมูลลูกค้า Real-time',
-    useCase: '[Use Case: Manufacturing Modern Data Platform Integration]\nโรงงานอุตสาหกรรมสเกลใหญ่ใช้ Collibra ทำ Data Catalog + Informatica/dbt ทำ ETL ดูดข้อมูลเครื่องจักร ➔ บันทึกลง Google BigQuery Cloud Warehouse ➔ เชื่อม MDM System ล้างข้อมูลซัพพลายเออร์อัตโนมัติ',
-    extraDetails: {
-      type: 'comparison',
-      table: {
-        headers: ['ชั้นเทคโนโลยี (Tech Layer)', 'ตัวอย่างซอฟต์แวร์ระดับองค์กร', 'หน้าที่หลักตาม DAMA-DMBOK'],
-        rows: [
-          ['Data Governance & Catalog', 'Collibra, Microsoft Purview, Alation', 'จัดการสารบบข้อมูล ค้นหา Owner และตรวจสอบ Lineage'],
-          ['Data Integration & ETL', 'dbt, Talend, Informatica, Airflow', 'ดูด แปลง และโหลดข้อมูลจากหลายแหล่งมารวมกัน'],
-          ['Modern Storage', 'Snowflake, Google BigQuery, Amazon Redshift', 'จัดเก็บและประมวลผลข้อมูลประสิทธิภาพสูงบน Cloud'],
-          ['MDM System', 'Reltio, Informatica MDM, IBM MDM', 'รวบรวมและล้างข้อมูลหลักให้เป็น Golden Record Real-time']
-        ]
-      }
-    }
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: ชั้นเทคโนโลยี 4 เสาหลักตามมาตรฐาน DAMA-DMBOK]
+การเลือกใช้ซอฟต์แวร์ระดับองค์กร 4 ชั้นเพื่อขับเคลื่อนนโยบายข้อมูลตาม DAMA-DMBOK:
+
+1. Governance & Catalog Layer: Collibra, Microsoft Purview, Alation
+2. Integration & ETL Layer: dbt, Apache Airflow, Talend, Informatica
+3. Modern Storage Layer: Snowflake, Google BigQuery, Amazon Redshift
+4. MDM System Layer: Reltio, Informatica MDM, IBM MDM`,
+    example: 'การเชื่อมต่อ Collibra + dbt + Snowflake + Reltio MDM เป็นโครงสร้างพื้นฐานเทคโนโลยีกลางขององค์กร',
+    useCase: '[Use Case: 4-Pillar Enterprise Tech Architecture]\nการวางสถาปัตยกรรมซอฟต์แวร์ 4 เสาหลักรองรับการสเกลระบบข้อมูลองค์กร'
   },
   {
     id: 'dmbok-risk-quality',
     groupId: 'dmbok',
     groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
-    title: '4. การจัดการความเสี่ยงและคุณภาพ (Risk & Quality Control)',
+    title: '4. Risk & Quality Control (dbt-expectations Setup)',
     iconKey: 'dmbok-risk-quality',
-    tag: 'DAMA-DMBOK Pillar 4',
+    tag: 'dbt-expectations Automated Rules Standard',
     imageUrl: '/images/knowledge/dmbok-risk-quality.jpg',
-    deepDive: 'การควบคุมความเสี่ยงและคุณภาพข้อมูลตามมาตรฐาน DAMA-DMBOK เน้น 2 เสาหลัก: การสืบย้อนรอยเส้นทางข้อมูล (Data Lineage Tracking) เพื่อหาต้นตอเมื่อปลายทางผิดพลาด และการรันสคริปต์ตรวจคุณภาพอัตโนมัติ (Automated Quality Checks) พร้อมตั้งระบบการเตือนเมื่อค่าผิดปกติ',
-    example: 'เขียนสคริปต์ตรวจ DQ อัตโนมัติ หากพบฟิลด์ "เลขประจำตัวผู้เสียภาษี" ในตารางประเมินความเสี่ยงถูกปล่อยว่างเกิน 5% ระบบจะส่งการแจ้งเตือนและระงับ Pipeline ทันที',
-    useCase: '[Use Case: Financial Automated DQ & Lineage Root Cause Analysis]\nสถาบันการเงินใช้ Data Lineage สืบย้อนรอยจากรายงานแดชบอร์ดความเสี่ยงปลายทางที่ตัวเลขผิดพลาด กลับไปยังฟอร์มอนุมัติสินเชื่อต้นทางได้ภายใน 2 นาที พร้อมใช้ Automated Quality Checks แจ้งเตือนทันทีเมื่อพบค่า Null เกิน 5%',
-    extraDetails: {
-      type: 'list',
-      items: [
-        { title: '1. Data Lineage Tracking', desc: 'การวาดแผนผังย้อนรอยเส้นทางไหลของข้อมูลจากหน้าฟอร์ม ➔ DB ➔ Dashboard หาต้นตอทันทีเมื่อตัวเลขผิด' },
-        { title: '2. Automated Quality Checks', desc: 'การเขียนสคริปต์ตรวจ DQ อัตโนมัติ (เช่น เตือนทันทีเมื่อเลขภาษีปล่อยว่างเกิน 5%)' }
-      ]
-    }
+    deepDive: `📘 [บทเรียนฉบับเต็มรูปแบบ: การควบคุมความเสี่ยงด้วย Automated Quality Checks (dbt-expectations)]
+การควบคุมความเสี่ยงคุณภาพข้อมูลอ้างอิงการตั้งค่าสคริปต์อัตโนมัติด้วยเครื่องมือ dbt-expectations ในท่อส่งข้อมูล CI/CD Pipeline:
+
+1. Automated Quality Expectations (dbt-expectations):
+- expect_column_values_to_not_be_null: เช็คห้ามมีค่าว่างในคอลัมน์สำคัญ (เช่น เลขภาษี null ไม่เกิน 5%)
+- expect_column_values_to_match_regex: เช็คฟอร์แมตข้อมูลตามกฎ (เช่น รูปแบบเบอร์โทรศัพท์ 10 หลัก)
+- expect_table_row_count_to_be_between: เช็คจำนวนระเบียนข้อมูลว่าอยู่ในช่วงปกติตามสถิตีย้อนหลัง
+
+2. CI/CD Quality Gate & Alerting:
+เมื่อวิศวกรส่งโค้ดใหม่ ท่อส่งข้อมูลจะรัน dbt-expectations หากพบข้อมูลผิดปกติเกินเกณฑ์ ระบบจะบล็อกการ Deploy และส่งสัญญาณเตือนทันที`,
+    example: 'สถาบันการเงินตั้งกฎ dbt-expectations เตือนทันทีเมื่อพบเลขประจำตัวผู้เสียภาษีปล่อยว่างเกิน 5% ในรายงานความเสี่ยง',
+    useCase: '[Use Case: Financial Automated DQ & CI/CD Quality Gate]\nการตั้งค่า dbt-expectations บล็อกท่อส่งข้อมูลอัตโนมัติเมื่อพบข้อมูลผิดปกติ ป้องกันรายงานความเสี่ยงคลาดเคลื่อน'
   }
 ];
