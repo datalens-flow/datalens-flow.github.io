@@ -30,6 +30,37 @@ export const KNOWLEDGE_GROUPS = [
 export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
   // 1. กลุ่มมาตรฐานและโครงสร้าง
   {
+    id: 'academic-curriculum',
+    groupId: 'standards',
+    groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
+    title: 'โครงสร้างเนื้อหาเชิงวิชาการ (Academic Content Structure & Curriculum Manual)',
+    iconKey: 'standards',
+    tag: 'Higher Education Academic & Curriculum Design Standard',
+    imageUrl: '/images/knowledge/sub-academic-minimal.jpg',
+    useCaseImageUrl: '/images/knowledge/data-platform-for-ai.jpg',
+    deepDive: `🎓 [โครงสร้างเนื้อหาเชิงวิชาการ: วิศวกรรมระบบนิเวศข้อมูล ธรรมาภิบาล และสถาปัตยกรรมปัญญาประดิษฐ์ระดับองค์กร]
+Academic Content Structure: Enterprise Data Ecosystem Engineering, Governance & AI Architecture Manual
+
+คำอธิบายเนื้อหาเชิงวิชาการ (Academic Description):
+หลักสูตรและชุดเนื้อหาเชิงวิชาการนี้ออกแบบขึ้นเพื่อสร้างความเข้าใจเชิงลึกเกี่ยวกับวงจรการบริหารจัดการและวิศวกรรมข้อมูลระดับองค์กร (Enterprise Data Lifecycle & Engineering) ตั้งแต่ระดับการไหลของสตรีมมิ่งข้อมูล (Streaming Ingestion), การประมวลผลเชิงธุรกรรมและการเปลี่ยนสภาพข้อมูล (Transactions & Transformation), การวางกรอบกำกับดูแลตามมาตรฐาน DAMA-DMBOK (Data Governance Framework), การคุ้มครองความปลอดภัยและความเป็นส่วนตัวของข้อมูลตามข้อกำหนดสากล (PCI DSS 4.0, PDPA/GDPR) ตลอดจนการพัฒนาสถาปัตยกรรมข้อมูลยุคใหม่เพื่อรองรับระบบปัญญาประดิษฐ์และโมเดลภาษาขนาดใหญ่ (Data Platform for AI & LLMOps) โดยเชื่อมโยงเนื้อหาทั้งหมดอย่างเป็นเหตุเป็นผลโดยปราศจากการแบ่งระดับพื้นฐานหรือขั้นสูง
+
+แนวคิดหลักและกรอบทฤษฎี (Core Concepts & Theoretical Framework):
+1. Distributed Data & Consistency Models: CAP Theorem, Eventual Consistency, ACID Compliance (Transactional RDBMS) vs BASE Model (Real-Time Event Streaming)
+2. Data Governance Framework: DAMA-DMBOK 6 Quality Dimensions (Accuracy, Completeness, Consistency, Timeliness, Validity, Uniqueness) & 4 Core Roles (CDO, Owner, Steward, Custodian)
+3. Security & Privacy Infrastructure: Vaultless FPE Tokenization (PCI DSS 4.0) & Automated Privacy Erasure Workflow (GDPR Article 17 / PDPA)
+4. AI Infrastructure & Vector Mechanics: Online/Offline Feature Store, Vector Embeddings, Semantic RAG & LLMOps Observability (MLflow/Arize)
+
+โครงสร้างเนื้อหาเชิงลึก 6 หัวข้อหลัก:
+- หัวข้อที่ 1: ระบบนิเวศและการไหลของข้อมูลแบบสตรีมมิ่ง (Low-latency Network, Eventstream, sub-300ms Fraud SLA)
+- หัวข้อที่ 2: สถาปัตยกรรมคลังข้อมูลและการแปลงสภาพ (PostgreSQL WAL CDC ➔ AWS S3 Parquet ➔ Snowflake ➔ dbt Core & Airflow)
+- หัวข้อที่ 3: สารบบข้อมูล การรวบรวม และการจัดการข้อมูลหลัก (Active Data Catalog, Monte Carlo Lineage, MDM Golden Record CUST-001)
+- หัวข้อที่ 4: การคุ้มครองความปลอดภัย ความเป็นส่วนตัว และวงจรชีวิตข้อมูล (PCI DSS 4.0 DDM/Tokenization, PDPA Erasure, Hot/Cold Tiering)
+- หัวข้อที่ 5: กรอบธรรมภิบาลและโครงสร้างบุคลากรข้อมูล (CDO/Owner/Steward/Custodian Workflow, dbt-expectations CI/CD)
+- หัวข้อที่ 6: สถาปัตยกรรมแพลตฟอร์มข้อมูลสำหรับปัญญาประดิษฐ์ (Feast Feature Store, Pinecone Vector DB, RAG & LLMOps)`,
+    example: 'สถาบันการศึกษาชั้นนำและองค์กรขนาดใหญ่ใช้โครงสร้างเนื้อหาเชิงวิชาการนี้ในการฝึกอบรมวิศวกรข้อมูลและสถาปนิกข้อมูลระดับองค์กร',
+    useCase: '[Academic Curriculum Use Case: Unified Data Engineering & AI Architecture]\nการร้อยเรียงทฤษฎีระบบกระจายศูนย์ สถาปัตยกรรมสตรีมมิ่ง ธรรมภิบาลข้อมูล และ LLMOps เข้าด้วยกัน เพื่อสร้างสถาปัตยกรรมข้อมูลองค์กรที่มีความเสถียรและมั่นคงปลอดภัยสูงสุด'
+  },
+  {
     id: 'enterprise-blueprint',
     groupId: 'standards',
     groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
