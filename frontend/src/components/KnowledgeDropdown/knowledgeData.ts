@@ -19,7 +19,8 @@ export const KNOWLEDGE_GROUPS = [
   { id: 'standards', title: '1. กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)', icon: '📐' },
   { id: 'security', title: '2. กลุ่มความปลอดภัยและสิทธิส่วนบุคคล (Security & Privacy)', icon: '🛡️' },
   { id: 'management', title: '3. กลุ่มการจัดการและการนำไปใช้ (Management & Integration)', icon: '⚙️' },
-  { id: 'modern', title: '4. กลุ่มเทคโนโลยีและแนวคิดยุคใหม่ (Modern Concepts)', icon: '🚀' }
+  { id: 'modern', title: '4. กลุ่มเทคโนโลยีและแนวคิดยุคใหม่ (Modern Concepts)', icon: '🚀' },
+  { id: 'dmbok', title: '5. กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)', icon: '🏛️' }
 ];
 
 export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
@@ -195,6 +196,88 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
           ['ความเหมาะสม', 'องค์กรขนาดใหญ่ที่มีหลายทีมธุรกิจ', 'องค์กรที่มีระบบข้อมูลกระจัดกระจายหลาย Cloud']
         ]
       }
+    }
+  },
+
+  // 5. กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)
+  {
+    id: 'dmbok-people-roles',
+    groupId: 'dmbok',
+    groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
+    title: '1. โครงสร้างบุคลากรและบทบาทหน้าที่ (People & Roles)',
+    icon: '👥',
+    tag: 'DAMA-DMBOK Pillar 1',
+    deepDive: 'ตามมาตรฐาน DAMA-DMBOK การจัดการข้อมูลไม่ใช่หน้าที่ของฝ่าย IT เพียงฝ่ายเดียว แต่เป็นความรับผิดชอบร่วมกันทั้งองค์กร ต้องมีการแต่งตั้งบทบาทที่ชัดเจนระหว่างระดับนโยบาย (CDO), ระดับตัดสินใจธุรกิจ (Data Owner), ระดับปฏิบัติการดูแลนิยาม (Data Steward) และระดับเทคนิค (Data Custodian)',
+    example: 'แต่งตั้ง Head of Marketing เป็น Data Owner ของตารางลูกค้า และแต่งตั้งทีม Risk Analyst เป็น Data Steward คอยเช็คว่าพนักงานกรอกข้อมูลกรมธรรม์ถูกต้องหรือไม่ โดยมีทีม Data Engineer เป็น Data Custodian คอยทำ Backup สิทธิ์',
+    useCase: '🏢 [Use Case: Enterprise Data Governance Org Structure]\nองค์กรการเงินขนาดใหญ่จัดตั้งโครงสร้างตาม DAMA-DMBOK โดยแต่งตั้ง CDO คุมยุทธศาสตร์ภาพรวม ➔ ให้ผู้อำนวยการฝ่ายพันธมิตรเป็น Data Owner อนุมัติสิทธิ์เข้าถึงตารางพาร์ทเนอร์ ➔ ให้สถาปนิกความเสี่ยงเป็น Data Steward กำหนด Data Dictionary ➔ ให้ทีม Data Infrastructure เป็น Data Custodian คอยดูเซิร์ฟเวอร์',
+    extraDetails: {
+      type: 'list',
+      items: [
+        { title: '1. Chief Data Officer (CDO)', desc: 'แม่ทัพใหญ่กำหนดกลยุทธ์ข้อมูลองค์กรให้สอดคล้องทิศทางธุรกิจ' },
+        { title: '2. Data Owner (เจ้าของข้อมูล)', desc: 'ผู้บริหารระดับสูงแผนก (เช่น Head of Marketing) มีอำนาจตัดสินใจสิทธิ์เข้าถึงและรับผิดชอบความเสียหาย' },
+        { title: '3. Data Steward (ผู้ดูแลปฏิบัติการ)', desc: 'ผู้เชี่ยวชาญธุรกิจคอยตรวจสอบคุณภาพข้อมูล กำหนด Data Dictionary และกำกับการกรอกข้อมูล' },
+        { title: '4. Data Custodian (ผู้เก็บรักษาข้อมูล)', desc: 'ทีม IT / Data Engineer ดูแลเทคนิค Backup, Server, Network และสิทธิ์การเข้าถึงตาม Data Owner สั่ง' }
+      ]
+    }
+  },
+  {
+    id: 'dmbok-process-framework',
+    groupId: 'dmbok',
+    groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
+    title: '2. กระบวนการและมาตรฐานการทำงาน (Process & Framework)',
+    icon: '⚙️',
+    tag: 'DAMA-DMBOK Pillar 2',
+    deepDive: 'กระบวนการขับเคลื่อนธรรมภิบาลข้อมูลตามมาตรฐาน DAMA-DMBOK เริ่มจากการประเมินวุฒิภาวะ (Maturity Assessment) การตั้งคณะกรรมการกำกับดูแล (Governance Board) และกระบวนการแก้ไขปัญหาข้อผิดพลาดข้อมูล (Issue Resolution Process) เพื่อสร้าง Single Source of Truth',
+    example: 'เมื่อพบรายชื่อพาร์ทเนอร์ซ้ำซ้อนกันใน 5 ระบบ คณะกรรมการ Data Governance Board จะเรียกประชุมและใช้ Issue Resolution Workflow กำหนดให้ระบบ CRM เป็นระบบหลักในการยึดความถูกต้อง',
+    useCase: '🏛️ [Use Case: Multi-Subsidiary Issue Resolution Workflow]\nกลุ่มบริษัทร่วมทุน 5 บริษัทใช้ DAMA-DMBOK Process ในการประเมิน Data Maturity จากระดับ 1 (Excel) สู่ระดับ 4 (Managed) และจัดประชุม Governance Board ทุกเดือนเพื่อแก้ไขปัญหารายชื่อพาร์ทเนอร์ซ้ำซ้อนให้รวมเป็น Single Source of Truth',
+    extraDetails: {
+      type: 'list',
+      items: [
+        { title: '1. Data Maturity Assessment', desc: 'การประเมินวุฒิภาวะข้อมูลเพื่อรู้จุดยืนปัจจุบันและวาง Roadmap การพัฒนา' },
+        { title: '2. Data Governance Board', desc: 'คณะกรรมการตัวแทนทุกฝ่ายร่วมประชุมกำหนดนโยบายความปลอดภัยและเกณฑ์ข้อมูลความลับ' },
+        { title: '3. Issue Resolution Process', desc: 'กระบวนการแจ้ง ตรวจสอบ และแก้ไขข้อมูลผิดพลาดข้ามระบบให้เป็น Single Source of Truth' }
+      ]
+    }
+  },
+  {
+    id: 'dmbok-tech-stack',
+    groupId: 'dmbok',
+    groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
+    title: '3. โครงสร้างพื้นฐานทางเทคโนโลยี (Technology Stack)',
+    icon: '🛠️',
+    tag: 'DAMA-DMBOK Pillar 3',
+    deepDive: 'เทคโนโลยีระดับองค์กรตามมาตรฐาน DAMA-DMBOK คือเครื่องมืออัตโนมัติที่เชื่อม People และ Process เข้าด้วยกัน ประกอบด้วย 4 ชั้นหลัก: สารบบข้อมูล (Catalog Tools), ท่อส่งข้อมูล (Integration/ETL Tools), คลังข้อมูลคลาวด์ (Modern Storage) และระบบล้างข้อมูลหลัก (MDM System)',
+    example: 'การใช้ Microsoft Purview ทำ Data Catalog ร่วมกับ dbt ทำ ETL Pipeline บน Snowflake และใช้ Reltio ทำ Master Data Management ล้างข้อมูลลูกค้า Real-time',
+    useCase: '🏭 [Use Case: Manufacturing Modern Data Platform Integration]\nโรงงานอุตสาหกรรมสเกลใหญ่ใช้ Collibra ทำ Data Catalog + Informatica/dbt ทำ ETL ดูดข้อมูลเครื่องจักร ➔ บันทึกลง Google BigQuery Cloud Warehouse ➔ เชื่อม MDM System ล้างข้อมูลซัพพลายเออร์อัตโนมัติ',
+    extraDetails: {
+      type: 'comparison',
+      table: {
+        headers: ['ชั้นเทคโนโลยี (Tech Layer)', 'ตัวอย่างซอฟต์แวร์ระดับองค์กร', 'หน้าที่หลักตาม DAMA-DMBOK'],
+        rows: [
+          ['Data Governance & Catalog', 'Collibra, Microsoft Purview, Alation', 'จัดการสารบบข้อมูล ค้นหา Owner และตรวจสอบ Lineage'],
+          ['Data Integration & ETL', 'dbt, Talend, Informatica, Airflow', 'ดูด แปลง และโหลดข้อมูลจากหลายแหล่งมารวมกัน'],
+          ['Modern Data Storage', 'Snowflake, Google BigQuery, Amazon Redshift', 'จัดเก็บและประมวลผลข้อมูลประสิทธิภาพสูงบน Cloud'],
+          ['MDM System', 'Reltio, Informatica MDM, IBM MDM', 'รวบรวมและล้างข้อมูลหลักให้เป็น Golden Record Real-time']
+        ]
+      }
+    }
+  },
+  {
+    id: 'dmbok-risk-quality',
+    groupId: 'dmbok',
+    groupTitle: 'กรอบ DAMA-DMBOK ทางปฏิบัติ (People, Process, Tech & Risk)',
+    title: '4. การจัดการความเสี่ยงและคุณภาพ (Risk & Quality Control)',
+    icon: '🛡️',
+    tag: 'DAMA-DMBOK Pillar 4',
+    deepDive: 'การควบคุมความเสี่ยงและคุณภาพข้อมูลตามมาตรฐาน DAMA-DMBOK เน้น 2 เสาหลัก: การสืบย้อนรอยเส้นทางข้อมูล (Data Lineage Tracking) เพื่อหาต้นตอเมื่อปลายทางผิดพลาด และการรันสคริปต์ตรวจคุณภาพอัตโนมัติ (Automated Quality Checks) พร้อมตั้งระบบการเตือนเมื่อค่าผิดปกติ',
+    example: 'เขียนสคริปต์ตรวจ DQ อัตโนมัติ หากพบฟิลด์ "เลขประจำตัวผู้เสียภาษี" ในตารางประเมินความเสี่ยงถูกปล่อยว่างเกิน 5% ระบบจะส่งการแจ้งเตือนและระงับ Pipeline ทันที',
+    useCase: '📊 [Use Case: Financial Automated DQ & Lineage Root Cause Analysis]\nสถาบันการเงินใช้ Data Lineage สืบย้อนรอยจากรายงานแดชบอร์ดความเสี่ยงปลายทางที่ตัวเลขผิดพลาด กลับไปยังฟอร์มอนุมัติสินเชื่อต้นทางได้ภายใน 2 นาที พร้อมใช้ Automated Quality Checks แจ้งเตือนทันทีเมื่อพบค่า Null เกิน 5%',
+    extraDetails: {
+      type: 'list',
+      items: [
+        { title: '1. Data Lineage Tracking', desc: 'การวาดแผนผังย้อนรอยเส้นทางไหลของข้อมูลจากหน้าฟอร์ม ➔ DB ➔ Dashboard หาต้นตอทันทีเมื่อตัวเลขผิด' },
+        { title: '2. Automated Quality Checks', desc: 'การเขียนสคริปต์ตรวจ DQ อัตโนมัติ (เช่น เตือนทันทีเมื่อเลขภาษีปล่อยว่างเกิน 5%)' }
+      ]
     }
   }
 ];
