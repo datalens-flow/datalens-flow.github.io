@@ -235,6 +235,13 @@
   padding: 16px;
 }
 
+.use-case-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 16px;
+}
+
 .text-emerald {
   color: #10b981;
 }

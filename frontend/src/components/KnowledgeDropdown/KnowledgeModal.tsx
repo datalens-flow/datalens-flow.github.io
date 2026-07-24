@@ -99,6 +99,16 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ initialTopicId, 
               <p className="section-text">{currentTopic.example}</p>
             </div>
 
+            {/* Enterprise Use Case Box */}
+            {currentTopic.useCase && (
+              <div className="knowledge-section use-case-box">
+                <h3 className="section-title text-cyan">
+                  🚀 กรณีการใช้งานในธุรกิจ (Enterprise Use Case)
+                </h3>
+                <p className="section-text" style={{ whiteSpace: 'pre-line' }}>{currentTopic.useCase}</p>
+              </div>
+            )}
+
             {/* Extra Details (6 Quality Dimensions List OR Architecture Comparison Table) */}
             {currentTopic.extraDetails && currentTopic.extraDetails.type === 'list' && currentTopic.extraDetails.items && (
               <div className="knowledge-section">

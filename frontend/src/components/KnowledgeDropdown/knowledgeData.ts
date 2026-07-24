@@ -7,6 +7,7 @@ export interface KnowledgeTopic {
   tag: string;
   deepDive: string;
   example: string;
+  useCase: string;
   extraDetails?: {
     type: 'list' | 'comparison';
     items?: { title: string; desc: string }[];
@@ -24,14 +25,26 @@ export const KNOWLEDGE_GROUPS = [
 export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
   // 1. กลุ่มมาตรฐานและโครงสร้าง
   {
+    id: 'data-ecosystem',
+    groupId: 'standards',
+    groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
+    title: 'ระบบนิเวศของข้อมูล (Data Ecosystem)',
+    icon: '🌐',
+    tag: 'Overview & Harmony',
+    deepDive: 'ระบบนิเวศของข้อมูล (Data Ecosystem) คือโครงสร้างพื้นฐาน เทคโนโลยี บุคลากร และกระบวนการทั้งหมดที่ปฏิสัมพันธ์กันอย่างสอดคล้องภายในองค์กร เพื่อเปลี่ยนข้อมูลดิบ (Raw Data) จากหลายแหล่งให้กลายเป็นคุณค่าทางธุรกิจ (Business Value) อย่างมีเสถียรภาพ มีความปลอดภัย และมีธรรมาภิบาล',
+    example: 'ธนาคารพาณิชย์เชื่อมต่อระบบ Mobile Banking, ตู้ ATM, ระบบอนุมัติสินเชื่อ และระบบบัตรเครดิต เข้ากับ Data Lakehouse กลาง เพื่อให้ทุกฝ่ายทำงานบนฐานข้อมูลเดียวกันโดยไร้รอยต่อ',
+    useCase: '🏢 [Use Case: Banking Real-time Fraud Detection]\nธนาคารพาณิชย์ใช้ Data Ecosystem ในการเฝ้าระวังภัยทุจริตทางการเงินแบบ Real-time ข้อมูลการรูดบัตรจากเครื่อง EDC และแอปพลิเคชันจะไหลผ่าน Data Pipeline ➔ ตรวจสอบ Data Quality ➔ กรองสิทธิ์ความปลอดภัย ➔ ผ่านโมเดล AI ใน Data Lakehouse เพื่อบล็อกรายการสุ่มเสี่ยงได้ภายใน 0.3 วินาที'
+  },
+  {
     id: 'data-architecture',
     groupId: 'standards',
     groupTitle: 'กลุ่มมาตรฐานและโครงสร้าง (Standards & Structure)',
     title: 'Data Architecture (สถาปัตยกรรมข้อมูล)',
     icon: '🏗️',
     tag: 'Foundation',
-    deepDive: 'เป็นการออกแบบ "พิมพ์เขียว" (Blueprint) ของระบบข้อมูลทั้งหมดในองค์กร กำหนดว่าองค์กรมีข้อมูลอะไรบ้าง ข้อมูลเหล่านั้นจะถูกเก็บไว้ที่ไหน (On-premise หรือ Cloud) ไหลผ่านระบบใดบ้าง และเชื่อมต่อกันอย่างไรเพื่อรองรับทั้งการใช้งานประจำวัน (Operational) และการวิเคราะห์ขั้นสูง (Analytics)',
-    example: 'การวาดแผนผังว่าข้อมูลลูกค้าเมื่อสมัครผ่านแอปพลิเคชัน Mobile Banking จะต้องวิ่งไปเก็บที่ Transaction DB (PostgreSQL) หลังบ้าน จากนั้น CDC (Change Data Capture) จะคัดลอกข้อมูลไปยัง Data Lake บน AWS S3 สำหรับให้ทีม Data Analytics ดึงไปใช้วิเคราะห์ต่อโดยไม่กระทบความเร็วของแอปพลิเคชันหลัก'
+    deepDive: 'การออกแบบ "พิมพ์เขียว" (Blueprint) ของระบบข้อมูลทั้งหมดในองค์กร กำหนดว่าองค์กรมีข้อมูลอะไรบ้าง ข้อมูลเหล่านั้นจะถูกเก็บไว้ที่ไหน (On-premise หรือ Cloud) ไหลผ่านระบบใดบ้าง และเชื่อมต่อกันอย่างไรเพื่อรองรับทั้งการใช้งานประจำวัน (Operational) และการวิเคราะห์ขั้นสูง (Analytics)',
+    example: 'การวาดแผนผังว่าข้อมูลลูกค้าเมื่อสมัครผ่านแอปพลิเคชัน Mobile Banking จะต้องวิ่งไปเก็บที่ Transaction DB (PostgreSQL) หลังบ้าน จากนั้น CDC (Change Data Capture) จะคัดลอกข้อมูลไปยัง Data Lake บน AWS S3 สำหรับให้ทีม Data Analytics ดึงไปใช้วิเคราะห์ต่อโดยไม่กระทบความเร็วของแอปหลัก',
+    useCase: '🛒 [Use Case: E-Commerce Multi-Cloud Streaming]\nธุรกิจอีคอมเมิร์ซออกแบบ Data Architecture ด้วย Kafka + Snowflake โดยดึงข้อมูลสั่งซื้อจากคำสั่งซื้อนับล้านรายการต่อนาทีบน Cloud เข้าสู่ Snowflake Data Warehouse แบบ Real-time ทำให้ทีมการตลาดเห็นยอดขายใน Flash Sale ได้ทันทีโดยระบบหน้าร้านไม่ล่ม'
   },
   {
     id: 'data-quality',
@@ -42,6 +55,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     tag: 'Quality Standard',
     deepDive: 'การทำให้แน่ใจว่าข้อมูลมีคุณภาพสมบูรณ์พร้อมใช้งานเพื่อการตัดสินใจที่ถูกต้อง โดยประเมินและวัดผลจาก 6 มิติหลักทางสถิติและวิศวกรรมข้อมูล (6 Quality Dimensions)',
     example: 'การตั้งระบบ Data Quality Rule อัตโนมัติใน Data Pipeline ตรวจสอบว่าเบอร์โทรศัพท์ลูกค้าต้องมี 10 หลักเท่านั้น หากใครกรอกมา 9 หลัก ระบบจะกักข้อมูลไว้ใน Staging Zone และส่งการแจ้งเตือนให้ทีมบริการลูกค้าแก้ไข',
+    useCase: '🏥 [Use Case: Healthcare Patient Prescription Validation]\nโรงพยาบาลตั้งกฎ Data Quality Validation บนระบบจ่ายยา โดยเช็คความครบถ้วน (Completeness) และความถูกต้อง (Accuracy) ของประวัติแพ้ยาของคนไข้ หากพบข้อมูลขัดแย้งกัน ระบบจะระงับการสั่งยาและแจ้งเตือนแพทย์ผู้รักษาทันที เพื่อความปลอดภัยสูงสุดของคนไข้',
     extraDetails: {
       type: 'list',
       items: [
@@ -62,7 +76,8 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     icon: '📖',
     tag: 'Documentation',
     deepDive: 'Data Dictionary คือพจนานุกรมอธิบายความหมายระดับเทคนิคของแต่ละคอลัมน์ (เช่น `cus_id` คือ รหัสประจำตัวลูกค้า PK) ส่วน Data Catalog ยกระดับขึ้นมาเป็น "Google Search ของข้อมูลองค์กร" ที่เปิดให้ทุกคนค้นหาชุดข้อมูลที่มี เจ้าของข้อมูล (Owner) และ Lineage การเชื่อมโยงได้ทันที',
-    example: 'พนักงานฝ่ายการตลาดต้องการทำแคมเปญวันเกิด สามารถเข้า Data Catalog ค้นหาคำว่า "Customer Birthdate" ระบบจะแสดงทันทีว่าชุดข้อมูลนี้อยู่ที่ตาราง `dim_customers` บน Snowflake อัปเดตทุกเที่ยงคืน โดยมีหัวหน้าฝ่าย CRM เป็นเจ้าของอนุมัติสิทธิ์'
+    example: 'พนักงานฝ่ายการตลาดต้องการทำแคมเปญวันเกิด สามารถเข้า Data Catalog ค้นหาคำว่า "Customer Birthdate" ระบบจะแสดงทันทีว่าชุดข้อมูลนี้อยู่ที่ตาราง `dim_customers` บน Snowflake อัปเดตทุกเที่ยงคืน โดยมีหัวหน้าฝ่าย CRM เป็นเจ้าของอนุมัติสิทธิ์',
+    useCase: '🏪 [Use Case: Retail Chain 500+ Branches Self-Service BI]\nห้างสรรพสินค้าที่มีกว่า 500 สาขา ใช้ Data Catalog ในการทำ Self-Service Analytics ให้ผู้จัดการสาขาสามารถค้นหาชุดข้อมูลยอดขายรายสินค้า (SKU) และทราบความหมายของคอลัมน์ได้เอง โดยไม่ต้องคอยส่งตั๋วคำร้องขอข้อมูลจากทีม IT'
   },
   {
     id: 'data-stewardship',
@@ -72,7 +87,8 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     icon: '👤',
     tag: 'Governance',
     deepDive: 'Data Governance คือการกำหนดนโยบายและกรอบกติกาบริหารจัดการข้อมูล ส่วน Data Steward คือ "ผู้ปฏิบัติงานจริง" ซึ่งเป็นตัวแทนจากฝ่ายธุรกิจและฝ่ายไอที คอยกำกับดูแล คุณภาพ ความถูกต้อง และการอนุมัติเข้าถึงข้อมูลในขอบเขตรับผิดชอบของตน',
-    example: 'ฝ่ายทรัพยากรบุคคล (HR) มี Data Steward ทำหน้าที่ตรวจสอบสิทธิ์ว่าพนักงานคนใดสามารถดูข้อมูลเงินเดือนได้บ้าง และคอยตรวจสอบความถูกต้องของข้อมูลตำแหน่งพนักงานก่อนส่งให้ฝ่ายบัญชีจ่ายเงินเดือน'
+    example: 'ฝ่ายทรัพยากรบุคคล (HR) มี Data Steward ทำหน้าที่ตรวจสอบสิทธิ์ว่าพนักงานคนใดสามารถดูข้อมูลเงินเดือนได้บ้าง และคอยตรวจสอบความถูกต้องของข้อมูลตำแหน่งพนักงานก่อนส่งให้ฝ่ายบัญชีจ่ายเงินเดือน',
+    useCase: '📱 [Use Case: Telecom Subscriber Ownership & Access Control]\nค่ายมือถือแต่งตั้ง Data Steward ประจำฝ่ายการตลาดเพื่ออนุมัติสิทธิ์การเข้าถึงประวัติการเติมเงินของลูกค้า โดย Data Steward จะคอยรีวิวตั๋วขอใช้ข้อมูลจากทีม Analytics และตรวจสอบว่าตรงตามนโยบาย PDPA ก่อนอนุมัติสิทธิ์เสมอ'
   },
 
   // 2. กลุ่มความปลอดภัยและสิทธิส่วนบุคคล
@@ -84,7 +100,8 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     icon: '🔒',
     tag: 'Security & Protection',
     deepDive: 'มุ่งเน้นมาตรการป้องกันทางเทคโนโลยีและการเข้าถึงจากผู้ไม่มีสิทธิ์ ประกอบด้วย 3 เสาหลัก: การเข้ารหัสข้อมูล (Encryption at Rest / In Transit), การบดบังข้อมูลสำคัญ (Data Masking / Anonymization) และการควบคุมสิทธิ์ตามบทบาท (Role-Based Access Control - RBAC)',
-    example: 'การบดบังหมายเลขบัตรเครดิตและเลขบัตรประชาชนในหน้าจอของพนักงาน Call Center ให้เห็นเฉพาะ 4 หลักสุดท้าย (`****-****-****-1234`) เพื่อป้องกันการรั่วไหลของข้อมูลการเงิน'
+    example: 'การบดบังหมายเลขบัตรเครดิตและเลขบัตรประชาชนในหน้าจอของพนักงาน Call Center ให้เห็นเฉพาะ 4 หลักสุดท้าย (`****-****-****-1234`) เพื่อป้องกันการรั่วไหลของข้อมูลการเงิน',
+    useCase: '💳 [Use Case: Insurance PCI-DSS Tokenization]\nบริษัทประกันภัยใช้ระบบ Tokenization เข้ารหัสข้อมูลบัตรเครดิตของลูกค้าตั้งแต่หน้าเว็บชำระเงิน และแปลงเป็นสัญลักษณ์สุ่ม (Token) บันทึกลงใน Data Warehouse ทำให้แม้นักวิเคราะห์ข้อมูลจะรัน SQL ก็จะไม่เห็นเลขบัตรจริง ตรงตามมาตรฐาน PCI-DSS'
   },
   {
     id: 'data-privacy',
@@ -94,7 +111,8 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     icon: '⚖️',
     tag: 'Compliance',
     deepDive: 'มุ่งเน้นการปฏิบัติตามกฎหมายคุ้มครองข้อมูลส่วนบุคคล (เช่น PDPA ของไทย หรือ GDPR ของยุโรป) กำหนดให้องค์กรต้องจัดเก็บข้อมูลเฉพาะเท่าที่จำเป็น แจ้งวัตถุประสงค์ (Purpose) ขอความยินยอม (Consent) และรองรับสิทธิของเจ้าของข้อมูล เช่น สิทธิการขอทำลายข้อมูล (Right to be Forgotten)',
-    example: 'เมื่อลูกค้ายกเลิกสมาชิกและใช้สิทธิ "ขอให้ลบข้อมูลส่วนบุคคล" ระบบสถาปัตยกรรมข้อมูลต้องสามารถตามไปลบระเบียนชื่อ-ที่อยู่-เบอร์โทร ของลูกค้าในทุกฐานข้อมูล ทั้ง Production DB, Data Lake และ Backup File ได้อย่างหมดจดภายใน 30 วัน'
+    example: 'เมื่อลูกค้ายกเลิกสมาชิกและใช้สิทธิ "ขอให้ลบข้อมูลส่วนบุคคล" ระบบสถาปัตยกรรมข้อมูลต้องสามารถตามไปลบระเบียนชื่อ-ที่อยู่-เบอร์โทร ของลูกค้าในทุกฐานข้อมูล ทั้ง Production DB, Data Lake และ Backup File ได้อย่างหมดจดภายใน 30 วัน',
+    useCase: '✈️ [Use Case: Airline Automated Right-to-be-Forgotten]\nสายการบินระดับโลกสร้างระบบ Automated Privacy Workflow เมื่อผู้โดยสารยื่นคำร้องลบข้อมูลผ่านแอป ระบบจะรัน Script ตามไปลบโปรไฟล์ สิทธิประโยชน์สะสมไมล์ และประวัติเดินทางในทุกฐานข้อมูลย่อย พร้อมออกใบรักษากฎหมาย GDPR ให้อัตโนมัติ'
   },
 
   // 3. กลุ่มการจัดการและการนำไปใช้
@@ -106,7 +124,8 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     icon: '👑',
     tag: 'Single Source of Truth',
     deepDive: 'กระบวนการรวมและขจัดความขัดแย้งของข้อมูลหลัก (Customer, Product, Vendor) จากหลายระบบย่อย เพื่อสร้าง "ความจริงเพียงหนึ่งเดียว" (Single Source of Truth / Golden Record) ให้ทั้งองค์กรใช้งานตรงกัน',
-    example: 'ฝ่ายขายระบุชื่อลูกค้าว่า "นายสมชาย" ฝ่ายบริการลูกค้าระบุว่า "Somchai" ฝ่ายบัญชีระบุว่า "คุณสมชาย ใจดี" ระบบ MDM จะทำ Matching Rule ยืนยันด้วยเลขบัตรประชาชน แล้วยุบรวมเป็น Golden Record ลูกค้ารหัส `CUST-001` รายเดียวกัน'
+    example: 'ฝ่ายขายระบุชื่อลูกค้าว่า "นายสมชาย" ฝ่ายบริการลูกค้าระบุว่า "Somchai" ฝ่ายบัญชีระบุว่า "คุณสมชาย ใจดี" ระบบ MDM จะทำ Matching Rule ยืนยันด้วยเลขบัตรประชาชน แล้วยุบรวมเป็น Golden Record ลูกค้ารหัส `CUST-001` รายเดียวกัน',
+    useCase: '🏢 [Use Case: Enterprise Conglomerate Single Customer View]\nเครือธุรกิจขนาดใหญ่ที่มีทั้งธุรกิจห้างสรรพสินค้า โรงแรม และซูเปอร์มาร์เก็ต ใช้ MDM เชื่อมโปรไฟล์ลูกค้าจาก 3 บริษัทในเครือเข้าด้วยกันเป็น Golden ID ทำให้สามารถทำคะแนนสะสมร่วมและมอบสิทธิประโยชน์ข้ามธุรกิจได้อย่างแม่นยำ'
   },
   {
     id: 'data-integration',
@@ -116,7 +135,8 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     icon: '🔄',
     tag: 'Pipeline & Integration',
     deepDive: 'กระบวนการเชื่อมโยงและดึงข้อมูลจากแหล่งที่มากระจัดกระจาย (Database, API, Cloud SaaS) เข้าสู่คลังข้อมูลกลาง ผ่านท่อส่งข้อมูล ETL (Extract -> Transform -> Load) หรือ ELT (Extract -> Load -> Transform บน Cloud Data Warehouse)',
-    example: 'ท่อส่งข้อมูลดึงยอดขายจากเครื่อง POS ตามหน้าร้าน (Extract) นำมาแปลงสกุลเงินเป็นบาทและปรับฟอร์แมตวันที่เป็น ค.ศ. (Transform) แล้วนำไปบันทึกลง Google BigQuery ทุกๆ 15 นาที (Load)'
+    example: 'ท่อส่งข้อมูลดึงยอดขายจากเครื่อง POS ตามหน้าร้าน (Extract) นำมาแปลงสกุลเงินเป็นบาทและปรับฟอร์แมตวันที่เป็น ค.ศ. (Transform) แล้วนำไปบันทึกลง Google BigQuery ทุกๆ 15 นาที (Load)',
+    useCase: '🚚 [Use Case: Logistics Real-Time Fleet Tracking & Analytics]\nบริษัทขนส่งใช้ Airflow + BigQuery ทำ ELT Pipeline ดึงตำแหน่ง GPS รถขนส่ง 10,000 คันทุก 5 วินาทีเข้า BigQuery เพื่อคำนวณเส้นทางประหยัดน้ำมันและประมาณเวลาส่งสินค้า (ETA) ให้ลูกค้าได้แบบ Real-time'
   },
   {
     id: 'data-lifecycle',
@@ -126,7 +146,8 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     icon: '⏳',
     tag: 'Lifecycle & Archiving',
     deepDive: 'การบริหารวงจรชีวิตของข้อมูลตั้งแต่เริ่มสร้าง ใช้งาน จัดเก็บสำรอง (Archive) จนถึงทำลายทิ้งตามกฎหมาย เพื่อบริหารต้นทุน Storage และลดความเสี่ยงทางกฎหมายจากการเก็บข้อมูลที่หมดอายุ',
-    example: 'ข้อมูลการโอนเงินปีปัจจุบันเก็บไว้ใน SSD ความเร็วสูง (Hot Storage) ข้อมูลอายุ 2-5 ปี ย้ายไปเก็บใน Cloud Cold Storage ที่ราคาถูกลง และข้อมูลธุรกรรมที่อายุครบ 10 ปีจะถูกลบทำลายทิ้งตามกฎหมายบัญชีโดยอัตโนมัติ'
+    example: 'ข้อมูลการโอนเงินปีปัจจุบันเก็บไว้ใน SSD ความเร็วสูง (Hot Storage) ข้อมูลอายุ 2-5 ปี ย้ายไปเก็บใน Cloud Cold Storage ที่ราคาถูกลง และข้อมูลธุรกรรมที่อายุครบ 10 ปีจะถูกลบทำลายทิ้งตามกฎหมายบัญชีโดยอัตโนมัติ',
+    useCase: '🏦 [Use Case: Financial 10-Year Auto-Archiving & Purge Policy]\nสถาบันการเงินตั้งนโยบาย DLM บน Cloud โดยข้อมูลสเตทเม้นท์ปีปัจจุบันอยู่บน SSD Performance ➔ พ้น 1 ปี ย้ายลง Glacier Flexible Archive (ลดค่าใช้จ่าย 80%) ➔ พ้น 10 ปี ระบบรัน Script ลบทำลายทิ้งตามกฎหมายการเงินอัตโนมัติ'
   },
 
   // 4. กลุ่มเทคโนโลยีและแนวคิดยุคใหม่
@@ -139,6 +160,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     tag: 'Architecture Comparison',
     deepDive: 'การเปรียบเทียบสองสถาปัตยกรรมคลังข้อมูลหลัก: Data Warehouse เน้นจัดเก็บข้อมูลที่มีโครงสร้างชัดเจน (Structured Data) ผ่านการทำความสะอาดแล้ว เหมาะสำหรับ Business Intelligence & Dashboard ส่วน Data Lake เน้นเก็บข้อมูลดิบทุกรูปแบบ (Structured, Semi-Structured, Unstructured) เหมาะสำหรับ Data Science & AI',
     example: 'บริษัท E-Commerce ใช้ Data Warehouse (Snowflake) สำหรับทำรายงานยอดขายประจำเดือนให้ผู้บริหาร และใช้ Data Lake (AWS S3) สำหรับเก็บไฟล์รูปภาพสินค้าและ Log พฤติกรรมการคลิกเพื่อฝึกโมเดล AI แนะนำสินค้า',
+    useCase: '🏬 [Use Case: Supermarket Retail Personalization Engine]\nซูเปอร์มาร์เก็ตใช้ Snowflake (Data Warehouse) ทำรายงานวิเคราะห์ยอดขายและกำไรรายสาขาให้ผู้บริหาร และใช้ AWS S3 Data Lake เก็บภาพจากกล้องวงจรปิดหน้าร้านเพื่อวิเคราะห์พฤติกรรมการเดินเลือกซื้อของลูกค้าด้วย AI Camera',
     extraDetails: {
       type: 'comparison',
       table: {
@@ -161,6 +183,7 @@ export const KNOWLEDGE_TOPICS: KnowledgeTopic[] = [
     tag: 'Enterprise Paradigm',
     deepDive: 'Data Mesh เป็นแนวคิดระดับ "องค์กรและคน" (Organizational Paradigm) ที่กระจายอำนาจให้แต่ละแผนก (Domain) ดูแลและสร้างข้อมูลเป็น "ผลิตภัณฑ์ (Data as a Product)" ส่วน Data Fabric เป็นแนวคิดเชิง "เทคโนโลยี" (Technical Architecture Layer) ที่ใช้ AI/Metadata อัจฉริยะเชื่อมต่อทุกระบบข้อมูลเข้าด้วยกันเสมือนเป็นผืนผ้าชิ้นเดียว',
     example: 'องค์กรขนาดใหญ่ใช้ Data Mesh ให้ทีมฝ่ายขายและทีมฝ่ายผลิตดูแลคลังข้อมูลของตนเอง และส่งออก Data API ให้แผนกอื่นใช้ และใช้ Data Fabric คอยทำ Automated Data Cataloging และ Access Control สแกนทั่วทั้งองค์กร',
+    useCase: '🚗 [Use Case: Global Automotive Decentralized Domain Products]\nบริษัทผลิตรถยนต์ระดับโลกใช้ Data Mesh กระจายให้ทีม R&D, ทีมโรงงานผลิต และทีมฝ่ายขาย สร้างผลิตภัณฑ์ข้อมูลของตนเอง (Data Products) แล้วเปิด API ให้กัน และใช้ Data Fabric ในการจัดการความปลอดภัยและเมตาดาต้ากลางโดยอัตโนมัติ',
     extraDetails: {
       type: 'comparison',
       table: {
