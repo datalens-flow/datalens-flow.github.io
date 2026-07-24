@@ -58,6 +58,7 @@ export const SqlTranspilerView: React.FC = () => {
   const [transpileLog, setTranspileLog] = useState<string[]>([]);
   const [changesCount, setChangesCount] = useState<number>(0);
   const [showDiff, setShowDiff] = useState<boolean>(false);
+  const [isLogExpanded, setIsLogExpanded] = useState<boolean>(false);
 
   const leftEditorRef = useRef<HTMLDivElement>(null);
   const rightEditorRef = useRef<HTMLDivElement>(null);
@@ -478,26 +479,45 @@ export const SqlTranspilerView: React.FC = () => {
 
       {/* Transformation Log Panel */}
       <div className="transpiler-log-panel glass-panel">
-        <div className="log-panel-header">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-          <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>
-            Dialect Transformation Rules Applied ({transpileLog.length})
-          </span>
+        <div 
+          className="log-panel-header" 
+          onClick={() => setIsLogExpanded(!isLogExpanded)}
+          style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-text-primary)' }}>
+              Dialect Transformation Rules Applied ({transpileLog.length})
+            </span>
+          </div>
+          <svg 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            style={{ transform: isLogExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </div>
-        <div className="log-panel-body">
-          {transpileLog.length > 0 ? (
-            transpileLog.map((log, i) => (
-              <div key={i} className="log-item">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>{log}</span>
+        {isLogExpanded && (
+          <div className="log-panel-body">
+            {transpileLog.length > 0 ? (
+              transpileLog.map((log, i) => (
+                <div key={i} className="log-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>{log}</span>
+                </div>
+              ))
+            ) : (
+              <div className="log-empty">
+                No dialect conversions detected. The source SQL syntax is compatible with the target dialect.
               </div>
-            ))
-          ) : (
-            <div className="log-empty">
-              No dialect conversions detected. The source SQL syntax is compatible with the target dialect.
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
