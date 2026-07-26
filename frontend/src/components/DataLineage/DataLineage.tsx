@@ -23,6 +23,7 @@ import { GlobalSearchModal } from './GlobalSearchModal';
 import { LineageEmptyState } from './LineageEmptyState';
 import { LineageFilterBar } from './LineageFilterBar';
 import { ImpactPanel } from './ImpactPanel';
+import { DbtProjectModal } from './DbtProjectModal';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -38,6 +39,7 @@ export interface DataLineageProps {
 const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
+  const [isDbtModalOpen, setIsDbtModalOpen] = useState(false);
   const [annotationTargetKey, setAnnotationTargetKey] = useState<string | null>(null);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [showImpactPanel, setShowImpactPanel] = useState(false);
@@ -186,6 +188,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
             showImpactPanel={showImpactPanel}
             onExportPng={handleExportPng}
             onShare={handleShareLink}
+            onOpenDbtWizard={() => setIsDbtModalOpen(true)}
           />
         )}
 
@@ -249,6 +252,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
       <LineageDiffModal />
       <AnnotationModal isOpen={!!annotationTargetKey} targetKey={annotationTargetKey} onClose={() => setAnnotationTargetKey(null)} />
       <GlobalSearchModal isOpen={showGlobalSearchModal} onClose={() => setShowGlobalSearchModal(false)} onSelectNode={(id) => setSelectedNodeId(id)} />
+      <DbtProjectModal isOpen={isDbtModalOpen} onClose={() => setIsDbtModalOpen(false)} procedureSql={procedureSql} />
     </div>
   );
 };

@@ -11,11 +11,12 @@ interface LineageFilterBarProps {
   showImpactPanel: boolean;
   onExportPng: () => void;
   onShare: () => void;
+  onOpenDbtWizard: () => void;
 }
 
 export const LineageFilterBar: React.FC<LineageFilterBarProps> = ({
   hasSelection, onFocusMode, isFocusMode, onExitFocus, nodeCount,
-  onToggleImpact, showImpactPanel, onExportPng, onShare
+  onToggleImpact, showImpactPanel, onExportPng, onShare, onOpenDbtWizard
 }) => {
   const {
     lineageHideTemp, setLineageHideTemp,
@@ -182,6 +183,22 @@ export const LineageFilterBar: React.FC<LineageFilterBarProps> = ({
           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
         Share
+      </button>
+
+      {/* 1-Click dbt Project Generator */}
+      <button
+        onClick={onOpenDbtWizard}
+        style={{
+          ...pill(true),
+          background: 'rgba(249, 115, 22, 0.18)',
+          color: '#f97316',
+          outline: '1px solid rgba(249, 115, 22, 0.45)',
+          fontWeight: 700
+        }}
+        title="1-Click dbt Project Generator Wizard"
+      >
+        <span style={{ fontSize: '10px' }}>⚡</span>
+        dbt Project
       </button>
 
       {/* Export PNG */}

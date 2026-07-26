@@ -37,7 +37,6 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
   };
 
   const dbtMeta = getDbtColor(data.dbtType || 'marts');
-  const dbtPathLabel = `${(data.dbtType || 'model')}.${data.dbtSchema || 'analytics'}.${data.tableName}`;
   void getTypeColor; // preserved for external use
 
   // Short label for type badge
@@ -85,12 +84,12 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
           <span style={{ fontSize: '9px', fontWeight: 700, background: dbtMeta.text, color: '#090d16', padding: '2px 5px', borderRadius: '4px', flexShrink: 0 }}>
             {dbtShortLabel}
           </span>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700, fontSize: '12px', color: 'var(--color-text-primary)', flex: 1 }} title={dbtPathLabel}>
-            {data.tableName}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700, fontSize: '12px', color: 'var(--color-text-primary)', flex: 1 }} title={data.dbtType === 'source' ? `{{ source('${data.dbtSchema || 'raw'}', '${data.tableName}') }}` : `{{ ref('${data.tableName}') }}`}>
+            {data.dbtType === 'source' ? `source('${data.tableName}')` : data.tableName}
           </span>
           {data.dbtMaterialization && (
-            <span style={{ fontSize: '9px', color: 'var(--color-text-muted)', opacity: 0.7, flexShrink: 0 }}>
-              [{data.dbtMaterialization}]
+            <span style={{ fontSize: '9px', color: dbtMeta.text, background: `${dbtMeta.border}22`, padding: '1px 5px', borderRadius: '4px', fontWeight: 600, flexShrink: 0 }}>
+              {data.dbtMaterialization}
             </span>
           )}
           {columns.length > 0 && (
