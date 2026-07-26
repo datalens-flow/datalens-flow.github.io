@@ -25,18 +25,6 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
     }
   };
 
-  const getBadgeIcon = (type: string) => {
-    switch(type) {
-      case 'source': return '◀';
-      case 'target': return '▶';
-      case 'both': return '◀▶';
-      case 'temp': return '📦';
-      case 'view': return '👁️';
-      default: return '';
-    }
-  };
-
-
   const getDbtColor = (type: string) => {
     switch(type) {
       case 'source': return { bg: 'rgba(16, 185, 129, 0.15)', text: '#10b981', border: '#10b981', label: 'SOURCE' };
@@ -53,6 +41,22 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
 
   const theme = getTypeColor(nodeType);
 
+  // Short label for type badge
+  const dbtShortLabel = ({
+    source: 'SRC',
+    staging: 'STG',
+    marts: 'MRT',
+    exposure: 'EXP',
+    seed: 'SED',
+  } as Record<string, string>)[data.dbtType || 'marts'] || 'MDL';
+
+  // Column type icon helper
+  const getColIcon = (colName: string) => {
+    if (colName === 'id' || colName.endsWith('_id')) return '#';
+    if (colName.includes('_dt') || colName.includes('_date') || colName.includes('_at')) return '⏱';
+    return '◈';
+  };
+
   return (
     <div style={{ position: 'relative', width: '260px' }}>
       <div 
@@ -61,8 +65,9 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
           opacity: isTemp ? 0.95 : 1,
           // BUG-07 FIX: Use data.highlightBorder (set by path tracing) to override border color on the actual card element
           border: isTemp
-            ? `1.5px dashed ${data.highlightBorder || dbtMeta.border}`
-            : `1px solid ${data.highlightBorder || dbtMeta.border}`,
+            ? `1.5px dashed ${data.highlightBorder || 'var(--color-border)'}`
+            : `1px solid ${data.highlightBorder || 'var(--color-border)'}`,
+          borderTop: `3px solid ${data.highlightBorder || dbtMeta.border}`,
           borderRadius: '8px',
           boxShadow: data.highlightGlow
             ? `${data.highlightGlow}, 0 2px 8px ${dbtMeta.bg}`
@@ -73,17 +78,17 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
       >
         {/* dbt Top Meta Pill */}
         <div style={{
-          padding: '4px 10px',
+          padding: '3px 10px',
           background: dbtMeta.bg,
           borderBottom: `1px solid ${dbtMeta.border}44`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          fontSize: '10px',
+          fontSize: '9.5px',
           fontFamily: 'var(--font-mono, monospace)'
         }}>
           <span style={{ color: dbtMeta.text, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: dbtMeta.text }} />
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dbtMeta.text }} />
             <span>{dbtMeta.label}</span>
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -124,7 +129,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
           </div>
         </div>
 
-        <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: 'transparent', color: theme.text, display: 'flex', alignItems: 'center' }}>
+        <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: dbtMeta.bg, color: theme.text, display: 'flex', alignItems: 'center', padding: '8px 10px' }}>
           <Handle
             type="target"
             position={Position.Left}
@@ -135,13 +140,17 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
               pointerEvents: 'all'
             }}
           />
-          <span style={{ fontSize: '10px', fontWeight: 'bold', background: dbtMeta.text, color: '#090d16', padding: '2px 6px', borderRadius: '4px', marginRight: '6px', flexShrink: 0, display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <span>{getBadgeIcon(nodeType)}</span>
-            <span>{nodeType.toUpperCase()}</span>
+          <span style={{ fontSize: '9px', fontWeight: 700, background: dbtMeta.text, color: '#090d16', padding: '2px 5px', borderRadius: '4px', marginRight: '6px', flexShrink: 0 }}>
+            {dbtShortLabel}
           </span>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--color-text-primary)' }} title={dbtPathLabel}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700, fontSize: '12px', color: 'var(--color-text-primary)', flex: 1 }} title={dbtPathLabel}>
             {data.tableName}
           </span>
+          {columns.length > 0 && (
+            <span style={{ fontSize: '9px', color: 'var(--color-text-muted)', background: 'var(--bg-tertiary)', padding: '1px 5px', borderRadius: '999px', marginLeft: '6px', flexShrink: 0 }}>
+              {columns.length}
+            </span>
+          )}
           <Handle
             type="source"
             position={Position.Right}
@@ -175,7 +184,8 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
                   }}
                 />
               )}
-              <span className="lineage-col-flow" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col.name}</span>
+              <span style={{ fontSize: '9px', color: dbtMeta.text, opacity: 0.5, marginRight: '4px', flexShrink: 0 }}>{getColIcon(col.name)}</span>
+              <span className="lineage-col-flow" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '11px' }} title={col.name}>{col.name}</span>
               {/* Right handle (outgoing) */}
               {col.hasRight && (
                 <Handle

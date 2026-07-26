@@ -5,7 +5,8 @@ import {
   Controls,
   MiniMap,
   ReactFlowProvider,
-  BackgroundVariant
+  BackgroundVariant,
+  useReactFlow
 } from '@xyflow/react';
 import { useSchemaStore } from '../../store/useSchemaStore';
 import { LineageNode } from './LineageNode';
@@ -21,6 +22,7 @@ import { AnnotationModal } from './AnnotationModal';
 import { GlobalSearchModal } from './GlobalSearchModal';
 import { LineageEmptyState } from './LineageEmptyState';
 import { LineageFilterBar } from './LineageFilterBar';
+import { ImpactPanel } from './ImpactPanel';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -38,6 +40,8 @@ const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => 
   const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
   const [annotationTargetKey, setAnnotationTargetKey] = useState<string | null>(null);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [showImpactPanel, setShowImpactPanel] = useState(false);
+  const { getViewport } = useReactFlow();
 
   const { 
     showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, 
@@ -65,6 +69,45 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
       setIsFocusMode(false);
     }
   }, [selectedNodeId, isFocusMode]);
+
+  // Auto-show Impact Panel when a node is selected
+  useEffect(() => {
+    if (selectedNodeId) setShowImpactPanel(true);
+    else setShowImpactPanel(false);
+  }, [selectedNodeId]);
+
+  // Export canvas as PNG by capturing ReactFlow viewport DOM
+  const handleExportPng = () => {
+    const flowEl = document.querySelector('.react-flow__viewport') as HTMLElement | null;
+    const container = document.querySelector('.react-flow') as HTMLElement | null;
+    if (!flowEl || !container) return;
+    const w = container.offsetWidth;
+    const h = container.offsetHeight;
+    const { x, y, zoom } = getViewport();
+    // Use XMLSerializer to capture the rendered SVG/HTML tree as a data URL
+    const data = new XMLSerializer().serializeToString(flowEl);
+    const svgBlob = new Blob([`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="transform:translate(${x}px,${y}px) scale(${zoom});transform-origin:0 0;">${data}</div></foreignObject></svg>`], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = w * 2; c.height = h * 2;
+      const ctx = c.getContext('2d')!;
+      ctx.scale(2, 2);
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() || '#0f172a';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => {
+        if (!b) return;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = `lineage-${new Date().toISOString().slice(0, 10)}.png`;
+        a.click();
+      }, 'image/png');
+    };
+    img.src = url;
+  };
 
   return (
     <div className="lineage-container">
@@ -164,6 +207,17 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           />
         )}
 
+        {/* Impact Analysis Panel */}
+        {showImpactPanel && selectedNodeId && (
+          <ImpactPanel
+            selectedNodeId={selectedNodeId}
+            nodes={nodes}
+            edges={edges}
+            onClose={() => { setShowImpactPanel(false); setSelectedNodeId(null); }}
+            onSelectNode={(id) => setSelectedNodeId(id)}
+          />
+        )}
+
         {isAnalyzing && (
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -204,6 +258,40 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
             />
           )}
           <Controls style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }} />
+          {/* Export PNG button — positioned above the Controls panel */}
+          {nodes.filter(n => n.type === 'lineageNode').length > 0 && (
+            <div style={{ position: 'absolute', bottom: '120px', left: '12px', zIndex: 5 }}>
+              <button
+                onClick={handleExportPng}
+                title="Export graph as PNG"
+                style={{
+                  padding: '6px 10px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-tertiary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-primary)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-secondary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-muted)'; }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                PNG
+              </button>
+            </div>
+          )}
+
         </ReactFlow>
       </div>
       <MappingMatrixModal />
