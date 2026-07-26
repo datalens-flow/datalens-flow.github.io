@@ -39,7 +39,8 @@ const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => 
   const { 
     showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, 
     ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer,
-    showGlobalSearchModal, setShowGlobalSearchModal
+    showGlobalSearchModal, setShowGlobalSearchModal,
+    lineageViewMode  // ISSUE-02 FIX: read view mode to show correct legend label
   } = useSchemaStore();
 
   const { procedureSql, setProcedureSql, editorRef, viewRef } = useSqlEditor(`-- Sample ETL Stored Procedure
@@ -102,7 +103,12 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
         }}>
           <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span>dbt DAG Lineage Mode</span>
+            {/* ISSUE-02 FIX: Show correct label based on current view mode */}
+            <span>
+              {lineageViewMode === 'dbt' ? 'dbt DAG Lineage Mode'
+                : lineageViewMode === 'detailed' ? 'Detailed Column-Level Mode'
+                : 'Overview Table-Level Mode'}
+            </span>
           </span>
           <div style={{ width: '1px', height: '14px', background: 'var(--color-border)' }} />
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>

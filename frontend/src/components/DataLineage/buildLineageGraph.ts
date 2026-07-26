@@ -122,8 +122,20 @@ export const buildLineageGraph = (
   const ROW_HEIGHT = 45;
   const MAX_COLS_VISIBLE = 5;
 
+  // Accurate node height calculator used both for dagre layout and group box sizing
+  const calcNodeHeight = (cols: ReturnType<typeof getColumnsForTable>, collapsed: boolean, mode: string): number => {
+    if (mode === 'dbt' && collapsed) return 54;
+    if (mode === 'overview') return 40;
+    const visibleCount = collapsed ? Math.min(cols.length, MAX_COLS_VISIBLE) : cols.length;
+    const hasMore = collapsed && cols.length > MAX_COLS_VISIBLE;
+    return 50 + visibleCount * ROW_HEIGHT + (hasMore ? 30 : 0);
+  };
+
   // Add group nodes for procedures
   const activeProcedures = new Set<string>();
+  // BUG-02 FIX: Track which group IDs actually exist so child nodes don't reference phantom parents
+  const createdGroupIds = new Set<string>();
+
   if (showProcedureGroups) {
     allTables.forEach(table => {
       const procs = tableProcedures.get(table);
@@ -135,9 +147,11 @@ export const buildLineageGraph = (
     activeProcedures.forEach(procName => {
       if (procName === 'Global Script') return;
       if (procedures.length > 1 && activeProcedures.size > 1) {
-        dagreGraph.setNode(`group-${procName}`, { label: procName, clusterLabelPos: 'top' });
+        const groupId = `group-${procName}`;
+        dagreGraph.setNode(groupId, { label: procName, clusterLabelPos: 'top' });
+        createdGroupIds.add(groupId); // Track created groups
         newNodes.push({
-          id: `group-${procName}`,
+          id: groupId,
           type: 'group',
           data: { label: procName },
           style: {
@@ -192,7 +206,8 @@ export const buildLineageGraph = (
       dbtSchema = 'seeds';
     } else if (isTemp || lowerTable.startsWith('stg_') || lowerTable.startsWith('int_') || lowerTable.startsWith('tmp_') || lowerTable.startsWith('temp_') || lowerTable.startsWith('ext_')) {
       dbtType = 'staging';
-      dbtMaterialization = isTemp ? 'ephemeral' : 'view';
+      // ISSUE-01 FIX: stg_ are staging tables (not views), only ephemeral/temp get 'ephemeral', only v_/vw_ get 'view'
+      dbtMaterialization = isTemp ? 'ephemeral' : (isView ? 'view' : 'table');
       dbtSchema = lowerTable.startsWith('stg_') ? 'staging' : 'intermediate';
     } else if (role === 'target' || (!isSrc && isTgt) || lowerTable.startsWith('fct_') || lowerTable.startsWith('dim_') || lowerTable.startsWith('rpt_') || lowerTable.startsWith('riskgrade_') || lowerTable.startsWith('summary') || lowerTable.startsWith('analytics')) {
       dbtType = 'marts';
@@ -208,20 +223,19 @@ export const buildLineageGraph = (
     const isCollapsed = !expandedNodes.has(table);
     
     const columns = getColumnsForTable(table);
-    const visibleColsCount = isCollapsed ? Math.min(columns.length, MAX_COLS_VISIBLE) : columns.length;
-    const hasMoreButton = isCollapsed && columns.length > MAX_COLS_VISIBLE;
-    
-    const nodeHeight = (viewMode === 'dbt' && isCollapsed) ? 54 : (viewMode === 'overview' ? 40 : 50 + (visibleColsCount * ROW_HEIGHT) + (hasMoreButton ? 30 : 0));
+    // BUG-05 FIX: Use shared calcNodeHeight for accurate height used in both dagre and group box sizing
+    const nodeHeight = calcNodeHeight(columns, isCollapsed, viewMode);
     
     dagreGraph.setNode(table, { width: COL_WIDTH, height: nodeHeight });
 
     const procs = tableProcedures.get(table);
     let parentNodeId = undefined;
-    // Only group if MULTIPLE procedures are being viewed at the same time and showProcedureGroups is enabled
-    if (showProcedureGroups && procs && procs.size >= 1 && procedures.length > 1) {
+    // Only group if MULTIPLE procedures are being viewed and the group node actually exists (BUG-02 FIX)
+    if (showProcedureGroups && procs && procedures.length > 1) {
       const pName = Array.from(procs)[0];
-      if (pName && pName !== 'Global Script') {
-        parentNodeId = `group-${pName}`;
+      const candidateGroupId = `group-${pName}`;
+      if (pName && pName !== 'Global Script' && createdGroupIds.has(candidateGroupId)) {
+        parentNodeId = candidateGroupId;
         dagreGraph.setParent(table, parentNodeId);
       }
     }
@@ -388,8 +402,8 @@ export const buildLineageGraph = (
 
           colNodes.forEach(child => {
             child.position = { x: relX, y: relY };
-            const dNode = dagreGraph.hasNode(child.id) ? dagreGraph.node(child.id) : null;
-            const h = dNode?.height || (child.data?.isCollapsed ? 54 : 300);
+            // BUG-05 FIX: Use calcNodeHeight for accurate height instead of hardcoded 300
+            const h = calcNodeHeight(child.data?.columns || [], child.data?.isCollapsed ?? true, viewMode);
             relY += h + 25;
           });
 
@@ -410,8 +424,8 @@ export const buildLineageGraph = (
           rowNodes.forEach((child, colIdx) => {
             const relX = 30 + colIdx * 300;
             child.position = { x: relX, y: currentRelY };
-            const dNode = dagreGraph.hasNode(child.id) ? dagreGraph.node(child.id) : null;
-            const h = dNode?.height || (child.data?.isCollapsed ? 54 : 300);
+            // BUG-05 FIX: Use calcNodeHeight for accurate height instead of hardcoded 300
+            const h = calcNodeHeight(child.data?.columns || [], child.data?.isCollapsed ?? true, viewMode);
             if (h > maxRowH) maxRowH = h;
           });
 

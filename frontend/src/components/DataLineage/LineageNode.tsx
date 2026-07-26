@@ -59,9 +59,14 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
         className="lineage-node" 
         style={{ 
           opacity: isTemp ? 0.95 : 1,
-          border: isTemp ? `1.5px dashed ${dbtMeta.border}` : `1px solid ${dbtMeta.border}`,
+          // BUG-07 FIX: Use data.highlightBorder (set by path tracing) to override border color on the actual card element
+          border: isTemp
+            ? `1.5px dashed ${data.highlightBorder || dbtMeta.border}`
+            : `1px solid ${data.highlightBorder || dbtMeta.border}`,
           borderRadius: '8px',
-          boxShadow: `0 2px 8px ${dbtMeta.bg}`,
+          boxShadow: data.highlightGlow
+            ? `${data.highlightGlow}, 0 2px 8px ${dbtMeta.bg}`
+            : `0 2px 8px ${dbtMeta.bg}`,
           background: 'var(--bg-secondary)',
           overflow: 'hidden'
         }}
@@ -191,7 +196,8 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
               )}
             </div>
           ))}
-          {hiddenCount > 0 && (
+          {/* BUG-06 FIX: Only show Show More / Collapse buttons in dbt mode where isCollapsed controls column visibility */}
+          {data.viewMode === 'dbt' && hiddenCount > 0 && (
             <div 
               className="lineage-col-row" 
               style={{ justifyContent: 'center', cursor: 'pointer', color: 'var(--color-indigo)', fontWeight: 600, fontSize: '11px', background: 'rgba(99, 102, 241, 0.05)' }}
@@ -200,7 +206,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
               Show {hiddenCount} more...
             </div>
           )}
-          {!isCollapsed && columns.length > MAX_COLS_VISIBLE && (
+          {data.viewMode === 'dbt' && !isCollapsed && columns.length > MAX_COLS_VISIBLE && (
             <div 
               className="lineage-col-row" 
               style={{ justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '11px' }}
@@ -232,6 +238,9 @@ export const LineageNode = React.memo(LineageNodeComponent, (prevProps, nextProp
   if (prev.isView !== next.isView) return false;
   if (prev.hasIncoming !== next.hasIncoming) return false;
   if (prev.hasOutgoing !== next.hasOutgoing) return false;
+  // BUG-07 FIX: Re-render when path trace highlight changes
+  if (prev.highlightBorder !== next.highlightBorder) return false;
+  if (prev.highlightGlow !== next.highlightGlow) return false;
   
   const prevCols = prev.columns || [];
   const nextCols = next.columns || [];

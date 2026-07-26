@@ -49,7 +49,8 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
   }, []);
 
   const handleExpandAll = useCallback(() => {
-    setExpandedNodes(new Set(nodes.map(n => n.id)));
+    // BUG-04 FIX: Only expand actual table nodes, not group-* nodes
+    setExpandedNodes(new Set(nodes.filter(n => n.type === 'lineageNode').map(n => n.id)));
   }, [nodes]);
 
   const handleCollapseAll = useCallback(() => {
@@ -241,14 +242,11 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
 
   useEffect(() => {
     if (!selectedNodeId) {
+      // BUG-07 FIX: Clear highlight data props instead of borderColor (wrapper has border:none so borderColor has no effect)
       setNodes(nds => nds.map(n => ({
         ...n,
-        style: {
-          ...n.style,
-          opacity: 1,
-          boxShadow: undefined,
-          borderColor: n.data?.isTemp ? 'var(--color-indigo)' : (n.data?.isView ? 'var(--color-purple)' : 'var(--color-border)')
-        }
+        style: { ...n.style, opacity: 1, boxShadow: undefined },
+        data: { ...n.data, highlightBorder: undefined, highlightGlow: undefined }
       })));
       setEdges(eds => eds.map(e => ({
         ...e,
@@ -266,12 +264,9 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
       if (node.id === selectedNodeId) {
         return {
           ...node,
-          style: {
-            ...node.style,
-            opacity: 1,
-            boxShadow: '0 0 20px #38bdf8, 0 0 40px rgba(56, 189, 248, 0.4)',
-            borderColor: '#38bdf8'
-          }
+          style: { ...node.style, opacity: 1, boxShadow: '0 0 20px #38bdf8, 0 0 40px rgba(56, 189, 248, 0.4)' },
+          // BUG-07 FIX: Pass highlight color through data so LineageNode applies it on the inner card border
+          data: { ...node.data, highlightBorder: '#38bdf8', highlightGlow: '0 0 0 2px #38bdf8' }
         };
       }
 
@@ -281,34 +276,23 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
       if (isUp) {
         return {
           ...node,
-          style: {
-            ...node.style,
-            opacity: 1,
-            boxShadow: '0 0 16px rgba(16, 185, 129, 0.6)',
-            borderColor: '#10b981'
-          }
+          style: { ...node.style, opacity: 1, boxShadow: '0 0 16px rgba(16, 185, 129, 0.6)' },
+          data: { ...node.data, highlightBorder: '#10b981', highlightGlow: '0 0 0 2px #10b981' }
         };
       }
 
       if (isDown) {
         return {
           ...node,
-          style: {
-            ...node.style,
-            opacity: 1,
-            boxShadow: '0 0 16px rgba(99, 102, 241, 0.6)',
-            borderColor: '#6366f1'
-          }
+          style: { ...node.style, opacity: 1, boxShadow: '0 0 16px rgba(99, 102, 241, 0.6)' },
+          data: { ...node.data, highlightBorder: '#6366f1', highlightGlow: '0 0 0 2px #6366f1' }
         };
       }
 
       return {
         ...node,
-        style: {
-          ...node.style,
-          opacity: 0.15,
-          boxShadow: undefined
-        }
+        style: { ...node.style, opacity: 0.15, boxShadow: undefined },
+        data: { ...node.data, highlightBorder: undefined, highlightGlow: undefined }
       };
     }));
 
