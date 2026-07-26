@@ -9,7 +9,7 @@ import { FormulaInspectorData } from '../FormulaInspectorDrawer';
 // @ts-ignore
 import LineageWorker from '../workers/lineageWorker?worker';
 
-export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchToDiagram?: () => void) => {
+export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchToDiagram?: () => void, isFocusMode = false) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
@@ -23,7 +23,10 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     activeLineageProcedureIndex, 
     ignoredLineageTables,
     lineageSearchQuery,
-    showProcedureGroups
+    showProcedureGroups,
+    lineageHideTemp,
+    lineageHideArchive,
+    lineageSchemaFilter,
   } = useSchemaStore();
 
   const parsedProcedures = useMemo(() => splitProcedures(procedureSql), [procedureSql]);
@@ -199,6 +202,26 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     handleAnalyze();
   }, [layoutDir, expandedNodes, activeProcedures, ignoredLineageTables, lineageViewMode, showProcedureGroups]);
 
+  // Smart Filter: apply hide flags without re-running layout engine
+  useEffect(() => {
+    const isTempPrefix = (id: string) => /^(tmp_|temp_|wrk_|work_|dummy_)/i.test(id);
+    const isArchivePattern = (id: string) => /(_arch|_bkp|_backup|_hist|_log)$/i.test(id);
+    const schemaFilters = lineageSchemaFilter
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean);
+
+    setNodes(nds => nds.map(n => {
+      if (n.type !== 'lineageNode') return n;
+      const id = n.id.toLowerCase();
+      let hidden = n.data?._focusHidden ?? false; // preserve focus hidden state
+      if (lineageHideTemp && isTempPrefix(id)) hidden = true;
+      if (lineageHideArchive && isArchivePattern(id)) hidden = true;
+      if (schemaFilters.length > 0 && schemaFilters.some(f => id.startsWith(f))) hidden = true;
+      return { ...n, hidden };
+    }));
+  }, [lineageHideTemp, lineageHideArchive, lineageSchemaFilter, setNodes]);
+
   const { traceMode } = useSchemaStore();
 
   const pathTracingData = useMemo(() => {
@@ -318,6 +341,47 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
       };
     }));
   }, [selectedNodeId, pathTracingData, traceMode, setNodes, setEdges]);
+
+  // Focus Mode: BFS 2-hop neighborhood — hide nodes outside the neighborhood
+  useEffect(() => {
+    if (!isFocusMode || !selectedNodeId) {
+      // When exiting focus mode, clear _focusHidden flags
+      if (!isFocusMode) {
+        setNodes(nds => nds.map(n => {
+          if (!n.data?._focusHidden) return n;
+          return { ...n, hidden: false, data: { ...n.data, _focusHidden: false } };
+        }));
+      }
+      return;
+    }
+
+    // BFS from selectedNodeId collecting nodes within 2 hops (both upstream + downstream)
+    const reachable = new Set<string>([selectedNodeId]);
+    let frontier = [selectedNodeId];
+
+    for (let hop = 0; hop < 2; hop++) {
+      const next: string[] = [];
+      frontier.forEach(curr => {
+        edges.forEach(e => {
+          if (e.source === curr && !reachable.has(e.target)) {
+            reachable.add(e.target);
+            next.push(e.target);
+          }
+          if (e.target === curr && !reachable.has(e.source)) {
+            reachable.add(e.source);
+            next.push(e.source);
+          }
+        });
+      });
+      frontier = next;
+    }
+
+    setNodes(nds => nds.map(n => {
+      if (n.type !== 'lineageNode') return n;
+      const shouldHide = !reachable.has(n.id);
+      return { ...n, hidden: shouldHide, data: { ...n.data, _focusHidden: shouldHide } };
+    }));
+  }, [isFocusMode, selectedNodeId, edges, setNodes]);
 
   useEffect(() => {
     const q = lineageSearchQuery.trim();

@@ -66,6 +66,13 @@ export interface SchemaState {
   setShowProcedureGroups: (show: boolean) => void;
   traceMode: 'both' | 'upstream' | 'downstream' | 'all';
   setTraceMode: (mode: 'both' | 'upstream' | 'downstream' | 'all') => void;
+  // Smart Filter Bar state
+  lineageHideTemp: boolean;
+  setLineageHideTemp: (v: boolean) => void;
+  lineageHideArchive: boolean;
+  setLineageHideArchive: (v: boolean) => void;
+  lineageSchemaFilter: string;
+  setLineageSchemaFilter: (v: string) => void;
   showMappingMatrixModal: boolean;
   setShowMappingMatrixModal: (show: boolean) => void;
   showEtlHealthModal: boolean;

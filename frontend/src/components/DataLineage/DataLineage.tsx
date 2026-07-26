@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ReactFlow, 
   Background, 
@@ -19,6 +19,8 @@ import { RepoImportModal } from './RepoImportModal';
 import { LineageDiffModal } from './LineageDiffModal';
 import { AnnotationModal } from './AnnotationModal';
 import { GlobalSearchModal } from './GlobalSearchModal';
+import { LineageEmptyState } from './LineageEmptyState';
+import { LineageFilterBar } from './LineageFilterBar';
 import '@xyflow/react/dist/style.css';
 import './DataLineage.css';
 
@@ -35,6 +37,7 @@ const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
   const [annotationTargetKey, setAnnotationTargetKey] = useState<string | null>(null);
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
   const { 
     showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, 
@@ -54,7 +57,14 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
     selectedNodeId, setSelectedNodeId, columnsInvolved, handleInspectInDiagram,
     handleAnalyze, parsedProcedures, setCenter, getZoom, isAnalyzing,
     inspectorData, setInspectorData
-  } = useDataLineageFlow(procedureSql, viewRef, onSwitchToDiagram);
+  } = useDataLineageFlow(procedureSql, viewRef, onSwitchToDiagram, isFocusMode);
+
+  // Auto-exit Focus Mode when user deselects a node
+  useEffect(() => {
+    if (!selectedNodeId && isFocusMode) {
+      setIsFocusMode(false);
+    }
+  }, [selectedNodeId, isFocusMode]);
 
   return (
     <div className="lineage-container">
@@ -128,6 +138,31 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
             <span>Exposure</span>
           </span>
         </div>
+
+        {/* Welcome Empty State — shown when no table nodes exist yet */}
+        {nodes.filter(n => n.type === 'lineageNode').length === 0 && !isAnalyzing && (
+          <LineageEmptyState
+            onFocusEditor={() => {
+              if (!showSidebarExplorer) {
+                const { setShowSidebarExplorer } = useSchemaStore.getState();
+                setShowSidebarExplorer(true);
+              }
+              setTimeout(() => viewRef.current?.focus(), 150);
+            }}
+            onImport={() => setIsRepoModalOpen(true)}
+          />
+        )}
+
+        {/* Smart Filter Bar — floating pill bar, always visible when graph has nodes */}
+        {nodes.filter(n => n.type === 'lineageNode').length > 0 && (
+          <LineageFilterBar
+            hasSelection={!!selectedNodeId}
+            onFocusMode={() => setIsFocusMode(true)}
+            isFocusMode={isFocusMode}
+            onExitFocus={() => { setIsFocusMode(false); }}
+            nodeCount={nodes.filter(n => n.type === 'lineageNode' && !n.hidden).length}
+          />
+        )}
 
         {isAnalyzing && (
           <div style={{

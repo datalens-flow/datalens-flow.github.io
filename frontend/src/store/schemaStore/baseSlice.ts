@@ -49,6 +49,13 @@ export const createBaseSlice: StateCreator<SchemaState, [], [], any> = (set, get
   setShowProcedureGroups: (showProcedureGroups) => set({ showProcedureGroups }),
   traceMode: 'both',
   setTraceMode: (traceMode) => set({ traceMode }),
+  // Smart Filter Bar
+  lineageHideTemp: false,
+  setLineageHideTemp: (lineageHideTemp) => set({ lineageHideTemp }),
+  lineageHideArchive: false,
+  setLineageHideArchive: (lineageHideArchive) => set({ lineageHideArchive }),
+  lineageSchemaFilter: '',
+  setLineageSchemaFilter: (lineageSchemaFilter) => set({ lineageSchemaFilter }),
   showMappingMatrixModal: false,
   setShowMappingMatrixModal: (showMappingMatrixModal) => set({ showMappingMatrixModal }),
   showEtlHealthModal: false,
