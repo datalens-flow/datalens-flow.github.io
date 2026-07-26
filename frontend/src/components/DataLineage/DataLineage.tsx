@@ -47,7 +47,6 @@ const DataLineageInner: React.FC<DataLineageProps> = ({ onSwitchToDiagram }) => 
     showMiniMap, showGrid, activeLineageProcedureIndex, setActiveLineageProcedureIndex, 
     ignoredLineageTables, setIgnoredLineageTables, showSidebarExplorer,
     showGlobalSearchModal, setShowGlobalSearchModal,
-    lineageViewMode  // ISSUE-02 FIX: read view mode to show correct legend label
   } = useSchemaStore();
 
   const { procedureSql, setProcedureSql, editorRef, viewRef } = useSqlEditor(`-- Sample ETL Stored Procedure
@@ -70,11 +69,6 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
     }
   }, [selectedNodeId, isFocusMode]);
 
-  // Auto-show Impact Panel when a node is selected
-  useEffect(() => {
-    if (selectedNodeId) setShowImpactPanel(true);
-    else setShowImpactPanel(false);
-  }, [selectedNodeId]);
 
   // Export canvas as PNG by capturing ReactFlow viewport DOM
   const handleExportPng = () => {
@@ -136,51 +130,6 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
         />
       )}
       <div className="lineage-canvas" style={{ position: 'relative' }}>
-        {/* dbt DAG Legend Bar Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: '12px',
-          left: '12px',
-          zIndex: 10,
-          background: 'var(--bg-secondary)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid var(--color-border)',
-          borderRadius: '8px',
-          padding: '6px 12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          fontSize: '11px',
-          color: 'var(--color-text-primary)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-        }}>
-          <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            {/* ISSUE-02 FIX: Show correct label based on current view mode */}
-            <span>
-              {lineageViewMode === 'dbt' ? 'dbt DAG Lineage Mode'
-                : lineageViewMode === 'detailed' ? 'Detailed Column-Level Mode'
-                : 'Overview Table-Level Mode'}
-            </span>
-          </span>
-          <div style={{ width: '1px', height: '14px', background: 'var(--color-border)' }} />
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-            <span>Source</span>
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#06b6d4' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#06b6d4' }} />
-            <span>Staging [View]</span>
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#818cf8' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#818cf8' }} />
-            <span>Marts [Table/Incremental]</span>
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f97316' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f97316' }} />
-            <span>Exposure</span>
-          </span>
-        </div>
 
         {/* Welcome Empty State — shown when no table nodes exist yet */}
         {nodes.filter(n => n.type === 'lineageNode').length === 0 && !isAnalyzing && (
@@ -196,14 +145,17 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
           />
         )}
 
-        {/* Smart Filter Bar — floating pill bar, always visible when graph has nodes */}
+        {/* Unified Filter Bar — legend + filters + actions merged */}
         {nodes.filter(n => n.type === 'lineageNode').length > 0 && (
           <LineageFilterBar
             hasSelection={!!selectedNodeId}
             onFocusMode={() => setIsFocusMode(true)}
             isFocusMode={isFocusMode}
-            onExitFocus={() => { setIsFocusMode(false); }}
+            onExitFocus={() => setIsFocusMode(false)}
             nodeCount={nodes.filter(n => n.type === 'lineageNode' && !n.hidden).length}
+            onToggleImpact={() => setShowImpactPanel(p => !p)}
+            showImpactPanel={showImpactPanel}
+            onExportPng={handleExportPng}
           />
         )}
 
@@ -213,7 +165,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
             selectedNodeId={selectedNodeId}
             nodes={nodes}
             edges={edges}
-            onClose={() => { setShowImpactPanel(false); setSelectedNodeId(null); }}
+            onClose={() => setShowImpactPanel(false)}
             onSelectNode={(id) => setSelectedNodeId(id)}
           />
         )}
@@ -258,39 +210,6 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
             />
           )}
           <Controls style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '8px' }} />
-          {/* Export PNG button — positioned above the Controls panel */}
-          {nodes.filter(n => n.type === 'lineageNode').length > 0 && (
-            <div style={{ position: 'absolute', bottom: '120px', left: '12px', zIndex: 5 }}>
-              <button
-                onClick={handleExportPng}
-                title="Export graph as PNG"
-                style={{
-                  padding: '6px 10px',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '6px',
-                  color: 'var(--color-text-muted)',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-tertiary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-primary)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-secondary)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-muted)'; }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                PNG
-              </button>
-            </div>
-          )}
 
         </ReactFlow>
       </div>

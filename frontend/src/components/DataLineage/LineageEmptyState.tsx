@@ -11,7 +11,7 @@ export const LineageEmptyState: React.FC<LineageEmptyStateProps> = ({ onFocusEdi
       position: 'absolute', inset: 0, zIndex: 5,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       background: 'var(--bg-primary)',
-      gap: '24px',
+      gap: '20px',
       fontFamily: 'var(--font-sans, sans-serif)'
     }}>
       {/* Icon + Title */}
@@ -22,9 +22,8 @@ export const LineageEmptyState: React.FC<LineageEmptyStateProps> = ({ onFocusEdi
         <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.5px' }}>
           Data Lineage
         </h2>
-        <p style={{ margin: '8px 0 0', fontSize: '13px', color: 'var(--color-text-muted)', maxWidth: '380px', lineHeight: 1.6 }}>
-          Visualize SQL stored procedures as a dbt-style DAG.<br/>
-          Paste SQL or import a <code style={{ background: 'var(--bg-tertiary)', padding: '1px 5px', borderRadius: '4px', fontSize: '11px' }}>.sql</code> file to get started.
+        <p style={{ margin: '8px 0 0', fontSize: '13px', color: 'var(--color-text-muted)', maxWidth: '460px', lineHeight: 1.6 }}>
+          Paste a stored procedure or import a .sql file to visualize your data pipeline.
         </p>
       </div>
 
@@ -67,38 +66,6 @@ export const LineageEmptyState: React.FC<LineageEmptyStateProps> = ({ onFocusEdi
           </svg>
           Import .sql File
         </button>
-      </div>
-
-      {/* Example SQL code block */}
-      <div style={{
-        background: 'var(--bg-secondary)', border: '1px solid var(--color-border)',
-        borderRadius: '10px', padding: '14px 18px',
-        fontFamily: 'var(--font-mono, monospace)', fontSize: '11.5px',
-        color: 'var(--color-text-muted)', maxWidth: '480px', lineHeight: 1.7,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.08)'
-      }}>
-        <div style={{ color: 'var(--color-text-secondary)', marginBottom: '6px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em' }}>EXAMPLE PROCEDURE</div>
-        <div>
-          <span style={{ color: '#818cf8' }}>CREATE PROCEDURE</span> <span style={{ color: '#38bdf8' }}>etl_sales</span>()
-        </div>
-        <div><span style={{ color: '#818cf8' }}>INSERT INTO</span> <span style={{ color: '#34d399' }}>sales_mart</span> (cust_id, revenue)</div>
-        <div style={{ paddingLeft: '16px' }}><span style={{ color: '#818cf8' }}>SELECT</span> u.id, <span style={{ color: '#818cf8' }}>SUM</span>(o.amount)</div>
-        <div style={{ paddingLeft: '16px' }}><span style={{ color: '#818cf8' }}>FROM</span> <span style={{ color: '#34d399' }}>users</span> u</div>
-        <div style={{ paddingLeft: '16px' }}><span style={{ color: '#818cf8' }}>JOIN</span> <span style={{ color: '#34d399' }}>orders</span> o <span style={{ color: '#818cf8' }}>ON</span> u.id = o.user_id</div>
-        <div style={{ paddingLeft: '16px' }}><span style={{ color: '#818cf8' }}>GROUP BY</span> u.id;</div>
-      </div>
-
-      {/* Feature highlights */}
-      <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
-        {[
-          { icon: '⚡', label: 'dbt DAG View' },
-          { icon: '🔍', label: 'Column Lineage' },
-          { icon: '🎯', label: 'Impact Analysis' },
-        ].map(f => (
-          <div key={f.label} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span>{f.icon}</span><span>{f.label}</span>
-          </div>
-        ))}
       </div>
     </div>
   );

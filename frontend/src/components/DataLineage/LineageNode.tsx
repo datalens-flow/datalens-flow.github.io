@@ -38,8 +38,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
 
   const dbtMeta = getDbtColor(data.dbtType || 'marts');
   const dbtPathLabel = `${(data.dbtType || 'model')}.${data.dbtSchema || 'analytics'}.${data.tableName}`;
-
-  const theme = getTypeColor(nodeType);
+  void getTypeColor; // preserved for external use
 
   // Short label for type badge
   const dbtShortLabel = ({
@@ -50,12 +49,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
     seed: 'SED',
   } as Record<string, string>)[data.dbtType || 'marts'] || 'MDL';
 
-  // Column type icon helper
-  const getColIcon = (colName: string) => {
-    if (colName === 'id' || colName.endsWith('_id')) return '#';
-    if (colName.includes('_dt') || colName.includes('_date') || colName.includes('_at')) return '⏱';
-    return '◈';
-  };
+
 
   return (
     <div style={{ position: 'relative', width: '260px' }}>
@@ -76,60 +70,8 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
           overflow: 'hidden'
         }}
       >
-        {/* dbt Top Meta Pill */}
-        <div style={{
-          padding: '3px 10px',
-          background: dbtMeta.bg,
-          borderBottom: `1px solid ${dbtMeta.border}44`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '9.5px',
-          fontFamily: 'var(--font-mono, monospace)'
-        }}>
-          <span style={{ color: dbtMeta.text, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dbtMeta.text }} />
-            <span>{dbtMeta.label}</span>
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {data.dbtMaterialization && (
-              <span style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: 'var(--color-text-muted)',
-                padding: '1px 5px',
-                borderRadius: '3px',
-                fontSize: '9px'
-              }}>
-                [{data.dbtMaterialization}]
-              </span>
-            )}
-            {columns.length > 0 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (data.onToggleCollapse) {
-                    data.onToggleCollapse(data.tableName);
-                  }
-                }}
-                style={{
-                  background: !isCollapsed ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid var(--color-border)',
-                  color: !isCollapsed ? '#38bdf8' : 'var(--color-text-muted)',
-                  borderRadius: '3px',
-                  padding: '1px 6px',
-                  fontSize: '9px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-                title="Toggle Columns List"
-              >
-                {!isCollapsed ? '▲ Hide cols' : `▼ ${columns.length} cols`}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className={`lineage-node-header`} style={{ position: 'relative', backgroundColor: dbtMeta.bg, color: theme.text, display: 'flex', alignItems: 'center', padding: '8px 10px' }}>
+        {/* Merged header row */}
+        <div className={`lineage-node-header`} style={{ position: 'relative', background: dbtMeta.bg, borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', padding: '6px 10px', fontSize: '11px', gap: '5px' }}>
           <Handle
             type="target"
             position={Position.Left}
@@ -140,16 +82,44 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
               pointerEvents: 'all'
             }}
           />
-          <span style={{ fontSize: '9px', fontWeight: 700, background: dbtMeta.text, color: '#090d16', padding: '2px 5px', borderRadius: '4px', marginRight: '6px', flexShrink: 0 }}>
+          <span style={{ fontSize: '9px', fontWeight: 700, background: dbtMeta.text, color: '#090d16', padding: '2px 5px', borderRadius: '4px', flexShrink: 0 }}>
             {dbtShortLabel}
           </span>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700, fontSize: '12px', color: 'var(--color-text-primary)', flex: 1 }} title={dbtPathLabel}>
             {data.tableName}
           </span>
+          {data.dbtMaterialization && (
+            <span style={{ fontSize: '9px', color: 'var(--color-text-muted)', opacity: 0.7, flexShrink: 0 }}>
+              [{data.dbtMaterialization}]
+            </span>
+          )}
           {columns.length > 0 && (
-            <span style={{ fontSize: '9px', color: 'var(--color-text-muted)', background: 'var(--bg-tertiary)', padding: '1px 5px', borderRadius: '999px', marginLeft: '6px', flexShrink: 0 }}>
+            <span style={{ fontSize: '9px', color: 'var(--color-text-muted)', background: 'var(--bg-tertiary)', padding: '1px 5px', borderRadius: '999px', flexShrink: 0 }}>
               {columns.length}
             </span>
+          )}
+          {columns.length > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (data.onToggleCollapse) {
+                  data.onToggleCollapse(data.tableName);
+                }
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: !isCollapsed ? '#38bdf8' : 'var(--color-text-muted)',
+                padding: '0 2px',
+                fontSize: '10px',
+                cursor: 'pointer',
+                flexShrink: 0,
+                lineHeight: 1
+              }}
+              title="Toggle Columns List"
+            >
+              {!isCollapsed ? '▲' : '▼'}
+            </button>
           )}
           <Handle
             type="source"
@@ -184,7 +154,7 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
                   }}
                 />
               )}
-              <span style={{ fontSize: '9px', color: dbtMeta.text, opacity: 0.5, marginRight: '4px', flexShrink: 0 }}>{getColIcon(col.name)}</span>
+
               <span className="lineage-col-flow" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '11px' }} title={col.name}>{col.name}</span>
               {/* Right handle (outgoing) */}
               {col.hasRight && (
