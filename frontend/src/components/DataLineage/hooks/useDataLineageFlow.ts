@@ -410,6 +410,40 @@ export const useDataLineageFlow = (procedureSql: string, viewRef: any, onSwitchT
     }
   }, [lineageSearchQuery, nodes, setNodes, setEdges, setCenter, getZoom]);
 
+  // Column-level hover highlight
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail) {
+        // Reset
+        setNodes(nds => nds.map(n => ({ ...n, style: { ...n.style, opacity: 1 } })));
+        setEdges(eds => eds.map(e => ({ ...e, style: { ...e.style, opacity: 0.8 } })));
+        return;
+      }
+      const { table, col } = detail;
+      const colHandle = `col-${col.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+
+      const matchEdgeIds = new Set<string>();
+      const matchNodeIds = new Set<string>([table]);
+
+      edges.forEach(e => {
+        const srcMatch = e.source === table && e.sourceHandle === colHandle;
+        const tgtMatch = e.target === table && e.targetHandle === colHandle;
+        if (srcMatch || tgtMatch) {
+          matchEdgeIds.add(e.id);
+          matchNodeIds.add(e.source);
+          matchNodeIds.add(e.target);
+        }
+      });
+
+      setNodes(nds => nds.map(n => ({ ...n, style: { ...n.style, opacity: matchNodeIds.has(n.id) ? 1 : 0.15 } })));
+      setEdges(eds => eds.map(e => ({ ...e, style: { ...e.style, opacity: matchEdgeIds.has(e.id) ? 1 : 0.06 } })));
+    };
+
+    window.addEventListener('lineage-col-hover', handler);
+    return () => window.removeEventListener('lineage-col-hover', handler);
+  }, [edges, setNodes, setEdges]);
+
   const [inspectorData, setInspectorData] = useState<FormulaInspectorData | null>(null);
 
   useEffect(() => {

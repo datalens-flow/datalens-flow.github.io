@@ -10,11 +10,12 @@ interface LineageFilterBarProps {
   onToggleImpact: () => void;
   showImpactPanel: boolean;
   onExportPng: () => void;
+  onShare: () => void;
 }
 
 export const LineageFilterBar: React.FC<LineageFilterBarProps> = ({
   hasSelection, onFocusMode, isFocusMode, onExitFocus, nodeCount,
-  onToggleImpact, showImpactPanel, onExportPng
+  onToggleImpact, showImpactPanel, onExportPng, onShare
 }) => {
   const {
     lineageHideTemp, setLineageHideTemp,
@@ -173,6 +174,15 @@ export const LineageFilterBar: React.FC<LineageFilterBarProps> = ({
       </button>
 
       <Sep />
+
+      {/* Share Link */}
+      <button onClick={onShare} style={pill(false)} title="Copy shareable link">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        Share
+      </button>
 
       {/* Export PNG */}
       <button onClick={onExportPng} style={pill(false)} title="Export graph as PNG">

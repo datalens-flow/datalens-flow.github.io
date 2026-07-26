@@ -62,12 +62,41 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
     inspectorData, setInspectorData
   } = useDataLineageFlow(procedureSql, viewRef, onSwitchToDiagram, isFocusMode);
 
+  // Load SQL from URL hash on mount
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#sql=')) {
+      try {
+        const encoded = hash.slice(5);
+        const decoded = decodeURIComponent(atob(encoded));
+        if (decoded.trim()) {
+          setProcedureSql(decoded);
+        }
+      } catch (e) {
+        console.warn('Failed to decode SQL from URL hash', e);
+      }
+    }
+  }, []);
+
   // Auto-exit Focus Mode when user deselects a node
   useEffect(() => {
     if (!selectedNodeId && isFocusMode) {
       setIsFocusMode(false);
     }
   }, [selectedNodeId, isFocusMode]);
+
+  const handleShareLink = () => {
+    const encoded = btoa(encodeURIComponent(procedureSql));
+    const url = `${window.location.origin}${window.location.pathname}#sql=${encoded}`;
+    navigator.clipboard.writeText(url).then(() => {
+      // Show a brief toast/notification
+      const toast = document.createElement('div');
+      toast.textContent = '✓ Link copied!';
+      toast.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;background:#10b981;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;animation:fadeIn 0.2s';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    });
+  };
 
 
   // Export canvas as PNG by capturing ReactFlow viewport DOM
@@ -156,6 +185,7 @@ JOIN orders o ON u.id = o.user_id;`, showSidebarExplorer);
             onToggleImpact={() => setShowImpactPanel(p => !p)}
             showImpactPanel={showImpactPanel}
             onExportPng={handleExportPng}
+            onShare={handleShareLink}
           />
         )}
 

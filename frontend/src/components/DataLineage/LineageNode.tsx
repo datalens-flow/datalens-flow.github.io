@@ -135,7 +135,11 @@ const LineageNodeComponent: React.FC<{ data: any; selected?: boolean }> = ({ dat
         {data.viewMode !== 'overview' && (data.viewMode !== 'dbt' || !isCollapsed) && (
           <div className="lineage-node-body">
           {visibleCols.map((col, i) => (
-            <div key={i} className="lineage-col-row">
+            <div key={i} className="lineage-col-row"
+              onMouseEnter={() => window.dispatchEvent(new CustomEvent('lineage-col-hover', { detail: { table: data.tableName, col: col.name } }))}
+              onMouseLeave={() => window.dispatchEvent(new CustomEvent('lineage-col-hover', { detail: null }))}
+              style={{ cursor: 'pointer' }}
+            >
               {/* Left handle (incoming) */}
               {col.hasLeft && (
                 <Handle

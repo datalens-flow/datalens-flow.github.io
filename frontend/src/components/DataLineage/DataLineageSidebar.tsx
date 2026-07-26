@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useSchemaStore } from '../../store/useSchemaStore';
+import { formatSql } from './sqlFormat';
 
 interface DataLineageSidebarProps {
   isFullscreen: boolean;
@@ -131,6 +132,34 @@ export const DataLineageSidebar: React.FC<DataLineageSidebarProps> = ({
               title="Import Repository Folder / dbt Models / Airflow DAGs"
             >
               📁 Import Repo
+            </button>
+            <button
+              onClick={() => {
+                const formatted = formatSql(viewRef.current?.state.doc.toString() || '');
+                setProcedureSql(formatted);
+                if (viewRef.current) {
+                  viewRef.current.dispatch({ changes: { from: 0, to: viewRef.current.state.doc.length, insert: formatted } });
+                }
+              }}
+              title="Format SQL"
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--color-border)',
+                borderRadius: '4px',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                color: 'var(--color-text-muted)',
+                fontSize: '11px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="14" x2="3" y2="14"/><line x1="15" y1="18" x2="3" y2="18"/>
+              </svg>
+              Format
             </button>
             <button 
               className="btn btn-primary" 
