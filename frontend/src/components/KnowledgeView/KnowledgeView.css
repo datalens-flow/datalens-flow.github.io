@@ -36,17 +36,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--input-bg);
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 6px 14px;
   width: 380px;
-  transition: all 0.2s ease;
+  transition: var(--transition-all);
 }
 
 .knowledge-search-bar:focus-within {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+  border-color: var(--color-indigo);
+  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
 .knowledge-search-input {
@@ -67,8 +67,8 @@
 
 /* Left Sidebar */
 .knowledge-view-sidebar {
-  width: 360px;
-  background: var(--bg-secondary);
+  width: 340px;
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -90,22 +90,23 @@
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-tertiary);
   border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--transition-all);
 }
 
 .group-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-row-hover);
   color: var(--color-text-primary);
+  border-color: var(--color-border-hover);
 }
 
 .group-btn.active {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: #38bdf8;
-  color: #38bdf8;
+  background: var(--accent-glow);
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
 }
 
 .topic-scroll-list {
@@ -120,23 +121,23 @@
 .topic-item-card {
   padding: 12px 14px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-secondary);
   border: 1px solid var(--color-border);
   cursor: pointer;
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  transition: all 0.15s ease;
+  transition: var(--transition-all);
 }
 
 .topic-item-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(56, 189, 248, 0.3);
+  background: var(--color-row-hover);
+  border-color: var(--color-indigo);
 }
 
 .topic-item-card.selected {
-  background: rgba(56, 189, 248, 0.12);
-  border-color: #38bdf8;
+  background: var(--accent-glow);
+  border-color: var(--color-indigo);
 }
 
 .topic-item-info {
@@ -155,8 +156,8 @@
 
 .topic-item-tag {
   font-size: 10px;
-  color: #38bdf8;
-  opacity: 0.85;
+  color: var(--color-indigo);
+  font-weight: 500;
 }
 
 /* Right Main Reading Content */
@@ -167,6 +168,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background: var(--bg-primary);
 }
 
 .content-header-banner {
@@ -178,7 +180,7 @@
 .content-group-title {
   font-size: 12px;
   font-weight: 600;
-  color: #38bdf8;
+  color: var(--color-indigo);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -197,9 +199,10 @@
   width: 100%;
   border-radius: 10px;
   border: 1px solid var(--color-border);
-  background: #080c14;
+  background: var(--bg-secondary);
   overflow: hidden;
   margin: 8px 0 16px 0;
+  box-shadow: var(--shadow-md);
 }
 
 .diagram-banner-box img {
@@ -209,13 +212,14 @@
 }
 
 .knowledge-section-box {
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
 }
 
 .section-heading {
@@ -225,6 +229,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--color-text-primary);
 }
 
 .section-body-text {
@@ -236,11 +241,75 @@
 }
 
 .example-box-theme {
-  background: rgba(16, 185, 129, 0.06);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-left: 4px solid var(--color-emerald);
 }
 
 .usecase-box-theme {
-  background: rgba(56, 189, 248, 0.06);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-left: 4px solid var(--color-indigo);
+}
+
+.deepdive-box-theme {
+  border-left: 4px solid var(--color-amber);
+}
+
+/* High Contrast Table Styles */
+.kv-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--bg-secondary);
+  margin-top: 8px;
+}
+
+.kv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+
+.kv-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 700;
+  background: var(--bg-tertiary);
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+}
+
+.kv-table th:last-child {
+  border-right: none;
+}
+
+.kv-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+.kv-table td:last-child {
+  border-right: none;
+}
+
+.kv-table tr:last-child td {
+  border-bottom: none;
+}
+
+.kv-table tr:nth-child(even) {
+  background: var(--color-row-hover);
+}
+
+.kv-table tr:hover {
+  background: var(--accent-glow);
+}
+
+.kv-table-feature-col {
+  font-weight: 600;
+  color: var(--color-indigo) !important;
+  background: var(--bg-tertiary);
+  white-space: nowrap;
 }

@@ -214,7 +214,20 @@ Snowflake Snowpipe คอยเฝ้าระวัง Event Sns Notification �
 3. Vaultless Format-Preserving Encryption (FPE) Tokenization:
 การแปลงหมายเลขบัตรจริงเป็นสัญลักษณ์สุ่ม (Token) ที่ไม่มีความสัมพันธ์ทางคณิตศาสตร์กับข้อมูลเดิม การใช้ Tokenization ช่วยลดขอบเขตการประเมินความปลอดภัย (PCI DSS Audit Scope) และปกป้องข้อมูลทั้งขณะจัดเก็บ (At Rest) และส่งผ่านท่อ (In Transit)`,
     example: 'ระบบชำระเงินของบริษัทประกันภัยแปลงเลขบัตรเครดิตลูกค้าเป็น Token ตั้งแต่หน้าเว็บ ชำระเงิน ทำให้พนักงาน Call Center เห็นเฉพาะเลขบดบัง `****-1234` บนหน้าจอ',
-    useCase: '[Use Case: Insurance PCI DSS 4.0 Tokenization Architecture]\nการตั้งระบบ Tokenization เพื่อสกัดข้อมูลบัตรเครดิตออกจากคลังข้อมูลวิเคราะห์ ป้องกันการถูกโจรกรรมข้อมูลและผ่านการรับรองมาตรฐาน PCI DSS 4.0'
+    useCase: '[Use Case: Insurance PCI DSS 4.0 Tokenization Architecture]\nการตั้งระบบ Tokenization เพื่อสกัดข้อมูลบัตรเครดิตออกจากคลังข้อมูลวิเคราะห์ ป้องกันการถูกโจรกรรมข้อมูลและผ่านการรับรองมาตรฐาน PCI DSS 4.0',
+    extraDetails: {
+      type: 'comparison',
+      table: {
+        headers: ['คุณลักษณะ (Feature)', 'Data Masking (DDM)', 'FPE Tokenization', 'Column-Level Encryption (CLE)'],
+        rows: [
+          ['จุดประสงค์หลัก', 'บดบังหน้าจอการทำงานประจำวัน (****-1234)', 'แปลงค่าเป็น Token สุ่ม ลด PCI Audit Scope', 'เข้ารหัสทางคณิตศาสตร์ป้องกันการแฮก DB'],
+          ['ผลกระทบต่อโครงสร้างข้อมูล', 'ไม่มี (คืนค่าเป็น String ความยาวเดิม)', 'ไม่มี (Format-Preserving ความยาวเท่าเดิม)', 'มี (เกิด Ciphertext ความยาวเพิ่มขึ้น)'],
+          ['ตำแหน่งการประมวลผล', 'Application Layer / Database View', 'Tokenization Gateway / API Service', 'Database Engine (AES-256 KMS Keys)'],
+          ['ข้อกำหนด PCI DSS 4.0', 'Requirement 3.5.1 (Display Limitation)', 'Requirement 3.4 (Primary Account Number)', 'Requirement 3.5 (Cryptographic Key Ops)'],
+          ['ผู้มีสิทธิ์ถอดรหัสข้อมูล', 'ผู้ที่มี Role สิทธิ์พิเศษ (RBAC)', 'บริการผ่าน Vaultless Tokenization Service', 'ผู้ถือครอง KMS Master Key']
+        ]
+      }
+    }
   },
   {
     id: 'data-privacy',
@@ -236,7 +249,18 @@ Snowflake Snowpipe คอยเฝ้าระวัง Event Sns Notification �
 3. Compliance Audit Trail Generation:
 เมื่อการลบเสร็จสิ้น ระบบจะสร้างใบรักษากฎหมาย (Audit Trail Certificate) บันทึกหลักฐานว่ากระบวนการลบสำเร็จเรียบร้อยโดยไม่มีการหลงเหลือของข้อมูล PII`,
     example: 'สายการบินรับคำร้องขอให้ลบข้อมูลจากผู้โดยสาร ระบบ Privacy Workflow จะรันสคริปต์อัตโนมัติตามไปลบประวัติเดินทาง สิทธิสะสมไมล์ และโปรไฟล์ลูกค้าข้าม 10 ฐานข้อมูลย่อยภายใน 30 วัน',
-    useCase: '[Use Case: Airline Automated PDPA Right-to-be-Forgotten]\nระบบอัตโนมัติตามสืบค้นและทำลายข้อมูล PII ข้าม 10 ระบบย่อย พร้อมออกใบรักษากฎหมายยืนยันความถูกต้องตาม PDPA/GDPR'
+    useCase: '[Use Case: Airline Automated PDPA Right-to-be-Forgotten]\nระบบอัตโนมัติตามสืบค้นและทำลายข้อมูล PII ข้าม 10 ระบบย่อย พร้อมออกใบรักษากฎหมายยืนยันความถูกต้องตาม PDPA/GDPR',
+    extraDetails: {
+      type: 'comparison',
+      table: {
+        headers: ['ข้อกำหนดกฎหมาย (Regulation)', 'สิทธิขอทำลายข้อมูล (Right to be Forgotten)', 'ระยะเวลาการดำเนินการ', 'บทลงโทษเมื่อฝ่าฝืน'],
+        rows: [
+          ['PDPA (ประเทศไทย)', 'มาตรา 33 - ขอให้ลบ ทำลาย หรือทำให้ไม่สามารถระบุตัวตน', 'ภายใน 30 วันนับจากได้รับคำร้อง', 'ปรับสูงสุด 5 ล้านบาท และโทษทางอาญา'],
+          ['GDPR (สหภาพยุโรป)', 'Article 17 - Right to Erasure', 'ภายใน 30 วัน (ขยายได้สูงสุด 90 วัน)', 'ปรับสูงสุด 20 ล้านยูโร หรือ 4% ของรายได้รวมทั่วโลก'],
+          ['CCPA / CPRA (แคลิฟอร์เนีย)', 'Section 1798.105 - Right to Delete Personal Info', 'ภายใน 45 วันนับจากได้รับคำขอ', 'ปรับสูงสุด 7,500 ดอลลาร์ต่อระเบียนที่ละเมิด']
+        ]
+      }
+    }
   },
 
   // 3. กลุ่มการจัดการและการนำไปใช้
@@ -263,7 +287,19 @@ Snowflake Snowpipe คอยเฝ้าระวัง Event Sns Notification �
 3. Golden Record Publishing:
 เมื่อล้างข้อมูลเสร็จสิ้น ระบบ MDM จะส่งออก Golden Record (CUST-001) กลับไปยังระบบย่อยทั้งหมด เพื่อให้ทั้งองค์กรใช้ข้อมูลตรงกัน`,
     example: 'เครือธุรกิจห้างสรรพสินค้าใช้ Profisee MDM รวมข้อมูลสมาชิกจากระบบห้าง โรงแรม และซูเปอร์มาร์เก็ต สร้างเป็น Golden Record ลูกค้าคีย์เดียว (CUST-001)',
-    useCase: '[Use Case: Enterprise Conglomerate Single Customer View]\nการเชื่อมต่อระบบ MDM ยุบรวมข้อมูลลูกค้า 3 บริษัทในเครือ ขจัดความซ้ำซ้อน และสร้าง Golden Record สำหรับแคมเปญการตลาดข้ามธุรกิจ'
+    useCase: '[Use Case: Enterprise Conglomerate Single Customer View]\nการเชื่อมต่อระบบ MDM ยุบรวมข้อมูลลูกค้า 3 บริษัทในเครือ ขจัดความซ้ำซ้อน และสร้าง Golden Record สำหรับแคมเปญการตลาดข้ามธุรกิจ',
+    extraDetails: {
+      type: 'comparison',
+      table: {
+        headers: ['กฎการคัดเลือก (Survivorship Rule)', 'กลไกการทำงาน (Mechanism)', 'กรณีตัวอย่างการใช้งาน (Use Case)', 'ระดับความน่าเชื่อถือ'],
+        rows: [
+          ['Source System Priority', 'เลือกข้อมูลจากระบบที่มีลำดับความสำคัญสูงสุด', 'ยึดเลขประจำตัวผู้เสียภาษีจากระบบ ERP ก่อน CRM', 'สูงมาก (High Certainty)'],
+          ['Most Recent (Recency)', 'เลือกข้อมูลจากระบบที่มีการอัปเดตล่าสุด', 'ยึดเบอร์โทรศัพท์และที่อยู่จากแอปมือถือล่าสุด', 'สูง (Dynamic Data)'],
+          ['Completeness', 'เลือกข้อมูลระเบียนที่มีค่า Null / ช่องว่างน้อยที่สุด', 'ยึดอีเมลและที่อยู่ที่มีข้อมูลครบถ้วนที่สุด', 'ปานกลาง (Fallback Rule)'],
+          ['Frequency / Voting', 'เลือกข้อมูลที่มีค่าซ้ำกันมากที่สุดข้ามระบบ', 'ยึดคำนำหน้าชื่อหรือเพศที่ปรากฏบ่อยที่สุด', 'ปานกลาง (Statistical Consensus)']
+        ]
+      }
+    }
   },
   {
     id: 'data-integration',
@@ -439,7 +475,19 @@ Airflow ทำหน้าที่เป็นวงดนตรีคุมท
 3. Data Steward (ผู้ดูแลปฏิบัติการ): ผู้เชี่ยวชาญธุรกิจ คอยบริหาร Data Dictionary จัดทำ Data Lineage และตรวจ DQ ปฏิบัติการ
 4. Data Custodian (ผู้เก็บรักษาข้อมูล): ทีม IT / Data Engineer ดูแลเทคนิค Server, Backup, Network และสิทธิ์การเข้าถึง`,
     example: 'แต่งตั้ง Head of Marketing เป็น Data Owner ตารางลูกค้า และแต่งตั้ง Risk Analyst เป็น Data Steward กำหนด Data Dictionary โดยมี Data Engineer เป็น Data Custodian',
-    useCase: '[Use Case: Enterprise Governance Team Org Setup]\nการจัดตั้งโครงสร้างทีมธรรมภิบาลข้อมูลตาม DAMA-DMBOK แบ่งแยกบทบาทชัดเจนระหว่าง CDO, Data Owner, Data Steward และ Data Custodian'
+    useCase: '[Use Case: Enterprise Governance Team Org Setup]\nการจัดตั้งโครงสร้างทีมธรรมภิบาลข้อมูลตาม DAMA-DMBOK แบ่งแยกบทบาทชัดเจนระหว่าง CDO, Data Owner, Data Steward และ Data Custodian',
+    extraDetails: {
+      type: 'comparison',
+      table: {
+        headers: ['บทบาทหน้าที่ (Role)', 'ขอบเขตความรับผิดชอบ (Responsibility)', 'เป้าหมายหลัก (Key Objective)', 'ตัวอย่างตำแหน่งในองค์กร'],
+        rows: [
+          ['Chief Data Officer (CDO)', 'กำหนดวิสัยทัศน์ นโยบายธรรมาภิบาล และงบประมาณข้อมูล', 'สร้างมูลค่าทางธุรกิจและบริหารความเสี่ยงข้อมูลองค์กร', 'SVP / EVP Head of Data'],
+          ['Data Owner (เจ้าของข้อมูล)', 'อนุมัติการเข้าถึงข้อมูลและกำหนดระดับความลับของข้อมูล', 'รับผิดชอบคุณภาพและความถูกต้องของข้อมูลในโดเมนตนเอง', 'Head of Business / VP Credit Card'],
+          ['Data Steward (ผู้ดูแลข้อมูล)', 'กำหนดคำนิยามข้อมูล (Data Dictionary) และตรวจสอบคุณภาพ', 'ดูแลความถูกต้องของข้อมูลรายวันและขจัดปัญหาสนิมข้อมูล', 'Senior Business Analyst / Data Lead'],
+          ['Data Custodian (ผู้บริหารเทคนิค)', 'ดูแลระบบโครงสร้างพื้นฐาน ฐานข้อมูล และการสำรองข้อมูล', 'รักษาความปลอดภัยและเสถียรภาพของระบบจัดเก็บข้อมูล', 'Lead Database Administrator / Data Engineer']
+        ]
+      }
+    }
   },
   {
     id: 'dmbok-process-framework',

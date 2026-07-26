@@ -39,13 +39,13 @@ export const KnowledgeView: React.FC = () => {
       {/* Header & Search Engine */}
       <div className="knowledge-view-header">
         <div className="knowledge-view-title-group">
-          <RenderKnowledgeIcon iconKey="data-catalog" size={22} color="#38bdf8" />
+          <RenderKnowledgeIcon iconKey="data-catalog" size={22} color="var(--color-indigo)" />
           <h2>Enterprise Data Ecosystem & Governance Knowledge Hub</h2>
         </div>
 
         {/* Global Knowledge Search Bar */}
         <div className="knowledge-search-bar">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-indigo)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input
             type="text"
             className="knowledge-search-input"
@@ -116,7 +116,7 @@ export const KnowledgeView: React.FC = () => {
           <div className="content-header-banner">
             <span className="content-group-title">{currentTopic.groupTitle}</span>
             <h1 className="content-main-title">
-              <RenderKnowledgeIcon iconKey={currentTopic.iconKey} size={26} color="#38bdf8" />
+              <RenderKnowledgeIcon iconKey={currentTopic.iconKey} size={26} color="var(--color-indigo)" />
               <span>{currentTopic.title}</span>
             </h1>
           </div>
@@ -135,12 +135,12 @@ export const KnowledgeView: React.FC = () => {
                 right: '10px',
                 background: 'rgba(15, 23, 42, 0.85)',
                 backdropFilter: 'blur(4px)',
-                color: '#38bdf8',
+                color: '#f8fafc',
                 padding: '4px 10px',
                 borderRadius: '4px',
                 fontSize: '11px',
                 fontWeight: 500,
-                border: '1px solid rgba(56, 189, 248, 0.3)'
+                border: '1px solid rgba(255, 255, 255, 0.2)'
               }}>
                 🔍 คลิกเพื่อดูขยายเต็มจอ
               </div>
@@ -148,10 +148,10 @@ export const KnowledgeView: React.FC = () => {
           )}
 
           {/* Deep Dive Concept Section */}
-          <div className="knowledge-section-box">
-            <h3 className="section-heading" style={{ color: '#facc15' }}>
-              <RenderKnowledgeIcon iconKey="lightbulb" size={18} color="#facc15" />
-              <span>การเจาะลึก (Deep Dive Concept)</span>
+          <div className="knowledge-section-box deepdive-box-theme">
+            <h3 className="section-heading">
+              <RenderKnowledgeIcon iconKey="lightbulb" size={18} color="var(--color-amber)" />
+              <span style={{ color: 'var(--color-amber)' }}>การเจาะลึก (Deep Dive Concept)</span>
             </h3>
             <p className="section-body-text">{currentTopic.deepDive}</p>
             {currentTopic.deepDiveImageUrl && (
@@ -166,15 +166,15 @@ export const KnowledgeView: React.FC = () => {
 
           {/* Real-World Scenario Section */}
           <div className="knowledge-section-box example-box-theme">
-            <h3 className="section-heading" style={{ color: '#10b981' }}>
-              <RenderKnowledgeIcon iconKey="pin" size={18} color="#10b981" />
-              <span>ตัวอย่างการทำงานจริงในองค์กร (Enterprise Scenario)</span>
+            <h3 className="section-heading">
+              <RenderKnowledgeIcon iconKey="pin" size={18} color="var(--color-emerald)" />
+              <span style={{ color: 'var(--color-emerald)' }}>ตัวอย่างการทำงานจริงในองค์กร (Enterprise Scenario)</span>
             </h3>
             <p className="section-body-text">{currentTopic.example}</p>
             {currentTopic.exampleImageUrl && (
               <div 
                 onClick={() => setPreviewImage(currentTopic.exampleImageUrl || null)}
-                style={{ borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)', overflow: 'hidden', cursor: 'zoom-in', marginTop: '10px' }}
+                style={{ borderRadius: '8px', border: '1px solid var(--color-border)', overflow: 'hidden', cursor: 'zoom-in', marginTop: '10px' }}
               >
                 <img src={getImageUrl(currentTopic.exampleImageUrl)} alt="Scenario Diagram" style={{ width: '100%', height: 'auto', display: 'block' }} />
               </div>
@@ -184,15 +184,15 @@ export const KnowledgeView: React.FC = () => {
           {/* Enterprise Use Case Section */}
           {currentTopic.useCase && (
             <div className="knowledge-section-box usecase-box-theme">
-              <h3 className="section-heading" style={{ color: '#38bdf8' }}>
-                <RenderKnowledgeIcon iconKey="rocket" size={18} color="#38bdf8" />
-                <span>กรณีการใช้งานในธุรกิจ (Enterprise Use Case)</span>
+              <h3 className="section-heading">
+                <RenderKnowledgeIcon iconKey="rocket" size={18} color="var(--color-indigo)" />
+                <span style={{ color: 'var(--color-indigo)' }}>กรณีการใช้งานในธุรกิจ (Enterprise Use Case)</span>
               </h3>
               <p className="section-body-text">{currentTopic.useCase}</p>
               {currentTopic.useCaseImageUrl && (
                 <div 
                   onClick={() => setPreviewImage(currentTopic.useCaseImageUrl || null)}
-                  style={{ borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)', overflow: 'hidden', cursor: 'zoom-in', marginTop: '10px' }}
+                  style={{ borderRadius: '8px', border: '1px solid var(--color-border)', overflow: 'hidden', cursor: 'zoom-in', marginTop: '10px' }}
                 >
                   <img src={getImageUrl(currentTopic.useCaseImageUrl)} alt="Use Case Diagram" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
@@ -200,18 +200,18 @@ export const KnowledgeView: React.FC = () => {
             </div>
           )}
 
-          {/* Extra Details (6 Quality Dimensions List OR Comparison Table) */}
+          {/* Extra Details (6 Quality Dimensions List OR High-Contrast Comparison Table) */}
           {currentTopic.extraDetails && currentTopic.extraDetails.type === 'list' && currentTopic.extraDetails.items && (
             <div className="knowledge-section-box">
-              <h3 className="section-heading" style={{ color: '#818cf8' }}>
-                <RenderKnowledgeIcon iconKey="data-quality" size={18} color="#818cf8" />
-                <span>6 มิติหลักวัดคุณภาพข้อมูล (Data Quality Dimensions)</span>
+              <h3 className="section-heading">
+                <RenderKnowledgeIcon iconKey="data-quality" size={18} color="var(--color-indigo)" />
+                <span style={{ color: 'var(--color-indigo)' }}>6 มิติหลักวัดคุณภาพข้อมูล (Data Quality Dimensions)</span>
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '8px' }}>
                 {currentTopic.extraDetails.items.map((item, i) => (
-                  <div key={i} style={{ padding: '14px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--color-border)' }}>
-                    <div style={{ fontWeight: 600, fontSize: '13px', color: '#818cf8', marginBottom: '4px' }}>{item.title}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: '1.6' }}>{item.desc}</div>
+                  <div key={i} style={{ padding: '14px', borderRadius: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--color-border)' }}>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--color-indigo)', marginBottom: '4px' }}>{item.title}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.6' }}>{item.desc}</div>
                   </div>
                 ))}
               </div>
@@ -220,30 +220,32 @@ export const KnowledgeView: React.FC = () => {
 
           {currentTopic.extraDetails && currentTopic.extraDetails.type === 'comparison' && currentTopic.extraDetails.table && (
             <div className="knowledge-section-box">
-              <h3 className="section-heading" style={{ color: '#22d3ee' }}>
-                <RenderKnowledgeIcon iconKey="mesh-vs-fabric" size={18} color="#22d3ee" />
-                <span>ตารางเปรียบเทียบเชิงลึก (Comparison Matrix)</span>
+              <h3 className="section-heading">
+                <RenderKnowledgeIcon iconKey="mesh-vs-fabric" size={18} color="var(--color-indigo)" />
+                <span style={{ color: 'var(--color-indigo)' }}>ตารางเปรียบเทียบเชิงลึก (Comparison Matrix)</span>
               </h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>
-                    {currentTopic.extraDetails.table.headers.map((h, i) => (
-                      <th key={i} style={{ padding: '10px 14px', textAlign: 'left', border: '1px solid var(--color-border)' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentTopic.extraDetails.table.rows.map((row, rIdx) => (
-                    <tr key={rIdx} style={{ background: rIdx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)' }}>
-                      {row.map((cell, cIdx) => (
-                        <td key={cIdx} style={{ padding: '10px 14px', border: '1px solid var(--color-border)', color: cIdx === 0 ? '#38bdf8' : 'var(--color-text-primary)' }}>
-                          {cell}
-                        </td>
+              <div className="kv-table-container">
+                <table className="kv-table">
+                  <thead>
+                    <tr>
+                      {currentTopic.extraDetails.table.headers.map((h, i) => (
+                        <th key={i}>{h}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {currentTopic.extraDetails.table.rows.map((row, rIdx) => (
+                      <tr key={rIdx}>
+                        {row.map((cell, cIdx) => (
+                          <td key={cIdx} className={cIdx === 0 ? 'kv-table-feature-col' : ''}>
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
